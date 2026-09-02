@@ -1,22 +1,29 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - SaaS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-md text-center">
-        <h1 class="text-3xl font-bold mb-4 text-gray-800">Bem-vindo ao Dashboard!</h1>
-        <p class="text-gray-600 mb-6">Você fez login com sucesso no sistema.</p>
-        
-        <form action="{% url 'logout' %}" method="POST">
-            {% csrf_token %}
-            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition w-full">
-                Sair
-            </button>
-        </form>
+{% extends 'interfaces/base.html' %}
+
+{% block title %}Dashboard - Visão Geral{% endblock %}
+
+{% block header_title %}Visão Geral{% endblock %}
+
+{% block content %}
+<!-- Cards de Métricas (KPIs) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <p class="text-sm font-medium text-gray-500">Vendas Hoje</p>
+        <p class="text-3xl font-bold text-gray-900 mt-2">R$ 0,00</p>
     </div>
-</body>
-</html>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <p class="text-sm font-medium text-gray-500">Produtos Cadastrados</p>
+        <!-- Exibindo a contagem dinâmica -->
+        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_produtos }}</p>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <p class="text-sm font-medium text-gray-500">Clientes Ativos</p>
+        <p class="text-3xl font-bold text-gray-900 mt-2">0</p>
+    </div>
+</div>
+
+<div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <h3 class="text-lg font-bold text-gray-800 mb-2">Bem-vindo ao seu painel de gestão!</h3>
+    <p class="text-gray-600">O sistema está integrado. Conforme você cadastra os itens na aba de Produtos, o total é atualizado automaticamente aqui na Visão Geral.</p>
+</div>
+{% endblock %}
