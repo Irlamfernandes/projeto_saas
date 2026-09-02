@@ -6,9 +6,31 @@
 {% block content %}
 <div class="space-y-8">
     
+    <!-- BARRA SUPERIOR DE EXPORTAÇÃO GERAL -->
+    <div class="flex flex-wrap justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-gray-200 gap-4">
+        <div>
+            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Exportação Global</h3>
+            <p class="text-xs text-gray-500">Baixe todos os dados consolidados da sua loja de uma só vez.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'exportar_pdf_modular' 'geral' %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2">
+                📄 Baixar Tudo (PDF)
+            </a>
+            <a href="{% url 'exportar_excel_modular' 'geral' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2">
+                📊 Baixar Tudo (Excel)
+            </a>
+        </div>
+    </div>
+
     <!-- ================= BLOCO 1: RESUMO EXECUTIVO ================= -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">1. Visão Geral Financeira</h3>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">1. Visão Geral Financeira</h3>
+            <div class="flex gap-2">
+                <a href="{% url 'exportar_pdf_modular' 'resumo' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                <a href="{% url 'exportar_excel_modular' 'resumo' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+            </div>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span class="text-xs font-medium text-gray-500 uppercase">Faturamento Total</span>
@@ -31,7 +53,13 @@
 
     <!-- ================= BLOCO 2: FATURAMENTO POR PERÍODO ================= -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">2. Desempenho por Ciclo Temporal</h3>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">2. Desempenho por Ciclo Temporal</h3>
+            <div class="flex gap-2">
+                <a href="{% url 'exportar_pdf_modular' 'temporal' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                <a href="{% url 'exportar_excel_modular' 'resumo' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+            </div>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Hoje</span>
@@ -57,7 +85,13 @@
         
         <!-- Clientes Devendo (Fiado) -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-red-100">
-            <h3 class="text-base font-bold text-red-700 mb-4 uppercase tracking-wider">3. Clientes Devendo (Maior Dívida)</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-red-700 uppercase tracking-wider">3. Clientes Devendo</h3>
+                <div class="flex gap-2">
+                    <a href="{% url 'exportar_pdf_modular' 'devendo' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                    <a href="{% url 'exportar_excel_modular' 'devendo' %}" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                </div>
+            </div>
             <div class="overflow-x-auto max-h-80 overflow-y-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -88,7 +122,13 @@
 
         <!-- Clientes com Crédito -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-green-100">
-            <h3 class="text-base font-bold text-green-700 mb-4 uppercase tracking-wider">4. Clientes com Crédito em Caixa</h3>
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-bold text-green-700 uppercase tracking-wider">4. Clientes com Crédito</h3>
+                <div class="flex gap-2">
+                    <a href="{% url 'exportar_pdf_modular' 'credito' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                    <a href="{% url 'exportar_excel_modular' 'credito' %}" class="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                </div>
+            </div>
             <div class="overflow-x-auto max-h-80 overflow-y-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -121,7 +161,13 @@
 
     <!-- ================= BLOCO 4: ESTOQUE COMPLETO ORDENADO ================= -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">5. Inventário de Estoque (Do menor para o maior)</h3>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">5. Inventário de Estoque</h3>
+            <div class="flex gap-2">
+                <a href="{% url 'exportar_pdf_modular' 'estoque' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                <a href="{% url 'exportar_excel_modular' 'estoque' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+            </div>
+        </div>
         <div class="overflow-x-auto max-h-96 overflow-y-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -150,69 +196,6 @@
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <!-- ================= BLOCO 5: HISTÓRICO DE VENDAS (HOJE, MÊS E ÚLTIMAS) ================= -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Compras do Dia -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">6. Vendas Realizadas Hoje</h3>
-            <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
-                            <th class="py-2 px-3">Cliente</th>
-                            <th class="py-2 px-3">Horário</th>
-                            <th class="py-2 px-3 text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
-                        {% for venda in compras_do_dia %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ venda.cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-gray-500 text-xs">{{ venda.data_venda|date:"H:i" }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-indigo-600">R$ {{ venda.valor_total }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhuma venda registrada hoje.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Últimas Vendas Gerais -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">7. Últimas 10 Vendas Gerais</h3>
-            <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
-                            <th class="py-2 px-3">Cliente</th>
-                            <th class="py-2 px-3">Data</th>
-                            <th class="py-2 px-3 text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
-                        {% for venda in ultimas_compras %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ venda.cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-gray-500 text-xs">{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-indigo-600">R$ {{ venda.valor_total }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhuma venda cadastrada.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 
 </div>

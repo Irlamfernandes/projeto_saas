@@ -5,7 +5,8 @@ from django.contrib.auth.views import LogoutView
 from interfaces.views import (
     extrato_pdf_view, login_view, dashboard_view, alterar_senha_view, produtos_view, 
     produto_editar_view, clientes_view, cliente_editar_view, vendas_view, 
-    extrato_cliente_view, venda_editar_view, relatorio_view
+    extrato_cliente_view, venda_editar_view, relatorio_view, exportar_excel_modular_view,
+    exportar_pdf_modular_view
 )
 urlpatterns = [
     path('', lambda request: redirect('login', permanent=False)),
@@ -27,4 +28,6 @@ urlpatterns = [
     path('vendas/<int:venda_id>/editar/', venda_editar_view, name='venda_editar'),
 
     path('relatorios/', relatorio_view, name='relatorios'),
+    path('relatorios/exportar/pdf/<str:tipo>/', exportar_pdf_modular_view, name='exportar_pdf_modular'),
+    path('relatorios/exportar/excel/<str:tipo>/', exportar_excel_modular_view, name='exportar_excel_modular'),
 ]
