@@ -2,9 +2,13 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from django.core.exceptions import PermissionDenied
 import openpyxl
 
-def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo):
+def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo, loja_usuario=None):
+    if loja_usuario and hasattr(contexto_dados, 'loja') and contexto_dados.loja != loja_usuario:
+        raise PermissionDenied("Acesso negado: Tentativa de exportar dados de outra loja.")
+
     doc = SimpleDocTemplate(caminho_arquivo, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
     story = []
     styles = getSampleStyleSheet()
@@ -53,6 +57,8 @@ def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo):
         story.append(Spacer(1, 10))
         dados = [["Cliente", "Valor Devido"]]
         for cliente in contexto_dados['clientes_devendo']:
+            if loja_usuario and cliente.loja != loja_usuario:
+                continue
             dados.append([cliente.nome, f"R$ {cliente.saldo_geral:.2f}"])
         t = Table(dados, colWidths=[300, 212])
         t.setStyle(TableStyle([
@@ -67,6 +73,8 @@ def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo):
         story.append(Spacer(1, 10))
         dados = [["Cliente", "Crédito Disponível"]]
         for cliente in contexto_dados['clientes_credito']:
+            if loja_usuario and cliente.loja != loja_usuario:
+                continue
             dados.append([cliente.nome, f"R$ {abs(cliente.saldo_geral):.2f}"])
         t = Table(dados, colWidths=[300, 212])
         t.setStyle(TableStyle([
@@ -81,6 +89,8 @@ def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo):
         story.append(Spacer(1, 10))
         dados_estoque = [["Produto", "Preço (R$)", "Qtd em Estoque"]]
         for prod in contexto_dados['estoque_ordenado']:
+            if loja_usuario and prod.loja != loja_usuario:
+                continue
             dados_estoque.append([prod.nome, f"R$ {prod.preco_venda:.2f}", str(prod.quantidade_estoque)])
         
         t_est = Table(dados_estoque, colWidths=[250, 130, 132])
@@ -94,7 +104,7 @@ def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo):
     doc.build(story)
 
 
-def gerar_relatorio_excel_secao(tipo_secao, contexto_dados, caminho_arquivo):
+def gerar_relatorio_excel_secao(tipo_secao, contexto_dados, caminho_arquivo, loja_usuario=None):
     wb = openpyxl.Workbook()
     ws = wb.active
     
@@ -110,21 +120,27 @@ def gerar_relatorio_excel_secao(tipo_secao, contexto_dados, caminho_arquivo):
         ws.title = "Estoque"
         ws.append(["Produto", "Preço de Venda", "Quantidade em Estoque"])
         for prod in contexto_dados['estoque_ordenado']:
+            if loja_usuario and prod.loja != loja_usuario:
+                continue
             ws.append([prod.nome, float(prod.preco_venda), prod.quantidade_estoque])
             
     elif tipo_secao == 'devendo':
         ws.title = "Clientes Devendo"
         ws.append(["Cliente", "Valor Devido"])
         for cliente in contexto_dados['clientes_devendo']:
+            if loja_usuario and cliente.loja != loja_usuario:
+                continue
             ws.append([cliente.nome, float(cliente.saldo_geral)])
 
     elif tipo_secao == 'credito':
         ws.title = "Clientes com Crédito"
         ws.append(["Cliente", "Crédito Disponível"])
         for cliente in contexto_dados['clientes_credito']:
+            if loja_usuario and cliente.loja != loja_usuario:
+                continue
             ws.append([cliente.nome, float(abs(cliente.saldo_geral))])
             
-    else: # Geral / Tudo
+    else:
         ws.title = "Resumo"
         ws.append(["Métrica", "Valor (R$)"])
         ws.append(["Faturamento Total", float(contexto_dados['total_geral_vendas'])])
@@ -133,11 +149,15 @@ def gerar_relatorio_excel_secao(tipo_secao, contexto_dados, caminho_arquivo):
         ws2 = wb.create_sheet(title="Estoque")
         ws2.append(["Produto", "Preço", "Quantidade"])
         for prod in contexto_dados['estoque_ordenado']:
+            if loja_usuario and prod.loja != loja_usuario:
+                continue
             ws2.append([prod.nome, float(prod.preco_venda), prod.quantidade_estoque])
 
         ws3 = wb.create_sheet(title="Clientes Devendo")
         ws3.append(["Cliente", "Valor Devido"])
         for cliente in contexto_dados['clientes_devendo']:
+            if loja_usuario and cliente.loja != loja_usuario:
+                continue
             ws3.append([cliente.nome, float(cliente.saldo_geral)])
 
     wb.save(caminho_arquivo)

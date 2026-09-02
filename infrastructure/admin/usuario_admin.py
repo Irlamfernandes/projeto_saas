@@ -2,6 +2,7 @@ import secrets
 import string
 from django.contrib import admin
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.urls import path
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.html import format_html
@@ -15,7 +16,6 @@ class CustomUserAdmin(admin.ModelAdmin):
     
     fields = ('username', 'loja', 'deve_trocar_senha', 'is_active', 'is_staff', 'is_superuser')
     
-    # Adiciona um link customizado para a página de edição (botão de resetar senha)
     change_form_template = "admin/usuario_change_form.html"
 
     def get_urls(self):
@@ -30,13 +30,21 @@ class CustomUserAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def reset_password_view(self, request, user_id):
+        if request.method != 'POST':
+            raise PermissionDenied("Método não permitido para esta operação.")
+
         user = get_object_or_404(UsuarioModel, pk=user_id)
         
-        # Gera nova senha temporária
+        if not request.user.is_superuser and user.is_superuser:
+            raise PermissionDenied("Você não tem permissão para alterar as credenciais de um superusuário.")
+
+        if not request.user.is_superuser and request.user.loja and user.loja != request.user.loja:
+            raise PermissionDenied("Acesso negado: Este usuário pertence a outra loja.")
+
         alphabet = string.ascii_letters + string.digits
         nova_senha = ''.join(secrets.choice(alphabet) for _ in range(8))
         user.set_password(nova_senha)
-        user.deve_trocar_senha = True # Força a troca no próximo login
+        user.deve_trocar_senha = True
         user.save()
 
         messages.success(
@@ -50,6 +58,9 @@ class CustomUserAdmin(admin.ModelAdmin):
         return redirect('admin:infrastructure_usuariomodel_change', user.pk)
 
     def save_model(self, request, obj, form, change):
+        if not change and not request.user.is_superuser and (obj.is_superuser or obj.is_staff):
+            raise PermissionDenied("Você não tem permissão para criar usuários com privilégios administrativos.")
+
         if not change or not obj.pk or not obj.has_usable_password():
             alphabet = string.ascii_letters + string.digits
             senha_temporaria = ''.join(secrets.choice(alphabet) for _ in range(8))

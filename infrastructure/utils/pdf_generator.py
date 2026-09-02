@@ -3,8 +3,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
+from django.core.exceptions import PermissionDenied
 
-def gerar_extrato_pdf_cliente(cliente, caminho_arquivo):
+def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None):
+    if loja_usuario and cliente.loja != loja_usuario:
+        raise PermissionDenied("Acesso negado: Este cliente pertence a outra loja.")
+
     doc = SimpleDocTemplate(caminho_arquivo, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
     story = []
     styles = getSampleStyleSheet()

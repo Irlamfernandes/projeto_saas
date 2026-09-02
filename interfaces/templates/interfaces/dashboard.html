@@ -5,57 +5,66 @@
 {% block header_title %}Visão Geral{% endblock %}
 
 {% block content %}
-<!-- Cards Principais (Cadastros) -->
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<section aria-label="Resumo de Cadastros" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-sm font-medium text-gray-500">Produtos Cadastrados</p>
-        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_produtos }}</p>
+        <h3 class="text-sm font-medium text-gray-500">Produtos Cadastrados</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_produtos|default:"0" }}</p>
     </div>
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-sm font-medium text-gray-500">Clientes Ativos</p>
-        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_clientes }}</p>
+        <h3 class="text-sm font-medium text-gray-500">Clientes Ativos</h3>
+        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_clientes|default:"0" }}</p>
     </div>
-</div>
+</section>
 
-<!-- Faturamento por Períodos -->
-<h3 class="text-lg font-bold text-gray-800 mb-4">Desempenho de Vendas</h3>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Hoje</p>
-        <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ vendas_hoje|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Esta Semana</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_semana|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Quinzenal</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_quinzena|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Mês</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_mes|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Bimestral</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_bimestre|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Trimestral</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_trimester|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Ano</p>
-        <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_ano|floatformat:2 }}</p>
-    </div>
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 bg-indigo-50/50">
-        <p class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Faturamento Total</p>
-        <p class="text-2xl font-bold text-indigo-700 mt-1">R$ {{ total_geral|floatformat:2 }}</p>
-    </div>
-</div>
+<section aria-label="Desempenho de Vendas">
+    <h3 class="text-lg font-bold text-gray-800 mb-4">Desempenho de Vendas</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Hoje</h4>
+            <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ vendas_hoje|default:0|floatformat:2 }}</p>
+        </div>
 
-<div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Esta Semana</h4>
+            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_semana|default:0|floatformat:2 }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Quinzenal</h4>
+            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_quinzena|default:0|floatformat:2 }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Mês</h4>
+            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_mes|default:0|floatformat:2 }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Bimestral</h4>
+            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_bimestre|default:0|floatformat:2 }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Trimestral</h4>
+            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_trimester|default:0|floatformat:2 }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Ano</h4>
+            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_ano|default:0|floatformat:2 }}</p>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 bg-indigo-50/50">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Faturamento Total</h4>
+            <p class="text-2xl font-bold text-indigo-700 mt-1">R$ {{ total_geral|default:0|floatformat:2 }}</p>
+        </div>
+
+    </div>
+</section>
+
+<section class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
     <h3 class="text-lg font-bold text-gray-800 mb-2">Painel de Controle Financeiro</h3>
     <p class="text-gray-600">Acompanhe em tempo real o volume de vendas da sua microempresa segmentado por ciclos temporais para tomada de decisão ágil.</p>
-</div>
+</section>
 {% endblock %}

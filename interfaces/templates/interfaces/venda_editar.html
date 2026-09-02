@@ -11,8 +11,8 @@
         {% csrf_token %}
         
         <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-semibold mb-1">Cliente</label>
-            <select name="cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <label for="id_cliente_venda" class="block text-gray-700 text-sm font-semibold mb-1">Cliente</label>
+            <select id="id_cliente_venda" name="cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">Selecione o cliente...</option>
                 {% for cliente in clientes %}
                     <option value="{{ cliente.id }}" {% if venda.cliente and venda.cliente.id == cliente.id %}selected{% endif %}>
@@ -23,31 +23,32 @@
         </div>
 
         <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-semibold mb-1">Produto</label>
-            <select name="produto" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <label for="id_produto_venda" class="block text-gray-700 text-sm font-semibold mb-1">Produto</label>
+            <select id="id_produto_venda" name="produto" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">Selecione um produto...</option>
                 {% for prod in produtos %}
                     <option value="{{ prod.id }}" {% if item_atual and item_atual.produto.id == prod.id %}selected{% endif %}>
-                        {{ prod.nome }} - R$ {{ prod.preco_venda }} (Estoque: {{ prod.quantidade_estoque }})
+                        {{ prod.nome }} - R$ {{ prod.preco_venda|default:0|floatformat:2 }} (Estoque: {{ prod.quantidade_estoque }})
                     </option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
-            <input type="number" name="quantidade" value="{{ item_atual.quantidade|default:1 }}" min="1" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <label for="id_quantidade_venda" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
+            <input type="number" id="id_quantidade_venda" name="quantidade" value="{{ item_atual.quantidade|default:1 }}" min="1" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
         </div>
 
         <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
-            <textarea name="observacoes" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">{{ venda.observacoes }}</textarea>
+            <label for="id_observacoes_venda" class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
+            <textarea id="id_observacoes_venda" name="observacoes" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">{{ venda.observacoes|default:'' }}</textarea>
         </div>
 
         <div class="flex gap-4">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
                 Salvar Alterações
             </button>
-            <a href="{% url 'vendas' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm text-center">
+            <a href="{% url 'vendas' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm text-center flex items-center justify-center">
                 Cancelar
             </a>
         </div>

@@ -6,10 +6,8 @@
 {% block content %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     
-    <!-- Painel Lateral Esquerdo: Resumo, Ações e Pagamento -->
     <div class="space-y-6">
         
-        <!-- Bloco de Resumo Financeiro -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Resumo Financeiro</h3>
             
@@ -20,42 +18,45 @@
                 <span class="block text-xs uppercase font-semibold mb-1 opacity-80">Situação Atual na Casa</span>
                 <span class="text-2xl font-black">
                     {% if cliente.saldo_geral > 0 %}
-                        Devendo R$ {{ cliente.saldo_geral|floatformat:2 }}
+                        Devendo R$ {{ cliente.saldo_geral|default:0|floatformat:2 }}
                     {% elif cliente.saldo_geral < 0 %}
-                        Crédito: R$ {{ cliente.saldo_geral|stringformat:"s"|slice:"1:"|floatformat:2 }}
+                        Crédito: R$ {{ cliente.saldo_geral|stringformat:"s"|slice:"1:"|default:0|floatformat:2 }}
                     {% else %}
                         Tudo Certo (Quitado)
                     {% endif %}
                 </span>
             </div>
 
-            <!-- Botões de Comprovante e Envio -->
             <div class="mt-5 space-y-2.5">
-                <a href="{% url 'extrato_pdf' cliente.id %}" class="flex items-center justify-center gap-2 w-full bg-gray-900 hover:bg-black text-white font-medium py-2.5 px-4 rounded-lg transition text-sm shadow-sm">
+                <a href="{% url 'extrato_pdf' cliente.id %}" class="flex items-center justify-center gap-2 w-full bg-gray-900 hover:bg-black text-white font-medium py-2.5 px-4 rounded-lg transition text-sm shadow-sm cursor-pointer">
                     📄 Baixar Comprovante PDF
                 </a>
 
-                <a href="https://wa.me/55{{ cliente.telefone|slugify }}?text=Olá%20{{ cliente.nome|urlencode }},%20aqui%20está%20o%20resumo%20oficial%20da%20sua%20conta%20na%20{{ request.user.loja.nome_loja|urlencode }}.%20Situação%20atual:%20R$%20{{ cliente.saldo_geral|floatformat:2 }}.%20Confira%20seu%20extrato%20completo%20com%20as%20últimas%20compras." target="_blank" class="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition text-sm shadow-sm">
+                {% with loja_nome=request.user.loja.nome_loja|default:"Minha Loja" %}
+                <a href="https://wa.me/55{{ cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-'|cut:'.' }}?text=Olá%20{{ cliente.nome|urlencode }},%20aqui%20está%20o%20resumo%20oficial%20da%20sua%20conta%20na%20{{ loja_nome|urlencode }}.%20Situação%20atual:%20R$%20{{ cliente.saldo_geral|default:0|floatformat:2 }}.%20Confira%20seu%20extrato%20completo%20com%20as%20últimas%20compras." 
+                   target="_blank" 
+                   rel="noopener noreferrer" 
+                   class="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition text-sm shadow-sm cursor-pointer">
                     💬 Enviar no WhatsApp
                 </a>
+                {% endwith %}
             </div>
         </div>
 
-        <!-- Bloco de Registrar Pagamento -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4">Registrar Pagamento</h3>
             
             <form method="POST" class="space-y-4">
                 {% csrf_token %}
                 <div>
-                    <label class="block text-gray-700 text-xs font-bold uppercase mb-1">Valor (R$)</label>
-                    <input type="number" step="0.01" name="valor" required placeholder="0.00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label for="id_valor_pagamento" class="block text-gray-700 text-xs font-bold uppercase mb-1">Valor (R$)</label>
+                    <input type="number" step="0.01" id="id_valor_pagamento" name="valor" required placeholder="0.00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-xs font-bold uppercase mb-1">Observação</label>
-                    <input type="text" name="observacao" placeholder="Ex: Pix, Parcela semanal..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    <label for="id_observacao_pagamento" class="block text-gray-700 text-xs font-bold uppercase mb-1">Observação</label>
+                    <input type="text" id="id_observacao_pagamento" name="observacao" placeholder="Ex: Pix, Parcela semanal..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition text-sm shadow-sm">
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition text-sm shadow-sm cursor-pointer">
                     Confirmar Pagamento
                 </button>
             </form>
@@ -67,7 +68,6 @@
 
     </div>
 
-    <!-- Linha do Tempo / Extrato (Lado Direito) -->
     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Histórico de Transações</h3>
 
@@ -100,7 +100,7 @@
                             {% endif %}
                         </td>
                         <td class="py-3.5 px-4 text-right font-bold whitespace-nowrap {% if item.tipo == 'compra' %}text-red-600{% else %}text-emerald-600{% endif %}">
-                            {% if item.tipo == 'compra' %}-{% else %}+{% endif %} R$ {{ item.valor }}
+                            {% if item.tipo == 'compra' %}-{% else %}+{% endif %} R$ {{ item.valor|default:0|floatformat:2 }}
                         </td>
                     </tr>
                     {% empty %}

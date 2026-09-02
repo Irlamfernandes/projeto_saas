@@ -6,7 +6,6 @@
 {% block content %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     
-    <!-- Formulário de Nova Venda -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Nova Venda / Pedido</h3>
         
@@ -14,14 +13,14 @@
             {% csrf_token %}
             
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Cliente</label>
-                <select name="cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="id_cliente_venda" class="block text-gray-700 text-sm font-semibold mb-1">Cliente</label>
+                <select id="id_cliente_venda" name="cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">Selecione o cliente...</option>
                     {% for cliente in clientes %}
                         <option value="{{ cliente.id }}">
                             {{ cliente.nome }} 
                             {% with saldo=cliente.saldo_geral %}
-                                {% if saldo > 0 %} (Devendo R$ {{ saldo|floatformat:2 }})
+                                {% if saldo > 0 %} (Devendo R$ {{ saldo|default:0|floatformat:2 }})
                                 {% elif saldo < 0 %} (Com Crédito)
                                 {% endif %}
                             {% endwith %}
@@ -31,38 +30,37 @@
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Produto</label>
-                <select name="produto" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="id_produto_venda" class="block text-gray-700 text-sm font-semibold mb-1">Produto</label>
+                <select id="id_produto_venda" name="produto" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     <option value="">Selecione o produto...</option>
                     {% for prod in produtos %}
-                        <option value="{{ prod.id }}">{{ prod.nome }} - R$ {{ prod.preco_venda }} (Estoque: {{ prod.quantidade_estoque }})</option>
+                        <option value="{{ prod.id }}">{{ prod.nome }} - R$ {{ prod.preco_venda|default:0|floatformat:2 }} (Estoque: {{ prod.quantidade_estoque }})</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
-                    <input type="number" name="quantidade" value="1" min="1" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <label for="id_quantidade_venda" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
+                    <input type="number" id="id_quantidade_venda" name="quantidade" value="1" min="1" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                 </div>
                 <div>
-                    <label class="block text-gray-700 text-sm font-semibold mb-1">Valor Pago Hoje (R$)</label>
-                    <input type="number" step="0.01" name="valor_pago" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <label for="id_valor_pago_venda" class="block text-gray-700 text-sm font-semibold mb-1">Valor Pago Hoje (R$)</label>
+                    <input type="number" step="0.01" id="id_valor_pago_venda" name="valor_pago" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                 </div>
             </div>
 
             <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
-                <textarea name="observacoes" rows="2" placeholder="Anotações..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                <label for="id_observacoes_venda" class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
+                <textarea id="id_observacoes_venda" name="observacoes" rows="2" placeholder="Anotações..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
                 Finalizar Venda
             </button>
         </form>
     </div>
 
-    <!-- Histórico de Vendas -->
     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Histórico de Vendas</h3>
 
@@ -85,12 +83,11 @@
                         </td>
                         <td class="py-3 px-4 text-xs text-gray-600">
                             {% for item in venda.itens.all %}
-                                <span class="block">{{ item.quantidade }}x {{ item.produto.nome }} (R$ {{ item.preco_unitario }})</span>
+                                <span class="block">{{ item.quantidade }}x {{ item.produto.nome }} (R$ {{ item.preco_unitario|default:0|floatformat:2 }})</span>
                             {% endfor %}
                         </td>
-                        <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ venda.valor_total }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ venda.valor_total|default:0|floatformat:2 }}</td>
                         
-                        <!-- Coluna de Ações unificada (Caderneta + Editar) -->
                         <td class="py-3 px-4 text-center">
                             <div class="flex items-center justify-center gap-2">
                                 {% if venda.cliente %}

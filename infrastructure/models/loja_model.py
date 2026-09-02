@@ -1,8 +1,10 @@
+import uuid
+from django.conf import settings
 from django.db import models
 
 class LojaModel(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    nome_loja = models.CharField(max_length=150)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nome_loja = models.CharField(max_length=150, db_index=True)
     ativo = models.BooleanField(default=True, help_text="Desmarque para colocar a loja fora do ar.")
     criado_em = models.DateTimeField(auto_now_add=True)
 
@@ -11,3 +13,5 @@ class LojaModel(models.Model):
 
     class Meta:
         db_table = 'lojas'
+        verbose_name = 'Loja'
+        verbose_name_plural = 'Lojas'

@@ -1,30 +1,45 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 @login_required
 def alterar_senha_view(request):
-    # Se por acaso o usuário não precisar trocar e tentar acessar via URL, manda pro dashboard
     if not request.user.deve_trocar_senha:
         return redirect('dashboard')
 
     if request.method == 'POST':
-        nova_senha = request.POST.get('nova_senha')
-        confirmacao_senha = request.POST.get('confirmacao_senha')
+        nova_senha = request.POST.get('nova_senha', '')
+        confirmacao_senha = request.POST.get('confirmacao_senha', '')
         
-        if nova_senha and nova_senha == confirmacao_senha:
-            # Salva a nova senha escolhida
-            request.user.set_password(nova_senha)
-            # Desativa a flag de troca obrigatória
-            request.user.deve_trocar_senha = False
-            request.user.save()
-            
-            # Atualiza a sessão para o usuário não deslogar ao mudar a senha
-            from django.contrib.auth import update_session_auth_hash
-            update_session_auth_hash(request, request.user)
-            
-            return redirect('dashboard')
-        else:
-            error = "As senhas não coincidem ou estão vazias."
-            return render(request, 'interfaces/alterar_senha.html', {'error': error})
+        if len(nova_senha) > 128 or len(confirmacao_senha) > 128:
+            messages.error(request, "A senha excede o limite máximo de caracteres permitido.")
+            return render(request, 'interfaces/alterar_senha.html')
+
+        if not nova_senha or not confirmacao_senha:
+            messages.error(request, "Os campos de senha não podem estar vazios.")
+            return render(request, 'interfaces/alterar_senha.html')
+
+        if nova_senha != confirmacao_senha:
+            messages.error(request, "As senhas não coincidem.")
+            return render(request, 'interfaces/alterar_senha.html')
+
+        try:
+            validate_password(nova_senha, user=request.user)
+        except ValidationError as e:
+            for error in e.messages:
+                messages.error(request, error)
+            return render(request, 'interfaces/alterar_senha.html')
+
+        request.user.set_password(nova_senha)
+        request.user.deve_trocar_senha = False
+        request.user.save()
+        
+        update_session_auth_hash(request, request.user)
+        
+        messages.success(request, "Senha alterada com sucesso!")
+        return redirect('dashboard')
 
     return render(request, 'interfaces/alterar_senha.html')

@@ -13,8 +13,8 @@ class Cliente(models.Model):
 
     @property
     def saldo_geral(self):
-        total_compras = self.vendas.aggregate(Sum('valor_total'))['valor_total__sum'] or Decimal('0.00')
-        total_pagamentos = self.pagamentos.aggregate(Sum('valor'))['valor__sum'] or Decimal('0.00')
+        total_compras = self.vendas.filter(loja=self.loja).aggregate(Sum('valor_total'))['valor_total__sum'] or Decimal('0.00')
+        total_pagamentos = self.pagamentos.filter(loja=self.loja).aggregate(Sum('valor'))['valor__sum'] or Decimal('0.00')
         return total_compras - total_pagamentos
 
     def __str__(self):

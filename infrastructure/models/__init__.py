@@ -1,5 +1,5 @@
 from .loja_model import LojaModel
-from .usuario_model import UsuarioModel
+from .usuario_model import UsuarioModel, CustomUsernameValidator
 from .produto import Produto
 from .cliente import Cliente
 from .venda import Venda, ItemVenda, PagamentoCliente

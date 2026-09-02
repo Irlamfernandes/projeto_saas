@@ -7,46 +7,44 @@
 {% block content %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     
-    <!-- Coluna da Esquerda: Formulário de Cadastro Rápido -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Adicionar Novo Cliente</h3>
         
         <form method="POST">
             {% csrf_token %}
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Nome do Cliente</label>
-                <input type="text" name="nome" required placeholder="Ex: Maria da Silva" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <label for="id_nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Cliente</label>
+                <input type="text" id="id_nome" name="nome" required placeholder="Ex: Maria da Silva" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Telefone / WhatsApp</label>
-                <input type="text" name="telefone" placeholder="(00) 00000-0000" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <label for="id_telefone" class="block text-gray-700 text-sm font-semibold mb-1">Telefone / WhatsApp</label>
+                <input type="text" id="id_telefone" name="telefone" placeholder="(00) 00000-0000" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">E-mail (Opcional)</label>
-                <input type="email" name="email" placeholder="cliente@email.com" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <label for="id_email" class="block text-gray-700 text-sm font-semibold mb-1">E-mail (Opcional)</label>
+                <input type="email" id="id_email" name="email" placeholder="cliente@email.com" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
 
             <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Endereço / Observações</label>
-                <textarea name="endereco" rows="2" placeholder="Rua, número, bairro..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                <label for="id_endereco" class="block text-gray-700 text-sm font-semibold mb-1">Endereço / Observações</label>
+                <textarea id="id_endereco" name="endereco" rows="2" placeholder="Rua, número, bairro..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
                 Salvar Cliente
             </button>
         </form>
     </div>
 
-    <!-- Coluna da Direita: Tabela e Filtros de Clientes -->
     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Seus Clientes Cadastrados</h3>
 
-        <!-- BARRA DE BUSCA -->
         <form method="GET" class="flex gap-2 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-            <input type="text" name="q" value="{{ filtro_busca }}" placeholder="Buscar por nome ou telefone..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold whitespace-nowrap">
+            <label for="id_busca" class="sr-only">Buscar clientes</label>
+            <input type="text" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Buscar por nome ou telefone..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold whitespace-nowrap cursor-pointer">
                 Buscar
             </button>
             {% if filtro_busca %}
@@ -83,8 +81,8 @@
                         </td>
                         <td class="py-3 px-4 text-center">
                             <button type="button" 
-                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs }}')"
-                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition">
+                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs|linebreaksbr|striptags }}')"
+                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer">
                                 Editar
                             </button>
                         </td>
@@ -103,42 +101,41 @@
 
 </div>
 
-<!-- MODAL DE EDIÇÃO DE CLIENTE -->
-<div id="modal-edicao-cliente" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+<div id="modal-edicao-cliente" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
     <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-lg w-full">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-gray-800">Editar Cliente</h3>
-            <button type="button" onclick="fecharModalEdicaoCliente()" class="text-gray-400 hover:text-gray-600 font-bold text-lg">&times;</button>
+            <h3 id="modal-titulo" class="text-lg font-bold text-gray-800">Editar Cliente</h3>
+            <button type="button" onclick="fecharModalEdicaoCliente()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer" aria-label="Fechar">&times;</button>
         </div>
         
         <form id="form-edicao-cliente" method="POST">
             {% csrf_token %}
             
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Nome do Cliente</label>
+                <label for="edit-cli-nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Cliente</label>
                 <input type="text" id="edit-cli-nome" name="nome" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Telefone / WhatsApp</label>
+                <label for="edit-cli-telefone" class="block text-gray-700 text-sm font-semibold mb-1">Telefone / WhatsApp</label>
                 <input type="text" id="edit-cli-telefone" name="telefone" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">E-mail (Opcional)</label>
+                <label for="edit-cli-email" class="block text-gray-700 text-sm font-semibold mb-1">E-mail (Opcional)</label>
                 <input type="email" id="edit-cli-email" name="email" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
 
             <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-semibold mb-1">Endereço / Observações</label>
+                <label for="edit-cli-endereco" class="block text-gray-700 text-sm font-semibold mb-1">Endereço / Observações</label>
                 <textarea id="edit-cli-endereco" name="endereco" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
             </div>
 
             <div class="flex items-center gap-3">
-                <button type="button" onclick="fecharModalEdicaoCliente()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-center text-sm">
+                <button type="button" onclick="fecharModalEdicaoCliente()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-center text-sm cursor-pointer">
                     Cancelar
                 </button>
-                <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+                <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
                     Salvar Alterações
                 </button>
             </div>

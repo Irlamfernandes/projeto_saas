@@ -6,23 +6,21 @@
 {% block content %}
 <div class="space-y-8">
     
-    <!-- BARRA SUPERIOR DE EXPORTAÇÃO GERAL -->
     <div class="flex flex-wrap justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-gray-200 gap-4">
         <div>
             <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Exportação Global</h3>
             <p class="text-xs text-gray-500">Baixe todos os dados consolidados da sua loja de uma só vez.</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{% url 'exportar_pdf_modular' 'geral' %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2">
+            <a href="{% url 'exportar_pdf_modular' 'geral' %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
                 📄 Baixar Tudo (PDF)
             </a>
-            <a href="{% url 'exportar_excel_modular' 'geral' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2">
+            <a href="{% url 'exportar_excel_modular' 'geral' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
                 📊 Baixar Tudo (Excel)
             </a>
         </div>
     </div>
 
-    <!-- ================= BLOCO 1: RESUMO EXECUTIVO ================= -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">1. Visão Geral Financeira</h3>
@@ -34,56 +32,53 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span class="text-xs font-medium text-gray-500 uppercase">Faturamento Total</span>
-                <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ total_geral_vendas|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ total_geral_vendas|default:0|floatformat:2 }}</p>
             </div>
             <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span class="text-xs font-medium text-gray-500 uppercase">Ticket Médio</span>
-                <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ ticket_medio|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ ticket_medio|default:0|floatformat:2 }}</p>
             </div>
             <div class="p-4 bg-red-50/50 rounded-lg border border-red-100">
                 <span class="text-xs font-medium text-red-500 uppercase">Total a Receber (Fiado)</span>
-                <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ total_fiado_pendente|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ total_fiado_pendente|default:0|floatformat:2 }}</p>
             </div>
             <div class="p-4 bg-green-50/50 rounded-lg border border-green-100">
                 <span class="text-xs font-medium text-green-600 uppercase">Créditos de Clientes</span>
-                <p class="text-2xl font-bold text-green-700 mt-1">R$ {{ total_credito_clientes|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-green-700 mt-1">R$ {{ total_credito_clientes|default:0|floatformat:2 }}</p>
             </div>
         </div>
     </div>
 
-    <!-- ================= BLOCO 2: FATURAMENTO POR PERÍODO ================= -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">2. Desempenho por Ciclo Temporal</h3>
             <div class="flex gap-2">
                 <a href="{% url 'exportar_pdf_modular' 'temporal' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'resumo' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                <a href="{% url 'exportar_excel_modular' 'temporal' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
             </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Hoje</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_hoje_valor|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_hoje_valor|default:0|floatformat:2 }}</p>
             </div>
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Esta Semana</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_semana_valor|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_semana_valor|default:0|floatformat:2 }}</p>
             </div>
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Este Mês</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_mes_valor|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_mes_valor|default:0|floatformat:2 }}</p>
             </div>
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Este Ano</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_ano_valor|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_ano_valor|default:0|floatformat:2 }}</p>
             </div>
         </div>
     </div>
 
-    <!-- ================= BLOCO 3: LISTAGEM DE CLIENTES (DEVENDO VS CRÉDITO) ================= -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <!-- Clientes Devendo (Fiado) -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-red-100">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-base font-bold text-red-700 uppercase tracking-wider">3. Clientes Devendo</h3>
@@ -105,7 +100,7 @@
                         {% for cliente in clientes_devendo %}
                         <tr class="hover:bg-gray-50">
                             <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-red-600">R$ {{ cliente.saldo_geral|floatformat:2 }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-red-600">R$ {{ cliente.saldo_geral|default:0|floatformat:2 }}</td>
                             <td class="py-2.5 px-3 text-center">
                                 <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
                             </td>
@@ -120,7 +115,6 @@
             </div>
         </div>
 
-        <!-- Clientes com Crédito -->
         <div class="bg-white p-6 rounded-xl shadow-sm border border-green-100">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-base font-bold text-green-700 uppercase tracking-wider">4. Clientes com Crédito</h3>
@@ -142,7 +136,7 @@
                         {% for cliente in clientes_credito %}
                         <tr class="hover:bg-gray-50">
                             <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-green-600">R$ {{ cliente.saldo_geral|stringformat:"s"|slice:"1:"|floatformat:2 }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-green-600">R$ {{ cliente.saldo_geral|default:0|floatformat:2 }}</td>
                             <td class="py-2.5 px-3 text-center">
                                 <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
                             </td>
@@ -159,7 +153,6 @@
 
     </div>
 
-    <!-- ================= BLOCO 4: ESTOQUE COMPLETO ORDENADO ================= -->
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">5. Inventário de Estoque</h3>
@@ -181,7 +174,7 @@
                     {% for prod in estoque_ordenado %}
                     <tr class="hover:bg-gray-50">
                         <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
-                        <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda }}</td>
+                        <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda|default:0|floatformat:2 }}</td>
                         <td class="py-3 px-4 text-center">
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% elif prod.quantidade_estoque <= 5 %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ prod.quantidade_estoque }} un.
