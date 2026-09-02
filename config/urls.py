@@ -8,13 +8,15 @@ from interfaces.views import (
     extrato_cliente_view, venda_editar_view, relatorio_view, exportar_excel_modular_view,
     exportar_pdf_modular_view
 )
+
 urlpatterns = [
     path('', lambda request: redirect('login', permanent=False)),
     path('admin/', admin.site.urls),
     path('login/', login_view, name='login'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+
     path('dashboard/', dashboard_view, name='dashboard'),
     path('alterar-senha/', alterar_senha_view, name='alterar_senha'),
-    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
 
     path('dashboard/produtos/', produtos_view, name='produtos'),
     path('produtos/editar/<int:pk>/', produto_editar_view, name='editar_produto'),

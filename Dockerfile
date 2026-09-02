@@ -20,3 +20,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código do projeto para dentro do container
 COPY . /app/
+
+# SEGURANÇA: Cria um usuário não-root (não-privilegiado) e ajusta as permissões da pasta
+RUN useradd -u 1000 appuser && \
+    chown -R appuser:appuser /app
+
+# Alterna para o usuário não-root para executar os comandos e a aplicação
+USER appuser

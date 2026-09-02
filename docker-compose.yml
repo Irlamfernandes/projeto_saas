@@ -21,8 +21,8 @@ services:
       - .:/app
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgres://postgres:postgrespassword@db:5432/db_saas
+    env_file:
+      - .env
     depends_on:
       - db
 
