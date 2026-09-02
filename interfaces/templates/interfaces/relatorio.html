@@ -1,0 +1,219 @@
+{% extends 'interfaces/base.html' %}
+
+{% block title %}Relatórios e Indicadores{% endblock %}
+{% block header_title %}Painel Completo de Relatórios{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    
+    <!-- ================= BLOCO 1: RESUMO EXECUTIVO ================= -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">1. Visão Geral Financeira</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span class="text-xs font-medium text-gray-500 uppercase">Faturamento Total</span>
+                <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ total_geral_vendas|floatformat:2 }}</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <span class="text-xs font-medium text-gray-500 uppercase">Ticket Médio</span>
+                <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ ticket_medio|floatformat:2 }}</p>
+            </div>
+            <div class="p-4 bg-red-50/50 rounded-lg border border-red-100">
+                <span class="text-xs font-medium text-red-500 uppercase">Total a Receber (Fiado)</span>
+                <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ total_fiado_pendente|floatformat:2 }}</p>
+            </div>
+            <div class="p-4 bg-green-50/50 rounded-lg border border-green-100">
+                <span class="text-xs font-medium text-green-600 uppercase">Créditos de Clientes</span>
+                <p class="text-2xl font-bold text-green-700 mt-1">R$ {{ total_credito_clientes|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= BLOCO 2: FATURAMENTO POR PERÍODO ================= -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">2. Desempenho por Ciclo Temporal</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
+                <span class="text-xs font-medium text-gray-400 uppercase">Hoje</span>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_hoje_valor|floatformat:2 }}</p>
+            </div>
+            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
+                <span class="text-xs font-medium text-gray-400 uppercase">Esta Semana</span>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_semana_valor|floatformat:2 }}</p>
+            </div>
+            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
+                <span class="text-xs font-medium text-gray-400 uppercase">Este Mês</span>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_mes_valor|floatformat:2 }}</p>
+            </div>
+            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
+                <span class="text-xs font-medium text-gray-400 uppercase">Este Ano</span>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_ano_valor|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= BLOCO 3: LISTAGEM DE CLIENTES (DEVENDO VS CRÉDITO) ================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Clientes Devendo (Fiado) -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-red-100">
+            <h3 class="text-base font-bold text-red-700 mb-4 uppercase tracking-wider">3. Clientes Devendo (Maior Dívida)</h3>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
+                            <th class="py-2 px-3">Cliente</th>
+                            <th class="py-2 px-3 text-right">Valor Devido</th>
+                            <th class="py-2 px-3 text-center">Caderneta</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        {% for cliente in clientes_devendo %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-red-600">R$ {{ cliente.saldo_geral|floatformat:2 }}</td>
+                            <td class="py-2.5 px-3 text-center">
+                                <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhum cliente com dívida pendente 🎉</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Clientes com Crédito -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-green-100">
+            <h3 class="text-base font-bold text-green-700 mb-4 uppercase tracking-wider">4. Clientes com Crédito em Caixa</h3>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
+                            <th class="py-2 px-3">Cliente</th>
+                            <th class="py-2 px-3 text-right">Crédito Disponível</th>
+                            <th class="py-2 px-3 text-center">Caderneta</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        {% for cliente in clientes_credito %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-green-600">R$ {{ cliente.saldo_geral|stringformat:"s"|slice:"1:"|floatformat:2 }}</td>
+                            <td class="py-2.5 px-3 text-center">
+                                <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhum cliente com crédito antecipado.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= BLOCO 4: ESTOQUE COMPLETO ORDENADO ================= -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">5. Inventário de Estoque (Do menor para o maior)</h3>
+        <div class="overflow-x-auto max-h-96 overflow-y-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
+                        <th class="py-3 px-4">Produto</th>
+                        <th class="py-3 px-4">Preço de Venda</th>
+                        <th class="py-3 px-4 text-center">Quantidade em Estoque</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-sm">
+                    {% for prod in estoque_ordenado %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
+                        <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% elif prod.quantidade_estoque <= 5 %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ prod.quantidade_estoque }} un.
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center py-6 text-gray-400">Nenhum produto cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= BLOCO 5: HISTÓRICO DE VENDAS (HOJE, MÊS E ÚLTIMAS) ================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Compras do Dia -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">6. Vendas Realizadas Hoje</h3>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
+                            <th class="py-2 px-3">Cliente</th>
+                            <th class="py-2 px-3">Horário</th>
+                            <th class="py-2 px-3 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        {% for venda in compras_do_dia %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ venda.cliente.nome }}</td>
+                            <td class="py-2.5 px-3 text-gray-500 text-xs">{{ venda.data_venda|date:"H:i" }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-indigo-600">R$ {{ venda.valor_total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhuma venda registrada hoje.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Últimas Vendas Gerais -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 class="text-base font-bold text-gray-800 mb-4 uppercase tracking-wider">7. Últimas 10 Vendas Gerais</h3>
+            <div class="overflow-x-auto max-h-80 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
+                            <th class="py-2 px-3">Cliente</th>
+                            <th class="py-2 px-3">Data</th>
+                            <th class="py-2 px-3 text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 text-sm">
+                        {% for venda in ultimas_compras %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ venda.cliente.nome }}</td>
+                            <td class="py-2.5 px-3 text-gray-500 text-xs">{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-indigo-600">R$ {{ venda.valor_total }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhuma venda cadastrada.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
