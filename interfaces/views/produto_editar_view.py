@@ -6,7 +6,6 @@ from infrastructure.models.produto import Produto
 def produto_editar_view(request, pk):
     loja_usuario = request.user.loja
     
-    # Garante que o produto pertence estritamente à loja do usuário logado
     produto = get_object_or_404(Produto, pk=pk, loja=loja_usuario)
 
     if request.method == 'POST':

@@ -29,7 +29,7 @@
                     <a href="{% url 'produtos' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'produtos' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg transition font-medium">
                         📦 Produtos
                     </a>
-                    <a href="#" class="flex items-center px-4 py-2.5 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition font-medium">
+                    <a href="{% url 'clientes' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'clientes' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg transition font-medium">
                         👥 Clientes
                     </a>
                     <a href="#" class="flex items-center px-4 py-2.5 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition font-medium">

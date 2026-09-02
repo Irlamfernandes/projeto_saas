@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.contrib.auth.views import LogoutView
 from interfaces.views import (
     login_view, dashboard_view, alterar_senha_view, produtos_view, 
-    produto_editar_view
+    produto_editar_view, clientes_view, cliente_editar_view
 )
 urlpatterns = [
     path('', lambda request: redirect('login', permanent=False)),
@@ -16,4 +16,7 @@ urlpatterns = [
 
     path('dashboard/produtos/', produtos_view, name='produtos'),
     path('produtos/editar/<int:pk>/', produto_editar_view, name='editar_produto'),
+
+    path('dashboard/clientes/', clientes_view, name='clientes'),
+    path('clientes/editar/<int:pk>/', cliente_editar_view, name='editar_cliente'),
 ]

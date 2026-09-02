@@ -1,5 +1,4 @@
 from django.db import models
-
 from infrastructure.models.loja_model import LojaModel
 
 class Produto(models.Model):

@@ -3,3 +3,5 @@ from .dashboard_view import dashboard_view
 from .alterar_senha_view import alterar_senha_view
 from .produtos_view import produtos_view
 from .produto_editar_view import produto_editar_view
+from .clientes_view import clientes_view
+from .cliente_editar_view import cliente_editar_view
