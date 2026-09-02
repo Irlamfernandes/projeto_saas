@@ -3,7 +3,7 @@ from django.urls import path
 from django.shortcuts import redirect
 from django.contrib.auth.views import LogoutView
 from interfaces.views import (
-    login_view, dashboard_view, alterar_senha_view, produtos_view, 
+    extrato_pdf_view, login_view, dashboard_view, alterar_senha_view, produtos_view, 
     produto_editar_view, clientes_view, cliente_editar_view, vendas_view, 
     extrato_cliente_view, venda_editar_view, relatorio_view
 )
@@ -23,6 +23,7 @@ urlpatterns = [
 
     path('dashboard/vendas/', vendas_view, name='vendas'),
     path('clientes/<int:cliente_id>/extrato/', extrato_cliente_view, name='extrato_cliente'),
+    path('clientes/<int:cliente_id>/pdf/', extrato_pdf_view, name='extrato_pdf'),
     path('vendas/<int:venda_id>/editar/', venda_editar_view, name='venda_editar'),
 
     path('relatorios/', relatorio_view, name='relatorios'),
