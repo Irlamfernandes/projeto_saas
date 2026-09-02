@@ -5,3 +5,6 @@ from .produtos_view import produtos_view
 from .produto_editar_view import produto_editar_view
 from .clientes_view import clientes_view
 from .cliente_editar_view import cliente_editar_view
+from .vendas_view import vendas_view
+from .extrato_cliente_view import extrato_cliente_view
+from .vendas_editar_view import venda_editar_view
