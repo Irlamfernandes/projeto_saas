@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # SEGURANÇA: Cria um usuário não-root (não-privilegiado) e ajusta as permissões da pasta
-RUN useradd -u 1000 appuser && \
+RUN useradd -u 1000 -m -d /home/appuser appuser && \
     chown -R appuser:appuser /app
 
 # Alterna para o usuário não-root para executar os comandos e a aplicação
