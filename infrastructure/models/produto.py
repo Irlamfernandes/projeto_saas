@@ -21,6 +21,12 @@ class Produto(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
+    margem_lucro = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))]
+    )
     
     quantidade_estoque = models.IntegerField(
         default=0,

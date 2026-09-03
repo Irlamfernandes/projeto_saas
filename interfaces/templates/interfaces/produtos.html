@@ -62,14 +62,18 @@
                 <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Detalhes, tamanho, sabor..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
-                    <label for="id_preco_custo" class="block text-gray-700 text-sm font-semibold mb-1">Preço de Custo (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <label for="id_preco_custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
+                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo" data-prefix="">
                 </div>
                 <div>
-                    <label for="id_preco_venda" class="block text-gray-700 text-sm font-semibold mb-1">Preço de Venda (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <label for="id_margem_lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
+                    <input type="number" step="0.01" id="id_margem_lucro" name="margem_lucro" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem" data-prefix="">
+                </div>
+                <div>
+                    <label for="id_preco_venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
+                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda" data-prefix="">
                 </div>
             </div>
 
@@ -167,10 +171,10 @@
                             </span>
                         </td>
                         <td class="py-3 px-4 text-gray-500">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
-                        <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ produto.preco_venda|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ produto.preco_venda|default:0|floatformat:2 }} <span class="text-xs font-normal text-gray-400">({{ produto.margem_lucro|default:0|floatformat:1 }}%)</span></td>
                         <td class="py-3 px-4 text-center">
                             <button type="button" 
-                                    onclick="abrirModalEdicao('{{ produto.id }}', '{{ produto.nome|escapejs }}', '{{ produto.categoria|default:''|escapejs }}', '{{ produto.descricao|default:''|escapejs|linebreaksbr|striptags }}', '{{ produto.preco_custo|default:0|stringformat:'.2f' }}', '{{ produto.preco_venda|default:0|stringformat:'.2f' }}', '{{ produto.quantidade_estoque }}')"
+                                    onclick="abrirModalEdicao('{{ produto.id }}', '{{ produto.nome|escapejs }}', '{{ produto.categoria|default:''|escapejs }}', '{{ produto.descricao|default:''|escapejs|linebreaksbr|striptags }}', '{{ produto.preco_custo|default:0|stringformat:'.2f' }}', '{{ produto.preco_venda|default:0|stringformat:'.2f' }}', '{{ produto.margem_lucro|default:0|stringformat:'.2f' }}', '{{ produto.quantidade_estoque }}')"
                                     class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer">
                                 Editar
                             </button>
@@ -215,14 +219,18 @@
                 <textarea id="edit-descricao" name="descricao" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
-                    <label for="edit-preco-custo" class="block text-gray-700 text-sm font-semibold mb-1">Preço de Custo (R$)</label>
-                    <input type="number" step="0.01" id="edit-preco-custo" name="preco_custo" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <label for="edit-preco-custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
+                    <input type="number" step="0.01" id="edit-preco-custo" name="preco_custo" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo" data-prefix="edit-">
                 </div>
                 <div>
-                    <label for="edit-preco-venda" class="block text-gray-700 text-sm font-semibold mb-1">Preço de Venda (R$)</label>
-                    <input type="number" step="0.01" id="edit-preco-venda" name="preco_venda" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <label for="edit-margem-lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
+                    <input type="number" step="0.01" id="edit-margem-lucro" name="margem_lucro" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem" data-prefix="edit-">
+                </div>
+                <div>
+                    <label for="edit-preco-venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
+                    <input type="number" step="0.01" id="edit-preco-venda" name="preco_venda" required class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda" data-prefix="edit-">
                 </div>
             </div>
 
@@ -244,7 +252,49 @@
 </div>
 
 <script>
-    function abrirModalEdicao(id, nome, categoria, descricao, precoCusto, precoVenda, estoque) {
+    function configurarCalculadoraPrecos(prefixo) {
+        const custoInput = document.getElementById(prefixo + 'preco_custo');
+        const margemInput = document.getElementById(prefixo + 'margem_lucro');
+        const vendaInput = document.getElementById(prefixo + 'preco_venda');
+
+        if (!custoInput || !margemInput || !vendaInput) return;
+
+        margemInput.addEventListener('input', function() {
+            const custo = parseFloat(custoInput.value) || 0;
+            const margem = parseFloat(margemInput.value) || 0;
+            if (custo > 0) {
+                const venda = custo + (custo * (margem / 100));
+                vendaInput.value = venda.toFixed(2);
+            }
+        });
+
+        vendaInput.addEventListener('input', function() {
+            const custo = parseFloat(custoInput.value) || 0;
+            const venda = parseFloat(vendaInput.value) || 0;
+            if (custo > 0 && venda >= custo) {
+                const margem = ((venda - custo) / custo) * 100;
+                margemInput.value = margem.toFixed(2);
+            } else if (venda < custo) {
+                margemInput.value = "0.00";
+            }
+        });
+
+        custoInput.addEventListener('input', function() {
+            const custo = parseFloat(custoInput.value) || 0;
+            const margem = parseFloat(margemInput.value) || 0;
+            if (custo > 0 && margem > 0) {
+                const venda = custo + (custo * (margem / 100));
+                vendaInput.value = venda.toFixed(2);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        configurarCalculadoraPrecos('id_');
+        configurarCalculadoraPrecos('edit-');
+    });
+
+    function abrirModalEdicao(id, nome, categoria, descricao, precoCusto, precoVenda, margemLucro, estoque) {
         const modal = document.getElementById('modal-edicao');
         const form = document.getElementById('form-edicao');
         
@@ -255,6 +305,7 @@
         document.getElementById('edit-descricao').value = descricao;
         document.getElementById('edit-preco-custo').value = precoCusto;
         document.getElementById('edit-preco-venda').value = precoVenda;
+        document.getElementById('edit-margem-lucro').value = margemLucro;
         document.getElementById('edit-estoque').value = estoque;
 
         modal.classList.remove('hidden');

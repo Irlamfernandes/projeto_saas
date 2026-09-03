@@ -68,6 +68,9 @@ def produtos_view(request):
             preco_venda_raw = request.POST.get('preco_venda', '0').strip().replace(',', '.')
             preco_venda = Decimal(preco_venda_raw) if preco_venda_raw else Decimal('0.00')
 
+            margem_lucro_raw = request.POST.get('margem_lucro', '0').strip().replace(',', '.')
+            margem_lucro = Decimal(margem_lucro_raw) if margem_lucro_raw else Decimal('0.00')
+
             qtd_estoque_raw = request.POST.get('quantidade_estoque', '0').strip()
             quantidade_estoque = int(qtd_estoque_raw) if qtd_estoque_raw else 0
         except (ValueError, InvalidOperation):
@@ -85,6 +88,7 @@ def produtos_view(request):
             descricao=descricao if descricao else None,
             preco_custo=preco_custo,
             preco_venda=preco_venda,
+            margem_lucro=margem_lucro,
             quantidade_estoque=quantidade_estoque
         )
 
