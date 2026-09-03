@@ -6,12 +6,12 @@
 
 {% block content %}
 
-<section class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+<section class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200 mb-6">
     <h3 class="text-lg font-bold text-gray-800 mb-2">Painel de Controle Financeiro</h3>
-    <p class="text-gray-600">Acompanhe em tempo real o volume de vendas da sua microempresa segmentado por ciclos temporais para tomada de decisão ágil.</p>
+    <p class="text-sm text-gray-600">Acompanhe em tempo real o volume de vendas da sua microempresa segmentado por ciclos temporais para tomada de decisão ágil.</p>
 </section>
 
-<section aria-label="Resumo de Cadastros" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+<section aria-label="Resumo de Cadastros" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-sm font-medium text-gray-500">Produtos Cadastrados</h3>
         <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_produtos|default:"0" }}</p>
@@ -22,62 +22,62 @@
     </div>
 </section>
 
-<section aria-label="Desempenho de Vendas">
+<section aria-label="Desempenho de Vendas" class="mb-8">
     <h3 class="text-lg font-bold text-gray-800 mb-4">Desempenho de Vendas</h3>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Hoje</h4>
-            <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ vendas_hoje|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-indigo-600 mt-1 truncate">R$ {{ vendas_hoje|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Esta Semana</h4>
-            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_semana|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_semana|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Quinzenal</h4>
-            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_quinzena|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_quinzena|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Mês</h4>
-            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_mes|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_mes|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Bimestral</h4>
-            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_bimestre|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_bimestre|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Trimestral</h4>
-            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_trimestre|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_trimestre|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Ano</h4>
-            <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ vendas_ano|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_ano|default:0|floatformat:2 }}</p>
         </div>
 
-        <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 bg-indigo-50/50">
+        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200 bg-indigo-50/50">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Faturamento Total</h4>
-            <p class="text-2xl font-bold text-indigo-700 mt-1">R$ {{ total_geral|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-indigo-700 mt-1 truncate">R$ {{ total_geral|default:0|floatformat:2 }}</p>
         </div>
 
     </div>
 </section>
 
-<section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-8">
-    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+<section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
             <h3 class="text-lg font-bold text-gray-800">Alerta de Estoque Baixo</h3>
             <p class="text-xs text-gray-500">Monitore produtos com poucas unidades disponíveis para reposição ágil.</p>
         </div>
         
-        <form method="GET" class="flex items-center gap-2">
-            <label for="limite_estoque" class="text-xs font-semibold text-gray-600">Mostrar unidades:</label>
+        <form method="GET" class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+            <label for="limite_estoque" class="text-xs font-semibold text-gray-600 whitespace-nowrap">Mostrar unidades:</label>
             <select name="limite_estoque" id="limite_estoque" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 <option value="1" {% if limite_estoque == 1 %}selected{% endif %}>1 ou menos</option>
                 <option value="2" {% if limite_estoque == 2 %}selected{% endif %}>2 ou menos</option>
@@ -103,8 +103,8 @@
                 <tr class="hover:bg-gray-50">
                     <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
                     <td class="py-3 px-4 text-gray-500 text-xs">{{ prod.codigo_interno|default:"N/D" }}</td>
-                    <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda|default:0|floatformat:2 }}</td>
-                    <td class="py-3 px-4 text-center">
+                    <td class="py-3 px-4 text-gray-600 whitespace-nowrap">R$ {{ prod.preco_venda|default:0|floatformat:2 }}</td>
+                    <td class="py-3 px-4 text-center whitespace-nowrap">
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                             {{ prod.quantidade_estoque }} un.
                         </span>

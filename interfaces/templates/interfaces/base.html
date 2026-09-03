@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SaaS de Gestão{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    {% load static %}
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body class="bg-gray-100 font-sans antialiased">
 
@@ -62,7 +66,7 @@
                 </div>
             </header>
 
-            <main class="p-8">
+            <main class="p-8 pb-20 md:pb-8">
                 {% if messages %}
                     <div class="mb-6 space-y-2" role="region" aria-label="Notificações do Sistema">
                         {% for message in messages %}
@@ -91,5 +95,54 @@
 
     </div>
 
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 text-white border-t border-gray-800 flex justify-around items-center py-2 z-50 shadow-lg">
+        <a href="{% url 'dashboard' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'dashboard' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
+            <span class="text-lg">📊</span>
+            <span>Visão</span>
+        </a>
+        <a href="{% url 'produtos' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'produtos' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
+            <span class="text-lg">📦</span>
+            <span>Produtos</span>
+        </a>
+        <a href="{% url 'clientes' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'clientes' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
+            <span class="text-lg">👥</span>
+            <span>Clientes</span>
+        </a>
+        <a href="{% url 'vendas' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'vendas' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
+            <span class="text-lg">🛒</span>
+            <span>Vendas</span>
+        </a>
+        <a href="{% url 'relatorios' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'relatorios' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
+            <span class="text-lg">📈</span>
+            <span>Relatórios</span>
+        </a>
+        
+        <form action="{% url 'logout' %}" method="POST" class="flex flex-col items-center">
+            {% csrf_token %}
+            <button type="submit" class="flex flex-col items-center py-1 px-2 text-red-400 hover:text-red-305 text-xs cursor-pointer">
+                <span class="text-lg">🚪</span>
+                <span>Sair</span>
+            </button>
+        </form>
+    </nav>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{% static 'sw.js' %}")
+                    .then(reg => console.log('Service Worker registrado com sucesso!', reg))
+                    .catch(err => console.log('Erro ao registrar Service Worker:', err));
+            });
+        }
+
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                setTimeout(() => {
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            });
+        });
+    </script>
 </body>
 </html>

@@ -14,11 +14,11 @@
             {% csrf_token %}
             <div class="mb-4">
                 <label for="id_codigo_interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU (Opcional)</label>
-                <input type="text" id="id_codigo_interno" name="codigo_interno" placeholder="Ex: PRD001" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="text" id="id_codigo_interno" name="codigo_interno" placeholder="Ex: PRD001" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
             <div class="mb-4">
                 <label for="id_nome_produto" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
-                <input type="text" id="id_nome_produto" name="nome" required placeholder="Ex: Bolo de Chocolate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="text" id="id_nome_produto" name="nome" required placeholder="Ex: Bolo de Chocolate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
 
             <div class="mb-4">
@@ -33,7 +33,7 @@
                 </select>
 
                 <label for="input-nova-categoria" class="sr-only">Nome da nova categoria</label>
-                <input type="text" id="input-nova-categoria" name="categoria" placeholder="Digite o nome da nova categoria..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm hidden">
+                <input type="text" id="input-nova-categoria" name="categoria" placeholder="Digite o nome da nova categoria..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm hidden bg-white">
 
                 <script>
                     function tratarMudancaCategoria(select) {
@@ -63,27 +63,27 @@
 
             <div class="mb-4">
                 <label for="id_descricao_produto" class="block text-gray-700 text-sm font-semibold mb-1">Descrição (Opcional)</label>
-                <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Detalhes, tamanho, sabor..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Detalhes, tamanho, sabor..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"></textarea>
             </div>
 
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
                     <label for="id_preco_custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo" data-prefix="">
+                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo bg-white" data-prefix="">
                 </div>
                 <div>
                     <label for="id_margem_lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
-                    <input type="number" step="0.01" id="id_margem_lucro" name="margem_lucro" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem" data-prefix="">
+                    <input type="number" step="0.01" id="id_margem_lucro" name="margem_lucro" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem bg-white" data-prefix="">
                 </div>
                 <div>
                     <label for="id_preco_venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda" data-prefix="">
+                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda bg-white" data-prefix="">
                 </div>
             </div>
 
             <div class="mb-6">
                 <label for="id_quantidade_estoque" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade em Estoque</label>
-                <input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
 
             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
@@ -125,16 +125,16 @@
                 </div>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between pt-1">
+            <div class="flex flex-wrap items-center justify-between pt-1 gap-3">
                 <label class="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
                     <input type="checkbox" name="baixo_estoque" value="1" {% if filtro_baixo_estoque %}checked{% endif %} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
                     <span>Apenas estoque baixo (≤ 5 un.)</span>
                 </label>
 
-                <div class="flex gap-2">
+                <div class="flex gap-2 w-full sm:w-auto justify-end">
                     {% if filtro_busca or filtro_categoria or filtro_baixo_estoque or filtro_ordem != '-data_criacao' %}
-                    <a href="{% url 'produtos' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition font-semibold text-center flex items-center">
-                        Limpar Filtros
+                    <a href="{% url 'produtos' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition font-semibold text-center flex items-center justify-center">
+                        Limpar
                     </a>
                     {% endif %}
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold cursor-pointer">
@@ -149,10 +149,10 @@
                 <thead>
                     <tr class="border-b border-gray-200 text-gray-500 text-xs uppercase font-semibold">
                         <th class="py-3 px-4">Produto</th>
-                        <th class="py-3 px-4">Estoque</th>
-                        <th class="py-3 px-4">Custo</th>
-                        <th class="py-3 px-4">Venda</th>
-                        <th class="py-3 px-4 text-center">Ações</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Estoque</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Custo</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Venda</th>
+                        <th class="py-3 px-4 text-center whitespace-nowrap">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
@@ -172,14 +172,14 @@
                             <span class="block text-xs text-gray-400 font-normal mt-0.5">{{ produto.descricao }}</span>
                             {% endif %}
                         </td>
-                        <td class="py-3 px-4">
+                        <td class="py-3 px-4 whitespace-nowrap">
                             <span class="px-2.5 py-1 rounded-full text-xs font-semibold {% if produto.quantidade_estoque > 5 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                 {{ produto.quantidade_estoque }} un.
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-gray-500">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
-                        <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ produto.preco_venda|default:0|floatformat:2 }} <span class="text-xs font-normal text-gray-400">({{ produto.margem_lucro|default:0|floatformat:1 }}%)</span></td>
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap">R$ {{ produto.preco_venda|default:0|floatformat:2 }} <span class="text-xs font-normal text-gray-400">({{ produto.margem_lucro|default:0|floatformat:1 }}%)</span></td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
                             <button type="button" 
                                     onclick="abrirModalEdicao(
                                         '{{ produto.id }}', 
@@ -211,8 +211,8 @@
 
 </div>
 
-<div id="modal-edicao" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-titulo-produto">
-    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-lg w-full">
+<div id="modal-edicao" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-titulo-produto">
+    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 id="modal-titulo-produto" class="text-lg font-bold text-gray-800">Editar Produto</h3>
             <button type="button" onclick="fecharModalEdicao()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer" aria-label="Fechar">&times;</button>
@@ -223,42 +223,42 @@
 
             <div class="mb-4">
                 <label for="edit-codigo-interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU</label>
-                <input type="text" id="edit-codigo-interno" name="codigo_interno" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="text" id="edit-codigo-interno" name="codigo_interno" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
             
             <div class="mb-4">
                 <label for="edit-nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
-                <input type="text" id="edit-nome" name="nome" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="text" id="edit-nome" name="nome" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
 
             <div class="mb-4">
                 <label for="edit-categoria" class="block text-gray-700 text-sm font-semibold mb-1">Categoria</label>
-                <input type="text" id="edit-categoria" name="categoria" placeholder="Ex: Roupas, Doces..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="text" id="edit-categoria" name="categoria" placeholder="Ex: Roupas, Doces..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
 
             <div class="mb-4">
                 <label for="edit-descricao" class="block text-gray-700 text-sm font-semibold mb-1">Descrição (Opcional)</label>
-                <textarea id="edit-descricao" name="descricao" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                <textarea id="edit-descricao" name="descricao" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"></textarea>
             </div>
 
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
                     <label for="edit-preco-custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
-                    <input type="number" step="0.01" id="edit-preco-custo" name="preco_custo" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo" data-prefix="edit-">
+                    <input type="number" step="0.01" id="edit-preco-custo" name="preco_custo" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo bg-white" data-prefix="edit-">
                 </div>
                 <div>
                     <label for="edit-margem-lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
-                    <input type="number" step="0.01" id="edit-margem-lucro" name="margem_lucro" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem" data-prefix="edit-">
+                    <input type="number" step="0.01" id="edit-margem-lucro" name="margem_lucro" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem bg-white" data-prefix="edit-">
                 </div>
                 <div>
                     <label for="edit-preco-venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
-                    <input type="number" step="0.01" id="edit-preco-venda" name="preco_venda" required class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda" data-prefix="edit-">
+                    <input type="number" step="0.01" id="edit-preco-venda" name="preco_venda" required class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda bg-white" data-prefix="edit-">
                 </div>
             </div>
 
             <div class="mb-6">
                 <label for="edit-estoque" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade em Estoque</label>
-                <input type="number" id="edit-estoque" name="quantidade_estoque" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <input type="number" id="edit-estoque" name="quantidade_estoque" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
             </div>
 
             <div class="flex items-center gap-3">

@@ -45,17 +45,17 @@
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="id_quantidade_venda" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
-                    <input type="number" id="id_quantidade_venda" name="quantidade" value="1" min="1" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <input type="number" id="id_quantidade_venda" name="quantidade" value="1" min="1" required class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                 </div>
                 <div>
                     <label for="id_valor_pago_venda" class="block text-gray-700 text-sm font-semibold mb-1">Valor Pago Hoje (R$)</label>
-                    <input type="number" step="0.01" id="id_valor_pago_venda" name="valor_pago" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <input type="number" step="0.01" id="id_valor_pago_venda" name="valor_pago" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                 </div>
             </div>
 
             <div class="mb-6">
                 <label for="id_observacoes_venda" class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
-                <textarea id="id_observacoes_venda" name="observacoes" rows="2" placeholder="Anotações..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+                <textarea id="id_observacoes_venda" name="observacoes" rows="2" placeholder="Anotações..." class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
             </div>
 
             <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
@@ -71,17 +71,17 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="border-b border-gray-200 text-gray-500 text-xs uppercase font-semibold">
-                        <th class="py-3 px-4">Cliente</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Cliente</th>
                         <th class="py-3 px-4">Itens</th>
-                        <th class="py-3 px-4">Total</th>
-                        <th class="py-3 px-4 text-center">Ações / Caderneta</th>
-                        <th class="py-3 px-4 text-right">Data</th>
+                        <th class="py-3 px-4 whitespace-nowrap">Total</th>
+                        <th class="py-3 px-4 text-center whitespace-nowrap">Ações / Caderneta</th>
+                        <th class="py-3 px-4 text-right whitespace-nowrap">Data</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
                     {% for venda in vendas %}
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="py-3 px-4 font-medium text-gray-900">
+                        <td class="py-3 px-4 font-medium text-gray-900 whitespace-nowrap">
                             {{ venda.cliente.nome|default:"Cliente Balcão" }}
                         </td>
                         <td class="py-3 px-4 text-xs text-gray-600">
@@ -89,9 +89,9 @@
                                 <span class="block">{{ item.quantidade }}x {{ item.produto.nome }} (R$ {{ item.preco_unitario|default:0|floatformat:2 }})</span>
                             {% endfor %}
                         </td>
-                        <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ venda.valor_total|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap">R$ {{ venda.valor_total|default:0|floatformat:2 }}</td>
                         
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-3 px-4 text-center whitespace-nowrap">
                             <div class="flex items-center justify-center gap-2">
                                 {% if venda.cliente %}
                                     <a href="{% url 'extrato_cliente' venda.cliente.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
@@ -107,7 +107,7 @@
                             </div>
                         </td>
 
-                        <td class="py-3 px-4 text-right text-xs text-gray-400">{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
+                        <td class="py-3 px-4 text-right text-xs text-gray-400 whitespace-nowrap">{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
                     </tr>
                     {% empty %}
                     <tr>

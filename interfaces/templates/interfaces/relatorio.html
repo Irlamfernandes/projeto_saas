@@ -10,11 +10,11 @@
         <form method="GET" action="" class="flex flex-wrap items-end gap-4">
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Início</label>
-                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
             </div>
             <div>
                 <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Fim</label>
-                <input type="date" name="data_fim" value="{{ data_fim }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <input type="date" name="data_fim" value="{{ data_fim }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition shadow-sm cursor-pointer">
@@ -32,7 +32,7 @@
             <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Exportação Global</h3>
             <p class="text-xs text-gray-500">Baixe todos os dados consolidados da sua loja de uma só vez (considerando o filtro de datas).</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
             <a href="{% url 'exportar_pdf_modular' 'geral' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
                 📄 Baixar Tudo (PDF)
             </a>
@@ -46,8 +46,8 @@
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">1. Visão Geral Financeira</h3>
             <div class="flex gap-2">
-                <a href="{% url 'exportar_pdf_modular' 'resumo' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'resumo' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                <a href="{% url 'exportar_pdf_modular' 'resumo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                <a href="{% url 'exportar_excel_modular' 'resumo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
             </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -74,8 +74,8 @@
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">2. Desempenho por Ciclo Temporal</h3>
             <div class="flex gap-2">
-                <a href="{% url 'exportar_pdf_modular' 'temporal' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'temporal' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                <a href="{% url 'exportar_pdf_modular' 'temporal' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                <a href="{% url 'exportar_excel_modular' 'temporal' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
             </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -104,14 +104,14 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-base font-bold text-red-700 uppercase tracking-wider">3. Clientes Devendo</h3>
                 <div class="flex gap-2">
-                    <a href="{% url 'exportar_pdf_modular' 'devendo' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                    <a href="{% url 'exportar_excel_modular' 'devendo' %}" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                    <a href="{% url 'exportar_pdf_modular' 'devendo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                    <a href="{% url 'exportar_excel_modular' 'devendo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
                 </div>
             </div>
             <div class="overflow-x-auto max-h-80 overflow-y-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
+                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
                             <th class="py-2 px-3">Cliente</th>
                             <th class="py-2 px-3 text-right">Valor Devido</th>
                             <th class="py-2 px-3 text-center">Caderneta</th>
@@ -140,14 +140,14 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-base font-bold text-green-700 uppercase tracking-wider">4. Clientes com Crédito</h3>
                 <div class="flex gap-2">
-                    <a href="{% url 'exportar_pdf_modular' 'credito' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                    <a href="{% url 'exportar_excel_modular' 'credito' %}" class="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                    <a href="{% url 'exportar_pdf_modular' 'credito' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                    <a href="{% url 'exportar_excel_modular' 'credito' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
                 </div>
             </div>
             <div class="overflow-x-auto max-h-80 overflow-y-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold">
+                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
                             <th class="py-2 px-3">Cliente</th>
                             <th class="py-2 px-3 text-right">Crédito Disponível</th>
                             <th class="py-2 px-3 text-center">Caderneta</th>
@@ -178,8 +178,8 @@
         <div class="flex justify-between items-center mb-4">
             <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">5. Inventário de Estoque</h3>
             <div class="flex gap-2">
-                <a href="{% url 'exportar_pdf_modular' 'estoque' %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'estoque' %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
+                <a href="{% url 'exportar_pdf_modular' 'estoque' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
+                <a href="{% url 'exportar_excel_modular' 'estoque' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
             </div>
         </div>
         <div class="overflow-x-auto max-h-96 overflow-y-auto">

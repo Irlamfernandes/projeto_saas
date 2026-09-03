@@ -41,17 +41,19 @@
     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Seus Clientes Cadastrados</h3>
 
-        <form method="GET" class="flex gap-2 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+        <form method="GET" class="flex flex-col sm:flex-row gap-2 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
             <label for="id_busca" class="sr-only">Buscar clientes</label>
             <input type="text" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Buscar por nome ou telefone..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold whitespace-nowrap cursor-pointer">
-                Buscar
-            </button>
-            {% if filtro_busca %}
-            <a href="{% url 'clientes' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition font-semibold flex items-center">
-                Limpar
-            </a>
-            {% endif %}
+            <div class="flex gap-2">
+                <button type="submit" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold whitespace-nowrap cursor-pointer text-center">
+                    Buscar
+                </button>
+                {% if filtro_busca %}
+                <a href="{% url 'clientes' %}" class="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition font-semibold flex items-center justify-center">
+                    Limpar
+                </a>
+                {% endif %}
+            </div>
         </form>
 
         <div class="overflow-x-auto">
@@ -73,19 +75,19 @@
                             <span class="block text-xs text-gray-400 font-normal mt-0.5">{{ cliente.email }}</span>
                             {% endif %}
                         </td>
-                        <td class="py-3 px-4 text-gray-600">
+                        <td class="py-3 px-4 text-gray-600 whitespace-nowrap">
                             {{ cliente.telefone|default:"Não informado" }}
                         </td>
-                        <td class="py-3 px-4 text-gray-500 text-xs">
+                        <td class="py-3 px-4 text-gray-500 text-xs max-w-xs truncate">
                             {{ cliente.endereco|default:"-" }}
                         </td>
-                        <td class="py-3 px-4 text-center">
-                            <a href="{% url 'extrato_cliente' cliente.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
+                        <td class="py-3 px-4 text-center whitespace-nowrap space-y-1 sm:space-y-0 sm:space-x-1">
+                            <a href="{% url 'extrato_cliente' cliente.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-md text-xs font-semibold transition inline-block">
                                 Caderneta
                             </a>
                             <button type="button" 
-                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs|linebreaksbr|striptags }}')"
-                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer">
+                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs }}')"
+                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer inline-block">
                                 Editar
                             </button>
                         </td>
