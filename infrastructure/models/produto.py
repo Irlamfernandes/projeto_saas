@@ -5,6 +5,7 @@ from infrastructure.models.loja_model import LojaModel
 
 class Produto(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='produtos')
+    codigo_interno = models.CharField(max_length=50, blank=True, null=True, db_index=True)
     
     nome = models.CharField(max_length=150, db_index=True)
     categoria = models.CharField(max_length=100, blank=True, null=True, db_index=True)
@@ -36,7 +37,8 @@ class Produto(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.nome} - R$ {self.preco_venda}"
+        codigo_str = f"[{self.codigo_interno}] " if self.codigo_interno else ""
+        return f"{codigo_str}{self.nome} - R$ {self.preco_venda}"
 
     class Meta:
         db_table = 'produtos'

@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
 from infrastructure.models.venda import Venda, ItemVenda
 from infrastructure.models.produto import Produto
 from infrastructure.models.cliente import Cliente
@@ -28,7 +29,7 @@ def venda_editar_view(request, venda_id):
 
     if request.method == 'POST':
         novo_cliente_id = request.POST.get('cliente')
-        novo_produto_id = request.POST.get('produto')
+        novo_produto_input = request.POST.get('produto', '').strip()
         observacoes = request.POST.get('observacoes', '').strip()
 
         try:
@@ -47,13 +48,18 @@ def venda_editar_view(request, venda_id):
                     novo_cliente = get_object_or_404(Cliente, pk=novo_cliente_id, loja=loja_usuario)
             else:
                 novo_cliente = None
-
-            if request.user.is_superuser:
-                novo_produto = get_object_or_404(Produto, pk=novo_produto_id)
-            else:
-                novo_produto = get_object_or_404(Produto, pk=novo_produto_id, loja=loja_usuario)
         except Http404:
-            messages.error(request, "Cliente ou Produto selecionado não foi encontrado.")
+            messages.error(request, "Cliente selecionado não foi encontrado.")
+            return redirect('venda_editar', venda_id=venda.id)
+
+        base_produtos_query = Produto.objects.all() if request.user.is_superuser else Produto.objects.filter(loja=loja_usuario)
+        
+        novo_produto = base_produtos_query.filter(
+            Q(pk=novo_produto_input) | Q(codigo_interno__iexact=novo_produto_input) | Q(nome__icontains=novo_produto_input)
+        ).first()
+
+        if not novo_produto:
+            messages.error(request, f"Produto '{novo_produto_input}' não foi encontrado pelo Código Interno ou Nome.")
             return redirect('venda_editar', venda_id=venda.id)
 
         with transaction.atomic():
@@ -92,7 +98,7 @@ def venda_editar_view(request, venda_id):
                 
                 messages.success(request, "Venda atualizada com sucesso!")
             else:
-                messages.error(request, f"Estoque insuficiente para o produto '{novo_produto_bloqueado.nome if hasattr(novo_produto_bloqueado, 'nome') else 'selecionado'}'. Disponível: {novo_produto_bloqueado.quantidade_estoque}.")
+                messages.error(request, f"Estoque insuficiente para o produto '{novo_produto_bloqueado.nome}'. Disponível: {novo_produto_bloqueado.quantidade_estoque}.")
                 transaction.set_rollback(True)
                 return redirect('venda_editar', venda_id=venda.id)
 

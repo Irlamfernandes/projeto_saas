@@ -16,6 +16,7 @@ def produto_editar_view(request, pk):
         produto = get_object_or_404(Produto, pk=pk, loja=request.user.loja)
 
     if request.method == 'POST':
+        codigo_interno = request.POST.get('codigo_interno', '').strip()
         nome = request.POST.get('nome', '').strip()
         categoria = request.POST.get('categoria', '').strip()
         descricao = request.POST.get('descricao', '').strip()
@@ -24,8 +25,8 @@ def produto_editar_view(request, pk):
             messages.error(request, "O nome do produto é obrigatório.")
             return redirect('produtos')
 
-        if len(nome) > 150 or len(categoria) > 100:
-            messages.error(request, "O nome ou a categoria excedem o limite máximo de caracteres permitido.")
+        if len(codigo_interno) > 50 or len(nome) > 150 or len(categoria) > 100:
+            messages.error(request, "Algum dos campos excede o limite máximo de caracteres permitido.")
             return redirect('produtos')
 
         try:
@@ -44,6 +45,7 @@ def produto_editar_view(request, pk):
             messages.error(request, "Os valores numéricos informados (preços ou estoque) são inválidos.")
             return redirect('produtos')
 
+        produto.codigo_interno = codigo_interno if codigo_interno else None
         produto.nome = nome
         produto.categoria = categoria if categoria else None
         produto.descricao = descricao if descricao else None

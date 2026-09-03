@@ -22,17 +22,18 @@
             </select>
         </div>
 
-        <div class="mb-4">
-            <label for="id_produto_venda" class="block text-gray-700 text-sm font-semibold mb-1">Produto</label>
-            <select id="id_produto_venda" name="produto" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Selecione um produto...</option>
-                {% for prod in produtos %}
-                    <option value="{{ prod.id }}" {% if item_atual and item_atual.produto.id == prod.id %}selected{% endif %}>
-                        {{ prod.nome }} - R$ {{ prod.preco_venda|default:0|floatformat:2 }} (Estoque: {{ prod.quantidade_estoque }})
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
+            <div class="mb-4">
+                <label for="id_produto_venda" class="block text-gray-700 text-sm font-semibold mb-1">Produto (Nome ou Código Interno)</label>
+                <input type="text" id="id_produto_venda" name="produto" list="lista-produtos" required value="{% if item_atual.produto.codigo_interno %}{{ item_atual.produto.codigo_interno }}{% else %}{{ item_atual.produto.nome }}{% endif %}" placeholder="Digite o nome ou código..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                
+                <datalist id="lista-produtos">
+                    {% for prod in produtos %}
+                        <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">
+                            {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|default:0|floatformat:2 }} [Estoque: {{ prod.quantidade_estoque }}]
+                        </option>
+                    {% endfor %}
+                </datalist>
+            </div>
 
         <div class="mb-4">
             <label for="id_quantidade_venda" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>

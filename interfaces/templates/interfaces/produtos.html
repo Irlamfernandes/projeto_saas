@@ -13,6 +13,10 @@
         <form method="POST">
             {% csrf_token %}
             <div class="mb-4">
+                <label for="id_codigo_interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU (Opcional)</label>
+                <input type="text" id="id_codigo_interno" name="codigo_interno" placeholder="Ex: PRD001" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            </div>
+            <div class="mb-4">
                 <label for="id_nome_produto" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
                 <input type="text" id="id_nome_produto" name="nome" required placeholder="Ex: Bolo de Chocolate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
             </div>
@@ -155,6 +159,9 @@
                     {% for produto in produtos %}
                     <tr class="hover:bg-gray-50 transition">
                         <td class="py-3 px-4 font-medium text-gray-900">
+                            {% if produto.codigo_interno %}
+                            <span class="text-xs bg-gray-100 text-gray-600 font-mono px-1.5 py-0.5 rounded mr-1">#{{ produto.codigo_interno }}</span>
+                            {% endif %}
                             {{ produto.nome }}
                             {% if produto.categoria %}
                             <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-md mt-0.5">
@@ -174,7 +181,17 @@
                         <td class="py-3 px-4 font-bold text-indigo-600">R$ {{ produto.preco_venda|default:0|floatformat:2 }} <span class="text-xs font-normal text-gray-400">({{ produto.margem_lucro|default:0|floatformat:1 }}%)</span></td>
                         <td class="py-3 px-4 text-center">
                             <button type="button" 
-                                    onclick="abrirModalEdicao('{{ produto.id }}', '{{ produto.nome|escapejs }}', '{{ produto.categoria|default:''|escapejs }}', '{{ produto.descricao|default:''|escapejs|linebreaksbr|striptags }}', '{{ produto.preco_custo|default:0|stringformat:'.2f' }}', '{{ produto.preco_venda|default:0|stringformat:'.2f' }}', '{{ produto.margem_lucro|default:0|stringformat:'.2f' }}', '{{ produto.quantidade_estoque }}')"
+                                    onclick="abrirModalEdicao(
+                                        '{{ produto.id }}', 
+                                        '{{ produto.codigo_interno|default:''|escapejs }}', 
+                                        '{{ produto.nome|escapejs }}', 
+                                        '{{ produto.categoria|default:''|escapejs }}', 
+                                        '{{ produto.descricao|default:''|escapejs|linebreaksbr|striptags }}', 
+                                        '{{ produto.preco_custo|default:0|stringformat:'.2f' }}', 
+                                        '{{ produto.preco_venda|default:0|stringformat:'.2f' }}', 
+                                        '{{ produto.margem_lucro|default:0|stringformat:'.2f' }}', 
+                                        '{{ produto.quantidade_estoque }}'
+                                    )"
                                     class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer">
                                 Editar
                             </button>
@@ -203,6 +220,11 @@
         
         <form id="form-edicao" method="POST">
             {% csrf_token %}
+
+            <div class="mb-4">
+                <label for="edit-codigo-interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU</label>
+                <input type="text" id="edit-codigo-interno" name="codigo_interno" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            </div>
             
             <div class="mb-4">
                 <label for="edit-nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
@@ -294,12 +316,13 @@
         configurarCalculadoraPrecos('edit-');
     });
 
-    function abrirModalEdicao(id, nome, categoria, descricao, precoCusto, precoVenda, margemLucro, estoque) {
+    function abrirModalEdicao(id, codigoInterno, nome, categoria, descricao, precoCusto, precoVenda, margemLucro, estoque) {
         const modal = document.getElementById('modal-edicao');
         const form = document.getElementById('form-edicao');
         
         form.action = `/produtos/editar/${id}/`;
 
+        document.getElementById('edit-codigo-interno').value = codigoInterno;
         document.getElementById('edit-nome').value = nome;
         document.getElementById('edit-categoria').value = categoria;
         document.getElementById('edit-descricao').value = descricao;

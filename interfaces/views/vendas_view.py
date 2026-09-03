@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.db.models import Q
 from infrastructure.models.venda import Venda, ItemVenda, PagamentoCliente
 from infrastructure.models.produto import Produto
 from infrastructure.models.cliente import Cliente
@@ -27,7 +28,7 @@ def vendas_view(request):
 
     if request.method == 'POST':
         cliente_id = request.POST.get('cliente')
-        produto_id = request.POST.get('produto')
+        produto_input = request.POST.get('produto', '').strip()
         observacoes = request.POST.get('observacoes', '').strip()
 
         try:
@@ -49,12 +50,20 @@ def vendas_view(request):
         try:
             if request.user.is_superuser:
                 cliente = get_object_or_404(Cliente, pk=cliente_id)
-                produto_temp = get_object_or_404(Produto, pk=produto_id)
             else:
                 cliente = get_object_or_404(Cliente, pk=cliente_id, loja=loja_usuario)
-                produto_temp = get_object_or_404(Produto, pk=produto_id, loja=loja_usuario)
         except Http404:
-            messages.error(request, "Cliente ou Produto selecionado não foi encontrado.")
+            messages.error(request, "Cliente selecionado não foi encontrado.")
+            return redirect('vendas')
+
+        base_produtos_query = Produto.objects.all() if request.user.is_superuser else Produto.objects.filter(loja=loja_usuario)
+        
+        produto_temp = base_produtos_query.filter(
+            Q(pk=produto_input) | Q(codigo_interno__iexact=produto_input) | Q(nome__icontains=produto_input)
+        ).first()
+
+        if not produto_temp:
+            messages.error(request, f"Produto '{produto_input}' não foi encontrado pelo Código Interno ou Nome.")
             return redirect('vendas')
 
         with transaction.atomic():
