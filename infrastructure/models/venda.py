@@ -1,4 +1,5 @@
 from decimal import Decimal
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -9,7 +10,8 @@ from infrastructure.models.produto import Produto
 class Venda(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='vendas', db_index=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, related_name='vendas', db_index=True)
-    data_venda = models.DateTimeField(auto_now_add=True, db_index=True)
+    data_venda = models.DateTimeField(default=timezone.now, db_index=True)
+    data_atualizacao = models.DateTimeField(auto_now=True, db_index=True)
     valor_total = models.DecimalField(
         max_digits=10, 
         decimal_places=2, 

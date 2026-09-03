@@ -5,17 +5,38 @@
 
 {% block content %}
 <div class="space-y-8">
+
+    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <form method="GET" action="" class="flex flex-wrap items-end gap-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Início</label>
+                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Fim</label>
+                <input type="date" name="data_fim" value="{{ data_fim }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition shadow-sm cursor-pointer">
+                    🔍 Filtrar
+                </button>
+                <a href="{% url 'relatorios' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center">
+                    Limpar
+                </a>
+            </div>
+        </form>
+    </div>
     
     <div class="flex flex-wrap justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-gray-200 gap-4">
         <div>
             <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Exportação Global</h3>
-            <p class="text-xs text-gray-500">Baixe todos os dados consolidados da sua loja de uma só vez.</p>
+            <p class="text-xs text-gray-500">Baixe todos os dados consolidados da sua loja de uma só vez (considerando o filtro de datas).</p>
         </div>
         <div class="flex items-center gap-3">
-            <a href="{% url 'exportar_pdf_modular' 'geral' %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <a href="{% url 'exportar_pdf_modular' 'geral' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
                 📄 Baixar Tudo (PDF)
             </a>
-            <a href="{% url 'exportar_excel_modular' 'geral' %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <a href="{% url 'exportar_excel_modular' 'geral' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio }}&data_fim={{ data_fim }}{% endif %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
                 📊 Baixar Tudo (Excel)
             </a>
         </div>

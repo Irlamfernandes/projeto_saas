@@ -23,12 +23,13 @@ def dashboard_view(request):
 
     hoje = timezone.now()
     inicio_hoje = hoje.replace(hour=0, minute=0, second=0, microsecond=0)
-    inicio_semana = hoje - timedelta(days=7)
-    inicio_mes = hoje.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
-    inicio_quinzena = hoje - timedelta(days=15)
-    inicio_bimestre = hoje - timedelta(days=60)
-    inicio_trimestre = hoje - timedelta(days=90)
+    inicio_semana = inicio_hoje - timedelta(days=6)
+    inicio_quinzena = inicio_hoje - timedelta(days=14)
+    inicio_bimestre = inicio_hoje - timedelta(days=59)
+    inicio_trimestre = inicio_hoje - timedelta(days=89)
+
+    inicio_mes = hoje.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     inicio_ano = hoje.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
     total_geral = vendas_loja.aggregate(Sum('valor_total'))['valor_total__sum'] or 0
