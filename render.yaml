@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: projeto-saas-loja
+    env: python
+    region: ohio
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
