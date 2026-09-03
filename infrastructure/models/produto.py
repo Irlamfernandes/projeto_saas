@@ -44,3 +44,21 @@ class Produto(models.Model):
         db_table = 'produtos'
         verbose_name = 'Produto'
         verbose_name_plural = 'Produtos'
+
+
+class ProdutoImagem(models.Model):
+    produto = models.ForeignKey(
+        Produto, 
+        on_delete=models.CASCADE, 
+        related_name='imagens'
+    )
+    imagem_url = models.URLField(max_length=500)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Imagem de {self.produto.nome}"
+
+    class Meta:
+        db_table = 'produto_imagens'
+        verbose_name = 'Imagem do Produto'
+        verbose_name_plural = 'Imagens dos Produtos'

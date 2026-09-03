@@ -10,7 +10,7 @@
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
         <h3 class="text-lg font-bold text-gray-800 mb-4">Adicionar Novo Produto</h3>
         
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="mb-4">
                 <label for="id_codigo_interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU (Opcional)</label>
@@ -53,7 +53,7 @@
 
                     window.addEventListener('DOMContentLoaded', () => {
                         const select = document.getElementById('select-categoria');
-                        if (select.options.length <= 2) {
+                        if (select && select.options.length <= 2) {
                             select.value = '__novo__';
                             tratarMudancaCategoria(select);
                         }
@@ -66,18 +66,24 @@
                 <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Detalhes, tamanho, sabor..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"></textarea>
             </div>
 
+            <div class="mb-4">
+                <label for="id_imagens_produto" class="block text-gray-700 text-sm font-semibold mb-1">Imagens do Produto (Opcional)</label>
+                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                <p class="text-xs text-gray-400 mt-1">Você pode selecionar várias fotos de uma vez.</p>
+            </div>
+
             <div class="grid grid-cols-3 gap-2 mb-4">
                 <div>
                     <label for="id_preco_custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo bg-white" data-prefix="">
+                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
                 </div>
                 <div>
                     <label for="id_margem_lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
-                    <input type="number" step="0.01" id="id_margem_lucro" name="margem_lucro" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem bg-white" data-prefix="">
+                    <input type="number" step="0.01" id="id_margem_lucro" name="margem_lucro" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
                 </div>
                 <div>
                     <label for="id_preco_venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda bg-white" data-prefix="">
+                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
                 </div>
             </div>
 
@@ -159,42 +165,53 @@
                     {% for produto in produtos %}
                     <tr class="hover:bg-gray-50 transition">
                         <td class="py-3 px-4 font-medium text-gray-900">
-                            {% if produto.codigo_interno %}
-                            <span class="text-xs bg-gray-100 text-gray-600 font-mono px-1.5 py-0.5 rounded mr-1">#{{ produto.codigo_interno }}</span>
-                            {% endif %}
-                            {{ produto.nome }}
-                            {% if produto.categoria %}
-                            <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-md mt-0.5">
-                                {{ produto.categoria }}
-                            </span>
-                            {% endif %}
-                            {% if produto.descricao %}
-                            <span class="block text-xs text-gray-400 font-normal mt-0.5">{{ produto.descricao }}</span>
-                            {% endif %}
+                            <div class="flex items-start gap-3">
+                                {% with primeira_imagem=produto.imagens.first %}
+                                    {% if primeira_imagem %}
+                                        {% with urls_imagens=produto.imagens.all %}
+                                        <img src="{{ primeira_imagem.imagem_url }}" alt="{{ produto.nome }}" 
+                                             onclick="abrirModalGaleria([{% for img in urls_imagens %}'{{ img.imagem_url }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)" 
+                                             style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem; object-fit: cover;" 
+                                             class="rounded border border-gray-200 shrink-0 mt-0.5 cursor-pointer hover:opacity-80 transition" 
+                                             title="Clique para ampliar galeria">
+                                        {% endwith %}
+                                    {% else %}
+                                        <div style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem;" class="bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs shrink-0 mt-0.5">
+                                            📦
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-gray-900 font-semibold leading-snug break-words">
+                                        {% if produto.codigo_interno %}
+                                        <span class="text-xs bg-gray-100 text-gray-600 font-mono px-1.5 py-0.5 rounded mr-1 inline-block">#{{ produto.codigo_interno }}</span>
+                                        {% endif %}
+                                        {{ produto.nome }}
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                                        {% if produto.categoria %}
+                                        <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-md">
+                                            {{ produto.categoria }}
+                                        </span>
+                                        {% endif %}
+                                        {% if produto.imagens.count > 1 %}
+                                        <span class="text-xs text-gray-400">+{{ produto.imagens.count|add:"-1" }} foto(s)</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </td>
-                        <td class="py-3 px-4 whitespace-nowrap">
+                        <td class="py-3 px-4 whitespace-nowrap align-middle">
                             <span class="px-2.5 py-1 rounded-full text-xs font-semibold {% if produto.quantidade_estoque > 5 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                 {{ produto.quantidade_estoque }} un.
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
-                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap">R$ {{ produto.preco_venda|default:0|floatformat:2 }} <span class="text-xs font-normal text-gray-400">({{ produto.margem_lucro|default:0|floatformat:1 }}%)</span></td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap">
-                            <button type="button" 
-                                    onclick="abrirModalEdicao(
-                                        '{{ produto.id }}', 
-                                        '{{ produto.codigo_interno|default:''|escapejs }}', 
-                                        '{{ produto.nome|escapejs }}', 
-                                        '{{ produto.categoria|default:''|escapejs }}', 
-                                        '{{ produto.descricao|default:''|escapejs|linebreaksbr|striptags }}', 
-                                        '{{ produto.preco_custo|default:0|stringformat:'.2f' }}', 
-                                        '{{ produto.preco_venda|default:0|stringformat:'.2f' }}', 
-                                        '{{ produto.margem_lucro|default:0|stringformat:'.2f' }}', 
-                                        '{{ produto.quantidade_estoque }}'
-                                    )"
-                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer">
+                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap align-middle">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap align-middle">R$ {{ produto.preco_venda|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-center whitespace-nowrap align-middle">
+                            <a href="{% url 'editar_produto' produto.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
                                 Editar
-                            </button>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
@@ -211,134 +228,134 @@
 
 </div>
 
-<div id="modal-edicao" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-titulo-produto">
-    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 id="modal-titulo-produto" class="text-lg font-bold text-gray-800">Editar Produto</h3>
-            <button type="button" onclick="fecharModalEdicao()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer" aria-label="Fechar">&times;</button>
-        </div>
+<!-- Modal de Galeria Centralizado e Organizado -->
+<div id="modal-imagem" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4" onclick="fecharModalImagem(event)">
+    <div class="relative flex flex-col items-center justify-center max-w-5xl w-full max-h-[90vh]" onclick="event.stopPropagation()">
         
-        <form id="form-edicao" method="POST">
-            {% csrf_token %}
-
-            <div class="mb-4">
-                <label for="edit-codigo-interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU</label>
-                <input type="text" id="edit-codigo-interno" name="codigo_interno" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
+        <!-- Botão Fechar no Topo Direito -->
+        <button type="button" class="absolute -top-12 right-0 bg-gray-800 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center gap-1.5 border border-gray-700 z-30" onclick="fecharModalDireto()">
+            ✕ Fechar
+        </button>
+        
+        <!-- Container Principal: Botão Esquerdo + Imagem + Botão Direito -->
+        <div class="flex items-center justify-center gap-4 w-full">
             
-            <div class="mb-4">
-                <label for="edit-nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
-                <input type="text" id="edit-nome" name="nome" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
+            <!-- Botão Esquerdo (Estilo Retangular igual ao Fechar) -->
+            <button id="btn-anterior" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(-1)" title="Foto anterior">
+                ❮ Anterior
+            </button>
 
-            <div class="mb-4">
-                <label for="edit-categoria" class="block text-gray-700 text-sm font-semibold mb-1">Categoria</label>
-                <input type="text" id="edit-categoria" name="categoria" placeholder="Ex: Roupas, Doces..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
+            <!-- Imagem Ampliada -->
+            <img id="modal-imagem-src" src="" class="max-w-[70vw] max-h-[78vh] object-contain rounded-xl shadow-2xl bg-black/50 border border-gray-800">
 
-            <div class="mb-4">
-                <label for="edit-descricao" class="block text-gray-700 text-sm font-semibold mb-1">Descrição (Opcional)</label>
-                <textarea id="edit-descricao" name="descricao" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"></textarea>
-            </div>
+            <!-- Botão Direito (Estilo Retangular igual ao Fechar) -->
+            <button id="btn-proximo" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(1)" title="Próxima foto">
+                Próxima ❯
+            </button>
+        </div>
 
-            <div class="grid grid-cols-3 gap-2 mb-4">
-                <div>
-                    <label for="edit-preco-custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
-                    <input type="number" step="0.01" id="edit-preco-custo" name="preco_custo" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-custo bg-white" data-prefix="edit-">
-                </div>
-                <div>
-                    <label for="edit-margem-lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
-                    <input type="number" step="0.01" id="edit-margem-lucro" name="margem_lucro" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-margem bg-white" data-prefix="edit-">
-                </div>
-                <div>
-                    <label for="edit-preco-venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
-                    <input type="number" step="0.01" id="edit-preco-venda" name="preco_venda" required class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm calc-venda bg-white" data-prefix="edit-">
-                </div>
-            </div>
-
-            <div class="mb-6">
-                <label for="edit-estoque" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade em Estoque</label>
-                <input type="number" id="edit-estoque" name="quantidade_estoque" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button type="button" onclick="fecharModalEdicao()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-center text-sm cursor-pointer">
-                    Cancelar
-                </button>
-                <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                    Salvar Alterações
-                </button>
-            </div>
-        </form>
+        <!-- Indicador de Posição (Ex: Foto 1 de 3) -->
+        <div id="modal-indicador" class="mt-4 text-white text-xs sm:text-sm font-medium bg-gray-800/90 px-4 py-1.5 rounded-full border border-gray-700 tracking-wide shadow"></div>
     </div>
 </div>
 
 <script>
-    function configurarCalculadoraPrecos(prefixo) {
-        const custoInput = document.getElementById(prefixo + 'preco_custo');
-        const margemInput = document.getElementById(prefixo + 'margem_lucro');
-        const vendaInput = document.getElementById(prefixo + 'preco_venda');
+    let galeriaImagens = [];
+    let indiceAtual = 0;
 
-        if (!custoInput || !margemInput || !vendaInput) return;
-
-        margemInput.addEventListener('input', function() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const margem = parseFloat(margemInput.value) || 0;
-            if (custo > 0) {
-                const venda = custo + (custo * (margem / 100));
-                vendaInput.value = venda.toFixed(2);
-            }
-        });
-
-        vendaInput.addEventListener('input', function() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const venda = parseFloat(vendaInput.value) || 0;
-            if (custo > 0 && venda >= custo) {
-                const margem = ((venda - custo) / custo) * 100;
-                margemInput.value = margem.toFixed(2);
-            } else if (venda < custo) {
-                margemInput.value = "0.00";
-            }
-        });
-
-        custoInput.addEventListener('input', function() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const margem = parseFloat(margemInput.value) || 0;
-            if (custo > 0 && margem > 0) {
-                const venda = custo + (custo * (margem / 100));
-                vendaInput.value = venda.toFixed(2);
-            }
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        configurarCalculadoraPrecos('id_');
-        configurarCalculadoraPrecos('edit-');
-    });
-
-    function abrirModalEdicao(id, codigoInterno, nome, categoria, descricao, precoCusto, precoVenda, margemLucro, estoque) {
-        const modal = document.getElementById('modal-edicao');
-        const form = document.getElementById('form-edicao');
-        
-        form.action = `/produtos/editar/${id}/`;
-
-        document.getElementById('edit-codigo-interno').value = codigoInterno;
-        document.getElementById('edit-nome').value = nome;
-        document.getElementById('edit-categoria').value = categoria;
-        document.getElementById('edit-descricao').value = descricao;
-        document.getElementById('edit-preco-custo').value = precoCusto;
-        document.getElementById('edit-preco-venda').value = precoVenda;
-        document.getElementById('edit-margem-lucro').value = margemLucro;
-        document.getElementById('edit-estoque').value = estoque;
-
+    function abrirModalGaleria(imagens, indice) {
+        galeriaImagens = imagens;
+        indiceAtual = indice;
+        atualizarModal();
+        const modal = document.getElementById('modal-imagem');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }
 
-    function fecharModalEdicao() {
-        const modal = document.getElementById('modal-edicao');
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
+    function mudarImagem(direcao) {
+        if (galeriaImagens.length <= 1) return;
+        indiceAtual += direcao;
+        if (indiceAtual < 0) {
+            indiceAtual = galeriaImagens.length - 1;
+        } else if (indiceAtual >= galeriaImagens.length) {
+            indiceAtual = 0;
+        }
+        atualizarModal();
     }
+
+    function atualizarModal() {
+        const img = document.getElementById('modal-imagem-src');
+        const indicador = document.getElementById('modal-indicador');
+        const btnAnterior = document.getElementById('btn-anterior');
+        const btnProximo = document.getElementById('btn-proximo');
+
+        if (galeriaImagens.length > 0) {
+            img.src = galeriaImagens[indiceAtual];
+        }
+
+        // Se houver apenas 1 foto, oculta as setas e o contador lateral
+        if (galeriaImagens.length <= 1) {
+            btnAnterior.classList.add('hidden');
+            btnProximo.classList.add('hidden');
+            indicador.classList.add('hidden');
+        } else {
+            btnAnterior.classList.remove('hidden');
+            btnProximo.classList.remove('hidden');
+            indicador.classList.remove('hidden');
+            indicador.textContent = `Foto ${indiceAtual + 1} de ${galeriaImagens.length}`;
+        }
+    }
+
+    function fecharModalDireto() {
+        const modal = document.getElementById('modal-imagem');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function fecharModalImagem(event) {
+        if (event.target.id === 'modal-imagem') {
+            fecharModalDireto();
+        }
+    }
+
+    // Atalhos do teclado (Esc para fechar, Setas Esquerda/Direita para navegar)
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('modal-imagem');
+        if (!modal.classList.contains('hidden')) {
+            if (e.key === 'Escape') {
+                fecharModalDireto();
+            } else if (e.key === 'ArrowLeft') {
+                mudarImagem(-1);
+            } else if (e.key === 'ArrowRight') {
+                mudarImagem(1);
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const custoInput = document.getElementById('id_preco_custo');
+        const margemInput = document.getElementById('id_margem_lucro');
+        const vendaInput = document.getElementById('id_preco_venda');
+
+        if (!custoInput || !vendaInput) return;
+
+        if (margemInput) {
+            margemInput.addEventListener('input', function() {
+                const custo = parseFloat(custoInput.value) || 0;
+                const margem = parseFloat(margemInput.value) || 0;
+                if (custo > 0) {
+                    vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
+                }
+            });
+        }
+
+        vendaInput.addEventListener('input', function() {
+            const custo = parseFloat(custoInput.value) || 0;
+            const venda = parseFloat(vendaInput.value) || 0;
+            if (custo > 0 && venda >= custo && margemInput) {
+                margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
+            }
+        });
+    });
 </script>
 {% endblock %}

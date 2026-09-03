@@ -4,7 +4,8 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from infrastructure.models.produto import Produto
+from infrastructure.models.produto import Produto, ProdutoImagem
+from infrastructure.utils.supabase_storage import upload_imagem_supabase
 
 @login_required
 def produtos_view(request):
@@ -54,6 +55,8 @@ def produtos_view(request):
         nome = request.POST.get('nome', '').strip()
         categoria = request.POST.get('categoria', '').strip()
         descricao = request.POST.get('descricao', '').strip()
+        
+        imagens_enviadas = request.FILES.getlist('imagens')
 
         if not nome:
             messages.error(request, "O nome do produto é obrigatório.")
@@ -98,9 +101,20 @@ def produtos_view(request):
         try:
             novo_produto.full_clean()
             novo_produto.save()
-            messages.success(request, "Produto cadastrado com sucesso!")
+
+            if imagens_enviadas:
+                for img in imagens_enviadas:
+                    public_url = upload_imagem_supabase(img, novo_produto.id)
+                    ProdutoImagem.objects.create(
+                        produto=novo_produto,
+                        imagem_url=public_url
+                    )
+
+            messages.success(request, "Produto e imagens cadastrados com sucesso!")
         except ValidationError:
             messages.error(request, "Erro ao validar os dados do produto. Verifique preços e estoque.")
+        except Exception as e:
+            messages.error(request, str(e))
 
         return redirect('produtos')
 
