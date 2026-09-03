@@ -80,6 +80,9 @@
                             {{ cliente.endereco|default:"-" }}
                         </td>
                         <td class="py-3 px-4 text-center">
+                            <a href="{% url 'extrato_cliente' cliente.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
+                                Caderneta
+                            </a>
                             <button type="button" 
                                     onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs|linebreaksbr|striptags }}')"
                                     class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer">

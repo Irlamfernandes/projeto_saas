@@ -5,6 +5,12 @@
 {% block header_title %}Visão Geral{% endblock %}
 
 {% block content %}
+
+<section class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    <h3 class="text-lg font-bold text-gray-800 mb-2">Painel de Controle Financeiro</h3>
+    <p class="text-gray-600">Acompanhe em tempo real o volume de vendas da sua microempresa segmentado por ciclos temporais para tomada de decisão ágil.</p>
+</section>
+
 <section aria-label="Resumo de Cadastros" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h3 class="text-sm font-medium text-gray-500">Produtos Cadastrados</h3>
@@ -63,8 +69,54 @@
     </div>
 </section>
 
-<section class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-    <h3 class="text-lg font-bold text-gray-800 mb-2">Painel de Controle Financeiro</h3>
-    <p class="text-gray-600">Acompanhe em tempo real o volume de vendas da sua microempresa segmentado por ciclos temporais para tomada de decisão ágil.</p>
+<section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mt-8">
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+        <div>
+            <h3 class="text-lg font-bold text-gray-800">Alerta de Estoque Baixo</h3>
+            <p class="text-xs text-gray-500">Monitore produtos com poucas unidades disponíveis para reposição ágil.</p>
+        </div>
+        
+        <form method="GET" class="flex items-center gap-2">
+            <label for="limite_estoque" class="text-xs font-semibold text-gray-600">Mostrar unidades:</label>
+            <select name="limite_estoque" id="limite_estoque" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                <option value="1" {% if limite_estoque == 1 %}selected{% endif %}>1 ou menos</option>
+                <option value="2" {% if limite_estoque == 2 %}selected{% endif %}>2 ou menos</option>
+                <option value="3" {% if limite_estoque == 3 %}selected{% endif %}>3 ou menos</option>
+                <option value="5" {% if limite_estoque == 5 %}selected{% endif %}>5 ou menos</option>
+                <option value="10" {% if limite_estoque == 10 %}selected{% endif %}>10 ou menos</option>
+            </select>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto max-h-80 overflow-y-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
+                    <th class="py-3 px-4">Produto</th>
+                    <th class="py-3 px-4">Código Interno</th>
+                    <th class="py-3 px-4">Preço de Venda</th>
+                    <th class="py-3 px-4 text-center">Estoque Atual</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-sm">
+                {% for prod in produtos_baixo_estoque %}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
+                    <td class="py-3 px-4 text-gray-500 text-xs">{{ prod.codigo_interno|default:"N/D" }}</td>
+                    <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda|default:0|floatformat:2 }}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ prod.quantidade_estoque }} un.
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-6 text-gray-400 text-sm">Nenhum produto abaixo desse limite de estoque 🎉</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </section>
 {% endblock %}

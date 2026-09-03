@@ -44,6 +44,13 @@ def dashboard_view(request):
     total_produtos = produtos_loja.count()
     total_clientes = clientes_loja.count()
 
+    try:
+        limite_estoque = int(request.GET.get('limite_estoque', 5))
+    except (ValueError, TypeError):
+        limite_estoque = 5
+
+    produtos_baixo_estoque = produtos_loja.filter(quantidade_estoque__lte=limite_estoque).order_by('quantidade_estoque')
+
     context = {
         'total_produtos': total_produtos,
         'total_clientes': total_clientes,
@@ -55,5 +62,7 @@ def dashboard_view(request):
         'vendas_bimestre': vendas_bimestre,
         'vendas_trimestre': vendas_trimestre,
         'vendas_ano': vendas_ano,
+        'produtos_baixo_estoque': produtos_baixo_estoque,
+        'limite_estoque': limite_estoque,
     }
     return render(request, 'interfaces/dashboard.html', context)
