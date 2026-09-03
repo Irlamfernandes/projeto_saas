@@ -27,3 +27,9 @@ RUN useradd -u 1000 appuser && \
 
 # Alterna para o usuário não-root para executar os comandos e a aplicação
 USER appuser
+
+# Expõe a porta que o Render usa
+EXPOSE 8000
+
+# Comando para iniciar o servidor Gunicorn em produção
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
