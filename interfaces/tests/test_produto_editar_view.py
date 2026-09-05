@@ -152,7 +152,7 @@ class ProdutoEditarViewTest(TestCase):
         """Cobre a remoção de imagem quando SUPABASE_URL termina com /rest/v1."""
         imagem_obj = ProdutoImagem.objects.create(
             produto=self.produto_loja1,
-            imagem_url="https://exemplo.supabase.co/storage/v1/object/public/produtos/loja1/foto.jpg"
+            imagem_url="https://exemplo.supabase.co/storage/v1/object/public/imagens/loja1/foto.jpg"
         )
         self.client.force_login(self.user_loja1)
 
@@ -185,7 +185,7 @@ class ProdutoEditarViewTest(TestCase):
         """Simula a remoção de uma imagem associada ao produto."""
         imagem_obj = ProdutoImagem.objects.create(
             produto=self.produto_loja1,
-            imagem_url="https://exemplo.supabase.co/storage/v1/object/public/produtos/loja1/foto.jpg"
+            imagem_url="https://exemplo.supabase.co/storage/v1/object/public/imagens/loja1/foto.jpg"
         )
 
         self.client.force_login(self.user_loja1)
@@ -223,7 +223,7 @@ class ProdutoEditarViewTest(TestCase):
         """Cobre a captura de exceção (except Exception) ao tentar deletar imagem no Supabase."""
         imagem_obj = ProdutoImagem.objects.create(
             produto=self.produto_loja1,
-            imagem_url="https://exemplo.supabase.co/storage/v1/object/public/produtos/loja1/foto_erro.jpg"
+            imagem_url="https://exemplo.supabase.co/storage/v1/object/public/imagens/loja1/foto_erro.jpg"
         )
 
         self.client.force_login(self.user_loja1)

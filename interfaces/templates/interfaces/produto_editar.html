@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load static %}
 
 {% block title %}Editar Produto #{{ produto.id }}{% endblock %}
 {% block header_title %}Editar Produto{% endblock %}
@@ -84,51 +85,8 @@
         </div>
     </form>
 </div>
+{% endblock %}
 
-<script>
-    function marcarParaRemover(id, wrapper) {
-        const inputRemover = document.getElementById('remover_imagens');
-        let idsAtuais = inputRemover.value ? inputRemover.value.split(',') : [];
-        
-        if (!idsAtuais.includes(id)) {
-            idsAtuais.push(id);
-            inputRemover.value = idsAtuais.join(',');
-        }
-
-        // Animação suave sumindo da tela
-        wrapper.style.transition = "all 0.3s ease";
-        wrapper.style.opacity = "0";
-        wrapper.style.transform = "scale(0.8)";
-        
-        setTimeout(() => {
-            wrapper.remove();
-        }, 300);
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const custoInput = document.getElementById('edit-preco-custo');
-        const margemInput = document.getElementById('edit-margem-lucro');
-        const vendaInput = document.getElementById('edit-preco-venda');
-
-        if (!custoInput || !vendaInput) return;
-
-        if (margemInput) {
-            margemInput.addEventListener('input', function() {
-                const custo = parseFloat(custoInput.value) || 0;
-                const margem = parseFloat(margemInput.value) || 0;
-                if (custo > 0) {
-                    vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
-                }
-            });
-        }
-
-        vendaInput.addEventListener('input', function() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const venda = parseFloat(vendaInput.value) || 0;
-            if (custo > 0 && venda >= custo && margemInput) {
-                margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
-            }
-        });
-    });
-</script>
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}

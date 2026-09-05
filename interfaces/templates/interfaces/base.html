@@ -133,15 +133,10 @@
                 navigator.serviceWorker.register("{% static 'sw.js' %}");
             });
         }
-
-        const inputs = document.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            input.addEventListener('focus', () => {
-                setTimeout(() => {
-                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
-            });
-        });
     </script>
+
+    <script src="{% static 'js/main.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

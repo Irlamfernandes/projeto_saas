@@ -25,7 +25,7 @@ def upload_imagem_supabase(file_obj, produto_id):
         file_bytes = file_obj.read()
         content_type = getattr(file_obj, 'content_type', 'application/octet-stream')
         
-        url = f"{base_url}/storage/v1/object/produtos/{file_path}"
+        url = f"{base_url}/storage/v1/object/imagens/{file_path}"
         
         headers = {
             "apikey": SUPABASE_KEY,
@@ -39,7 +39,7 @@ def upload_imagem_supabase(file_obj, produto_id):
         if response.status_code not in (200, 201):
             raise Exception(f"Erro na API do Supabase ({response.status_code}): {response.text}")
             
-        public_url = f"{base_url}/storage/v1/object/public/produtos/{file_path}"
+        public_url = f"{base_url}/storage/v1/object/public/imagens/{file_path}"
         return public_url
         
     except Exception as e:

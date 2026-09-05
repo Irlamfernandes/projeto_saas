@@ -71,13 +71,13 @@ def produto_editar_view(request, pk):
                 for img_obj in imagens_objs:
                     try:
                         if img_obj.imagem_url:
-                            parsed_path = img_obj.imagem_url.split('/storage/v1/object/public/produtos/')
+                            parsed_path = img_obj.imagem_url.split('/storage/v1/object/public/imagens/')
                             if len(parsed_path) > 1:
                                 file_path = parsed_path[1]
                                 base_url = os.getenv("SUPABASE_URL", "").strip().rstrip('/')
                                 if base_url.endswith('/rest/v1'):
                                     base_url = base_url[:-8]
-                                delete_url = f"{base_url}/storage/v1/object/produtos/{file_path}"
+                                delete_url = f"{base_url}/storage/v1/object/imagens/{file_path}"
                                 headers = {
                                     "apikey": os.getenv("SUPABASE_KEY"),
                                     "Authorization": f"Bearer {os.getenv('SUPABASE_KEY')}"

@@ -25,6 +25,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+node_modules/
+
 
 # Installer logs
 pip-log.txt
@@ -35,6 +37,7 @@ htmlcov/
 .tox/
 .nox/
 .coverage
+coverage/
 .coveragerc
 .coverage.*
 .cache

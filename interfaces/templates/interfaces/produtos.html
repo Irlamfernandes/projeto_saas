@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load static %}
 
 {% block title %}Produtos - Gestão{% endblock %}
 
@@ -34,31 +35,6 @@
 
                 <label for="input-nova-categoria" class="sr-only">Nome da nova categoria</label>
                 <input type="text" id="input-nova-categoria" name="categoria" placeholder="Digite o nome da nova categoria..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm hidden bg-white">
-
-                <script>
-                    function tratarMudancaCategoria(select) {
-                        const inputNova = document.getElementById('input-nova-categoria');
-                        if (select.value === '__novo__') {
-                            select.removeAttribute('name');
-                            inputNova.classList.remove('hidden');
-                            inputNova.setAttribute('required', 'true');
-                            inputNova.focus();
-                        } else {
-                            select.setAttribute('name', 'categoria');
-                            inputNova.removeAttribute('required');
-                            inputNova.classList.add('hidden');
-                            inputNova.value = '';
-                        }
-                    }
-
-                    window.addEventListener('DOMContentLoaded', () => {
-                        const select = document.getElementById('select-categoria');
-                        if (select && select.options.length <= 2) {
-                            select.value = '__novo__';
-                            tratarMudancaCategoria(select);
-                        }
-                    });
-                </script>
             </div>
 
             <div class="mb-4">
@@ -228,134 +204,31 @@
 
 </div>
 
-<!-- Modal de Galeria Centralizado e Organizado -->
 <div id="modal-imagem" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4" onclick="fecharModalImagem(event)">
     <div class="relative flex flex-col items-center justify-center max-w-5xl w-full max-h-[90vh]" onclick="event.stopPropagation()">
         
-        <!-- Botão Fechar no Topo Direito -->
         <button type="button" class="absolute -top-12 right-0 bg-gray-800 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center gap-1.5 border border-gray-700 z-30" onclick="fecharModalDireto()">
             ✕ Fechar
         </button>
         
-        <!-- Container Principal: Botão Esquerdo + Imagem + Botão Direito -->
         <div class="flex items-center justify-center gap-4 w-full">
             
-            <!-- Botão Esquerdo (Estilo Retangular igual ao Fechar) -->
             <button id="btn-anterior" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(-1)" title="Foto anterior">
                 ❮ Anterior
             </button>
 
-            <!-- Imagem Ampliada -->
             <img id="modal-imagem-src" src="" class="max-w-[70vw] max-h-[78vh] object-contain rounded-xl shadow-2xl bg-black/50 border border-gray-800">
 
-            <!-- Botão Direito (Estilo Retangular igual ao Fechar) -->
             <button id="btn-proximo" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(1)" title="Próxima foto">
                 Próxima ❯
             </button>
         </div>
 
-        <!-- Indicador de Posição (Ex: Foto 1 de 3) -->
         <div id="modal-indicador" class="mt-4 text-white text-xs sm:text-sm font-medium bg-gray-800/90 px-4 py-1.5 rounded-full border border-gray-700 tracking-wide shadow"></div>
     </div>
 </div>
+{% endblock %}
 
-<script>
-    let galeriaImagens = [];
-    let indiceAtual = 0;
-
-    function abrirModalGaleria(imagens, indice) {
-        galeriaImagens = imagens;
-        indiceAtual = indice;
-        atualizarModal();
-        const modal = document.getElementById('modal-imagem');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function mudarImagem(direcao) {
-        if (galeriaImagens.length <= 1) return;
-        indiceAtual += direcao;
-        if (indiceAtual < 0) {
-            indiceAtual = galeriaImagens.length - 1;
-        } else if (indiceAtual >= galeriaImagens.length) {
-            indiceAtual = 0;
-        }
-        atualizarModal();
-    }
-
-    function atualizarModal() {
-        const img = document.getElementById('modal-imagem-src');
-        const indicador = document.getElementById('modal-indicador');
-        const btnAnterior = document.getElementById('btn-anterior');
-        const btnProximo = document.getElementById('btn-proximo');
-
-        if (galeriaImagens.length > 0) {
-            img.src = galeriaImagens[indiceAtual];
-        }
-
-        // Se houver apenas 1 foto, oculta as setas e o contador lateral
-        if (galeriaImagens.length <= 1) {
-            btnAnterior.classList.add('hidden');
-            btnProximo.classList.add('hidden');
-            indicador.classList.add('hidden');
-        } else {
-            btnAnterior.classList.remove('hidden');
-            btnProximo.classList.remove('hidden');
-            indicador.classList.remove('hidden');
-            indicador.textContent = `Foto ${indiceAtual + 1} de ${galeriaImagens.length}`;
-        }
-    }
-
-    function fecharModalDireto() {
-        const modal = document.getElementById('modal-imagem');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-
-    function fecharModalImagem(event) {
-        if (event.target.id === 'modal-imagem') {
-            fecharModalDireto();
-        }
-    }
-
-    // Atalhos do teclado (Esc para fechar, Setas Esquerda/Direita para navegar)
-    document.addEventListener('keydown', function(e) {
-        const modal = document.getElementById('modal-imagem');
-        if (!modal.classList.contains('hidden')) {
-            if (e.key === 'Escape') {
-                fecharModalDireto();
-            } else if (e.key === 'ArrowLeft') {
-                mudarImagem(-1);
-            } else if (e.key === 'ArrowRight') {
-                mudarImagem(1);
-            }
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const custoInput = document.getElementById('id_preco_custo');
-        const margemInput = document.getElementById('id_margem_lucro');
-        const vendaInput = document.getElementById('id_preco_venda');
-
-        if (!custoInput || !vendaInput) return;
-
-        if (margemInput) {
-            margemInput.addEventListener('input', function() {
-                const custo = parseFloat(custoInput.value) || 0;
-                const margem = parseFloat(margemInput.value) || 0;
-                if (custo > 0) {
-                    vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
-                }
-            });
-        }
-
-        vendaInput.addEventListener('input', function() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const venda = parseFloat(vendaInput.value) || 0;
-            if (custo > 0 && venda >= custo && margemInput) {
-                margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
-            }
-        });
-    });
-</script>
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}

@@ -56,7 +56,7 @@ class SupabaseStorageTest(TestCase):
         self.assertTrue(mock_post.called)
         self.assertEqual(
             url_publica, 
-            "https://xyz.supabase.co/storage/v1/object/public/produtos/10/foto_capivara.jpg"
+            "https://xyz.supabase.co/storage/v1/object/public/imagens/10/foto_capivara.jpg"
         )
 
     @patch('infrastructure.utils.supabase_storage.SUPABASE_KEY', 'test_key')

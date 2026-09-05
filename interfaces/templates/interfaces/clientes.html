@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load static %}
 
 {% block title %}Clientes - Gestão{% endblock %}
 
@@ -147,27 +148,8 @@
         </form>
     </div>
 </div>
+{% endblock %}
 
-<script>
-    function abrirModalEdicaoCliente(id, nome, telefone, email, endereco) {
-        const modal = document.getElementById('modal-edicao-cliente');
-        const form = document.getElementById('form-edicao-cliente');
-        
-        form.action = `/clientes/editar/${id}/`;
-
-        document.getElementById('edit-cli-nome').value = nome;
-        document.getElementById('edit-cli-telefone').value = telefone;
-        document.getElementById('edit-cli-email').value = email;
-        document.getElementById('edit-cli-endereco').value = endereco;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function fecharModalEdicaoCliente() {
-        const modal = document.getElementById('modal-edicao-cliente');
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    }
-</script>
+{% block extra_js %}
+<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}
