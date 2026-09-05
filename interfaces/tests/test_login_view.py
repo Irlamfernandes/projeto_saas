@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.loja_model import LojaModel
+from interfaces.views.login_view import TEMPLATE_LOGIN  # Importa a constante da view
 
 User = get_user_model()
 
@@ -32,7 +33,7 @@ class LoginViewTest(TestCase):
         """Acessar a página de login via GET retorna status 200 e renderiza o template."""
         response = self.client.get(self.url_login)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'interfaces/login.html')
+        self.assertTemplateUsed(response, TEMPLATE_LOGIN)
         self.assertIn('form', response.context)
 
     def test_usuario_autenticado_ja_redireciona_dashboard(self):

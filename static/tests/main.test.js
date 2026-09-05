@@ -53,7 +53,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         const margem = document.getElementById('edit-margem-lucro');
         margem.value = '10';
         margem.dispatchEvent(new Event('input'));
-        expect(document.getElementById('id_preco_venda') || document.getElementById('edit-preco-venda').value).toBe('110.00');
+        expect(document.getElementById('edit-preco-venda').value).toBe('110.00');
 
         const venda = document.getElementById('edit-preco-venda');
         venda.value = '200';
@@ -92,7 +92,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(venda.value).toBe('120');
     });
 
-    test('3.1. Deve testar o ramo falso de if (margemInput) (Linha 17)', () => {
+    test('3.1. Deve testar o ramo falso de if (margemInput)', () => {
         document.body.innerHTML = `
             <input id="id_preco_custo" value="100" />
             <input id="id_preco_venda" value="150" />
@@ -106,7 +106,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(() => venda.dispatchEvent(new Event('input'))).not.toThrow();
     });
 
-    test('4. Deve testar select com poucas opções (< 2)', () => {
+    test('4. Deve testar select com poucas opções (<= 2)', () => {
         document.body.innerHTML = `
             <select id="select-categoria">
                 <option value="__novo__">Nova</option>

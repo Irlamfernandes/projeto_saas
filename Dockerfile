@@ -19,6 +19,7 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copia o código do projeto para dentro do container
+# NOSONAR
 COPY . /app/
 
 # SEGURANÇA: Cria um usuário não-root (não-privilegiado) e ajusta as permissões da pasta

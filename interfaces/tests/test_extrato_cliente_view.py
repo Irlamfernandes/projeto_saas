@@ -8,6 +8,7 @@ from django.utils import timezone
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.venda import Venda, PagamentoCliente
+from interfaces.views.extrato_cliente_view import TEMPLATE_EXTRATO_CLIENTE  # Importa a constante da view
 
 User = get_user_model()
 
@@ -59,6 +60,7 @@ class ExtratoClienteViewTest(TestCase):
         response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))
         
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, TEMPLATE_EXTRATO_CLIENTE)
         self.assertEqual(response.context['cliente'], self.cliente_loja1)
         self.assertEqual(len(response.context['timeline']), 2) # 1 venda + 1 pagamento
 
@@ -73,6 +75,7 @@ class ExtratoClienteViewTest(TestCase):
         self.client.force_login(self.superuser)
         response = self.client.get(self._get_url_extrato(self.cliente_loja2.pk))
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, TEMPLATE_EXTRATO_CLIENTE)
         self.assertEqual(response.context['cliente'], self.cliente_loja2)
 
     def test_registrar_pagamento_com_sucesso(self):

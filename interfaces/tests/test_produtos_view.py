@@ -6,9 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.loja_model import LojaModel
-from infrastructure.models.produto import Produto
-from django.utils.datastructures import MultiValueDict
-from infrastructure.models.produto import ProdutoImagem  
+from infrastructure.models.produto import Produto, ProdutoImagem
 
 User = get_user_model()
 
@@ -178,7 +176,6 @@ class ProdutosViewTest(TestCase):
     def test_superuser_sem_loja_contexto_nao_cadastra(self):
         """Superusuário sem loja de contexto associada recebe erro ao tentar cadastrar produto."""
         self.client.force_login(self.superuser)
-        # Como o superuser não tem self.user.loja padrão, o codigo avalia loja_contexto como None
         response = self.client.post(self.url_produtos, {
             'nome': 'Produto Superuser Sem Loja',
             'preco_venda': '10.00'
@@ -187,7 +184,6 @@ class ProdutosViewTest(TestCase):
 
     def test_cadastrar_produto_com_upload_de_imagens(self):
         """Cadastra novo produto enviando arquivos de imagem associados via Supabase."""
-        from django.core.files.uploadedfile import SimpleUploadedFile
         self.client.force_login(self.user_loja1)
         
         img_file = SimpleUploadedFile("produto.jpg", b"dados_img", content_type="image/jpeg")
@@ -195,8 +191,9 @@ class ProdutosViewTest(TestCase):
         with patch('interfaces.views.produtos_view.upload_imagem_supabase', return_value="https://exemplo.supabase.co/img.jpg"):
             response = self.client.post(self.url_produtos, {
                 'nome': 'Produto Com Imagem',
-                'preco_venda': '50.00'
-            }, FILES={'imagens': [img_file]})
+                'preco_venda': '50.00',
+                'imagens': img_file
+            })
 
         self.assertRedirects(response, self.url_produtos)
 
@@ -221,14 +218,12 @@ class ProdutosViewTest(TestCase):
 
     def test_cadastrar_produto_com_multiplas_imagens(self):
         """Cadastra novo produto enviando múltiplas imagens pelo loop de imagens."""
-        
         self.client.force_login(self.user_loja1)
         
         img1 = SimpleUploadedFile("foto1.jpg", b"dados1", content_type="image/jpeg")
         img2 = SimpleUploadedFile("foto2.jpg", b"dados2", content_type="image/jpeg")
 
         with patch('interfaces.views.produtos_view.upload_imagem_supabase', side_effect=["url1.jpg", "url2.jpg"]):
-            # Passando a lista de arquivos diretamente no dicionário de dados (data)
             response = self.client.post(self.url_produtos, {
                 'nome': 'Produto Multimagens',
                 'preco_venda': '80.00',

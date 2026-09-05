@@ -108,13 +108,13 @@ class RelatoriosExportTest(TestCase):
             wb = openpyxl.load_workbook(self.caminho_excel)
             self.assertIn(wb.active.title, ["Resumo Executivo", "Estoque", "Clientes Devendo", "Clientes com Crédito"])
 
-    def test_gerar_excel_secao_default_geral(self):
-        """Testa o bloco else (geral) que cria múltiplas abas no Excel."""
-        gerar_relatorio_excel_secao('outro_tipo_desconhecido', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
+    def test_gerar_excel_secao_geral(self):
+        """Testa a opção 'geral' que cria múltiplas abas consolidadas no Excel."""
+        gerar_relatorio_excel_secao('geral', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
         self.assertTrue(os.path.exists(self.caminho_excel))
         
         wb = openpyxl.load_workbook(self.caminho_excel)
-        # Deve conter múltiplas planilhas criadas no bloco else
+        # Deve conter múltiplas planilhas criadas para a exportação geral
         self.assertGreaterEqual(len(wb.sheetnames), 3)
 
     def test_aliases_funcoes(self):
@@ -123,3 +123,11 @@ class RelatoriosExportTest(TestCase):
         gerar_relatorio_excel('resumo', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
         self.assertTrue(os.path.exists(self.caminho_pdf))
         self.assertTrue(os.path.exists(self.caminho_excel))
+
+    def test_gerar_excel_secao_desconhecida_fallback(self):
+        """Testa o bloco else (fallback) para uma seção Excel desconhecida."""
+        gerar_relatorio_excel_secao('secao_inexistente', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
+        self.assertTrue(os.path.exists(self.caminho_excel))
+        wb = openpyxl.load_workbook(self.caminho_excel)
+        # O fallback padrão cria a aba de Resumo e Estoque
+        self.assertGreaterEqual(len(wb.sheetnames), 2)

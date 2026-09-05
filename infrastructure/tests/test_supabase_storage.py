@@ -4,7 +4,9 @@ from django.test import TestCase
 from requests.exceptions import RequestException
 from infrastructure.utils.supabase_storage import (
     limpar_nome_arquivo,
-    upload_imagem_supabase
+    upload_imagem_supabase,
+    SupabaseConfigError,
+    SupabaseAPIError
 )
 
 
@@ -23,7 +25,7 @@ class SupabaseStorageTest(TestCase):
         file_obj = io.BytesIO(b"conteudo")
         file_obj.name = "teste.jpg"
 
-        with self.assertRaises(Exception) as ctx:
+        with self.assertRaises(SupabaseConfigError) as ctx:
             upload_imagem_supabase(file_obj, produto_id=1)
         self.assertIn("Credenciais do Supabase não configuradas", str(ctx.exception))
 
@@ -34,7 +36,7 @@ class SupabaseStorageTest(TestCase):
         file_obj = io.BytesIO(b"conteudo")
         file_obj.name = "teste.jpg"
 
-        with self.assertRaises(Exception) as ctx:
+        with self.assertRaises(SupabaseConfigError) as ctx:
             upload_imagem_supabase(file_obj, produto_id=1)
         self.assertIn("Credenciais do Supabase não configuradas", str(ctx.exception))
 
@@ -72,7 +74,7 @@ class SupabaseStorageTest(TestCase):
         file_obj = io.BytesIO(b"dados")
         file_obj.name = "arquivo.jpg"
 
-        with self.assertRaises(Exception) as ctx:
+        with self.assertRaises(SupabaseAPIError) as ctx:
             upload_imagem_supabase(file_obj, produto_id=5)
         self.assertIn("Erro na API do Supabase (400)", str(ctx.exception))
 
@@ -86,6 +88,6 @@ class SupabaseStorageTest(TestCase):
         file_obj = io.BytesIO(b"dados")
         file_obj.name = "arquivo.jpg"
 
-        with self.assertRaises(Exception) as ctx:
+        with self.assertRaises(SupabaseAPIError) as ctx:
             upload_imagem_supabase(file_obj, produto_id=5)
         self.assertIn("Erro no Supabase Storage", str(ctx.exception))

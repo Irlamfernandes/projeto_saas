@@ -90,7 +90,7 @@ class VendaEditarViewTest(TestCase):
         self.client.force_login(self.user_loja1)
         response = self.client.post(self.url, {
             'cliente': self.cliente.id,
-            'produto': '999999',  # Passando ID numérico inexistente para evitar falha de conversão do Django
+            'produto': '999999',
             'quantidade': 1,
             'observacoes': ''
         })
@@ -101,7 +101,7 @@ class VendaEditarViewTest(TestCase):
         self.client.force_login(self.user_loja1)
         response = self.client.post(self.url, {
             'cliente': self.cliente.id,
-            'produto': str(self.produto2.id), # Produto 2 tem apenas 2 em estoque
+            'produto': str(self.produto2.id),
             'quantidade': 5,
             'observacoes': ''
         })
@@ -111,7 +111,6 @@ class VendaEditarViewTest(TestCase):
         """Edita com sucesso o produto, quantidade e recalcula o total, ajustando estoques."""
         self.client.force_login(self.user_loja1)
         
-        # O Produto 2 tem 2 unidades em estoque. Vamos comprar 2 unidades dele informando o ID numérico.
         response = self.client.post(self.url, {
             'cliente': self.cliente.id,
             'produto': str(self.produto2.id),
@@ -121,18 +120,12 @@ class VendaEditarViewTest(TestCase):
 
         self.assertRedirects(response, reverse('vendas'))
         
-        # Atualiza instâncias do banco
         self.venda.refresh_from_db()
         self.produto1.refresh_from_db()
         self.produto2.refresh_from_db()
 
-        # O estoque do produto antigo (produto1) deve ter devolvido as 2 unidades (10 + 2 = 12)
         self.assertEqual(self.produto1.quantidade_estoque, 12)
-        
-        # O estoque do novo produto (produto2) deve ter consumido 2 unidades (2 - 2 = 0)
         self.assertEqual(self.produto2.quantidade_estoque, 0)
-        
-        # O valor total da venda deve ser atualizado para 2 * 100.00 = 200.00
         self.assertEqual(self.venda.valor_total, Decimal('200.00'))
         self.assertEqual(self.venda.observacoes, 'Venda atualizada com sucesso')
 
@@ -159,7 +152,6 @@ class VendaEditarViewTest(TestCase):
 
     def test_editar_venda_sem_item_anterior(self):
         """Edita com sucesso uma venda que não possuía nenhum item pré-vinculado."""
-        # Remove o item atual para simular uma venda vazia de itens
         self.item_venda.delete()
 
         self.client.force_login(self.user_loja1)
@@ -172,13 +164,13 @@ class VendaEditarViewTest(TestCase):
         self.assertRedirects(response, reverse('vendas'))
         
         self.venda.refresh_from_db()
-        self.assertEqual(self.venda.valor_total, Decimal('150.00'))  # 3 * 50.00
+        self.assertEqual(self.venda.valor_total, Decimal('150.00'))
 
     def test_superuser_cliente_inexistente_exibe_erro(self):
-        """Superusuário que informa um ID numérico de cliente inexistente recebe Http404 capturado, exibe erro e redireciona."""
+        """Superusuário que informa um ID de cliente inexistente recebe erro e redireciona."""
         self.client.force_login(self.superuser)
         response = self.client.post(self.url, {
-            'cliente': 99999,  # Inteiro para evitar ValidationError e cair direto no get_object_or_404
+            'cliente': '99999',
             'produto': str(self.produto1.id),
             'quantidade': 1
         })
@@ -188,7 +180,7 @@ class VendaEditarViewTest(TestCase):
         """Edita uma venda sem informar cliente (campo vazio), definindo cliente como None."""
         self.client.force_login(self.user_loja1)
         response = self.client.post(self.url, {
-            'cliente': '',  # Vazio para acionar o else da linha 50
+            'cliente': '',
             'produto': str(self.produto1.id),
             'quantidade': 1,
             'observacoes': 'Sem cliente'

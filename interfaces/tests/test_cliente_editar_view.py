@@ -41,7 +41,6 @@ class ClienteEditarViewTest(TestCase):
         self.url_clientes = reverse('clientes')
 
     def _get_url_editar(self, pk):
-        # Nome corrigido conforme o urls.py: 'editar_cliente'
         return reverse('editar_cliente', args=[pk])
 
     def test_usuario_sem_loja_nem_superuser_recebe_permission_denied(self):
@@ -50,6 +49,12 @@ class ClienteEditarViewTest(TestCase):
             self.client.force_login(self.user_sem_loja)
         response = self.client.post(self._get_url_editar(self.cliente_loja1.pk), {'nome': 'Novo Nome'})
         self.assertEqual(response.status_code, 403)
+
+    def test_get_request_redireciona_para_clientes(self):
+        """Requisição GET para edição redireciona diretamente para a listagem."""
+        self.client.force_login(self.user_loja1)
+        response = self.client.get(self._get_url_editar(self.cliente_loja1.pk))
+        self.assertRedirects(response, self.url_clientes)
 
     def test_usuario_comum_edita_cliente_da_propria_loja(self):
         """Usuário comum consegue editar cliente pertencente à sua loja."""

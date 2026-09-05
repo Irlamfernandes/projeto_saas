@@ -103,3 +103,13 @@ class RelatoriosExportViewsTest(TestCase):
         
         self.assertEqual(response.status_code, 200)
         mock_gerar_pdf.assert_called_once()
+
+    @patch('interfaces.views.relatorios_export_views.gerar_relatorio_pdf_secao')
+    def test_exportar_pdf_data_inicio_invalida(self, mock_gerar_pdf):
+        """Apenas a data de início mal formatada cai no except ValueError e é ignorada."""
+        self.client.force_login(self.user_loja1)
+        url = reverse('exportar_pdf_modular', args=['vendas'])
+        response = self.client.get(url, {'data_inicio': 'data-invalida'})
+        
+        self.assertEqual(response.status_code, 200)
+        mock_gerar_pdf.assert_called_once()

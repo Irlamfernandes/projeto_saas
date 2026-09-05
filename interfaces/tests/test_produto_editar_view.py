@@ -143,8 +143,9 @@ class ProdutoEditarViewTest(TestCase):
         with patch('interfaces.views.produto_editar_view.upload_imagem_supabase', return_value="https://exemplo.supabase.co/nova.jpg"):
             response = self.client.post(self._get_url_editar(self.produto_loja1.pk), {
                 'nome': 'Produto Com Foto Nova',
-                'preco_venda': '75.00'
-            }, FILES={'imagens': img_file})  # <-- Ajustado de 'data=' para 'FILES='
+                'preco_venda': '75.00',
+                'imagens': img_file
+            })
 
         self.assertRedirects(response, self.url_produtos)
 
@@ -199,7 +200,6 @@ class ProdutoEditarViewTest(TestCase):
                 'remover_imagens': str(imagem_obj.id)
             })
 
-        # O fluxo de sucesso redireciona para a rota 'produtos'
         self.assertRedirects(response, self.url_produtos, fetch_redirect_response=False)
         self.assertFalse(ProdutoImagem.objects.filter(pk=imagem_obj.id).exists())
 
@@ -213,7 +213,7 @@ class ProdutoEditarViewTest(TestCase):
                 'nome': 'Produto Editado Com Imagens',
                 'preco_venda': '50.00',
                 'quantidade_estoque': '10',
-                'imagens': [img1]  # Passando a lista de arquivos diretamente no dicionário de dados
+                'imagens': [img1]
             })
 
         self.assertRedirects(response, self.url_produtos)
@@ -238,3 +238,26 @@ class ProdutoEditarViewTest(TestCase):
 
         self.assertRedirects(response, self.url_produtos)
         self.assertFalse(ProdutoImagem.objects.filter(pk=imagem_obj.id).exists())
+
+    def test_editar_produto_com_valores_numericos_vazios(self):
+        """Cobre o envio de campos numéricos como strings vazias para testar os fallbacks."""
+        self.client.force_login(self.user_loja1)
+        
+        with patch('infrastructure.models.produto.Produto.full_clean'):
+            response = self.client.post(self._get_url_editar(self.produto_loja1.pk), {
+                'nome': 'Produto Valores Vazios',
+                'preco_custo': '',
+                'preco_venda': '',
+                'margem_lucro': '',
+                'quantidade_estoque': ''
+            })
+            
+        self.assertRedirects(response, self.url_produtos)
+
+    def test_remover_imagem_supabase_url_vazia(self):
+        """Cobre o retorno antecipado (guard clause) quando a URL da imagem é vazia."""
+        from interfaces.views.produto_editar_view import _remover_imagem_supabase
+        # Não deve lançar exceção nem fazer requisição HTTP
+        _remover_imagem_supabase("")
+        _remover_imagem_supabase(None)
+        self.assertTrue(True)

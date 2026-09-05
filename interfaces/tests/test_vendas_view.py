@@ -87,6 +87,17 @@ class VendasViewTest(TestCase):
         })
         self.assertRedirects(response, self.url)
 
+    def test_post_quantidade_formato_invalido(self):
+        """Enviar quantidade com formato não numérico exibe mensagem de erro e redireciona."""
+        self.client.force_login(self.user_loja1)
+        response = self.client.post(self.url, {
+            'cliente': self.cliente1.id,
+            'produto': str(self.produto1.id),
+            'quantidade': 'abc',
+            'valor_pago': '0'
+        })
+        self.assertRedirects(response, self.url)
+
     def test_post_valor_pago_invalido(self):
         """Enviar valor pago com formato inválido exibe erro e redireciona."""
         self.client.force_login(self.user_loja1)

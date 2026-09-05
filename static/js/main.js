@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
+    inicializarFocoInputs();
+    inicializarCalculadoraPrecos();
+    inicializarCategoriaPadrao();
+});
+
+function inicializarFocoInputs() {
     const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
         input.addEventListener('focus', () => {
@@ -8,37 +13,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         });
     });
+}
 
+function inicializarCalculadoraPrecos() {
     const custoInput = document.getElementById('id_preco_custo') || document.getElementById('edit-preco-custo');
     const margemInput = document.getElementById('id_margem_lucro') || document.getElementById('edit-margem-lucro');
     const vendaInput = document.getElementById('id_preco_venda') || document.getElementById('edit-preco-venda');
 
-    if (custoInput && vendaInput) {
-        if (margemInput) {
-            margemInput.addEventListener('input', function() {
-                const custo = parseFloat(custoInput.value) || 0;
-                const margem = parseFloat(margemInput.value) || 0;
-                if (custo > 0) {
-                    vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
-                }
-            });
-        }
+    if (!custoInput || !vendaInput) return;
 
-        vendaInput.addEventListener('input', function() {
+    if (margemInput) {
+        margemInput.addEventListener('input', function() {
             const custo = parseFloat(custoInput.value) || 0;
-            const venda = parseFloat(vendaInput.value) || 0;
-            if (custo > 0 && venda >= custo && margemInput) {
-                margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
+            const margem = parseFloat(margemInput.value) || 0;
+            if (custo > 0) {
+                vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
             }
         });
     }
 
+    vendaInput.addEventListener('input', function() {
+        const custo = parseFloat(custoInput.value) || 0;
+        const venda = parseFloat(vendaInput.value) || 0;
+        if (custo > 0 && venda >= custo && margemInput) {
+            margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
+        }
+    });
+}
+
+function inicializarCategoriaPadrao() {
     const selectCategoria = document.getElementById('select-categoria');
     if (selectCategoria && selectCategoria.options.length <= 2) {
         selectCategoria.value = '__novo__';
         tratarMudancaCategoria(selectCategoria);
     }
-});
+}
 
 
 function tratarMudancaCategoria(select) {

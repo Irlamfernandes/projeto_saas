@@ -38,7 +38,7 @@
             <div id="container-imagens-atuais" class="flex flex-wrap gap-3 mb-3">
                 {% for img in produto.imagens.all %}
                 <div class="relative w-24 h-24 border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50 shadow-sm shrink-0" data-id="{{ img.id }}">
-                    <img src="{{ img.imagem_url }}" class="w-full h-full object-cover">
+                    <img src="{{ img.imagem_url }}" alt="Imagem do produto" class="w-full h-full object-cover">
                     
                     <button type="button" onclick="marcarParaRemover('{{ img.id }}', this.closest('div'))" title="Remover imagem" class="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md cursor-pointer transition transform hover:scale-110 z-10">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">

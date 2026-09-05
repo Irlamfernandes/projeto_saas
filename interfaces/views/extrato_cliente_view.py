@@ -6,50 +6,55 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.venda import PagamentoCliente
 
-@login_required
-def extrato_cliente_view(request, cliente_id):
-    if not request.user.is_superuser and not request.user.loja:
+TEMPLATE_EXTRATO_CLIENTE = 'interfaces/extrato_cliente.html'
+
+
+def _obter_cliente_e_loja(user, cliente_id):
+    """Retorna o cliente verificado e o contexto da loja de acordo com as permissões."""
+    if not user.is_superuser and not user.loja:
         raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
 
-    if request.user.is_superuser:
+    if user.is_superuser:
         cliente = get_object_or_404(Cliente, pk=cliente_id)
-        loja_contexto = cliente.loja
-    else:
-        cliente = get_object_or_404(Cliente, pk=cliente_id, loja=request.user.loja)
-        loja_contexto = request.user.loja
+        return cliente, cliente.loja
+    
+    cliente = get_object_or_404(Cliente, pk=cliente_id, loja=user.loja)
+    return cliente, user.loja
 
-    if request.method == 'POST':
-        try:
-            valor_raw = request.POST.get('valor', '0').strip().replace(',', '.')
-            valor = Decimal(valor_raw)
-        except (ValueError, InvalidOperation):
-            messages.error(request, "O valor informado para o pagamento é inválido.")
-            return redirect('extrato_cliente', cliente_id=cliente.id)
 
-        observacao = request.POST.get('observacao', 'Pagamento na caderneta').strip()
+def _processar_pagamento(request, cliente, loja_contexto):
+    """Processa a requisição POST para registrar um novo pagamento."""
+    try:
+        valor_raw = request.POST.get('valor', '0').strip().replace(',', '.')
+        valor = Decimal(valor_raw)
+    except (ValueError, InvalidOperation):
+        messages.error(request, "O valor informado para o pagamento é inválido.")
+        return
 
-        if len(observacao) > 255:
-            messages.error(request, "A observação excede o limite máximo de 255 caracteres.")
-            return redirect('extrato_cliente', cliente_id=cliente.id)
+    observacao = request.POST.get('observacao', 'Pagamento na caderneta').strip()
+    if len(observacao) > 255:
+        messages.error(request, "A observação excede o limite máximo de 255 caracteres.")
+        return
 
-        pagamento = PagamentoCliente(
-            loja=loja_contexto,
-            cliente=cliente,
-            valor=valor,
-            observacao=observacao if observacao else 'Pagamento na caderneta'
-        )
+    pagamento = PagamentoCliente(
+        loja=loja_contexto,
+        cliente=cliente,
+        valor=valor,
+        observacao=observacao or 'Pagamento na caderneta'
+    )
 
-        try:
-            pagamento.full_clean()
-            pagamento.save()
-            messages.success(request, "Pagamento registrado com sucesso!")
-        except ValidationError:
-            messages.error(request, "Erro ao validar os dados do pagamento. Verifique se o valor é positivo.")
+    try:
+        pagamento.full_clean()
+        pagamento.save()
+        messages.success(request, "Pagamento registrado com sucesso!")
+    except ValidationError:
+        messages.error(request, "Erro ao validar os dados do pagamento. Verifique se o valor é positivo.")
 
-        return redirect('extrato_cliente', cliente_id=cliente.id)
 
-    compras = list(cliente.vendas.prefetch_related('itens__produto').all())
-    pagamentos = list(cliente.pagamentos.all())
+def _construir_timeline(cliente):
+    """Constrói e ordena a timeline combinando compras e pagamentos."""
+    compras = cliente.vendas.prefetch_related('itens__produto').all()
+    pagamentos = cliente.pagamentos.all()
 
     timeline = []
     for c in compras:
@@ -73,9 +78,19 @@ def extrato_cliente_view(request, cliente_id):
         })
 
     timeline.sort(key=lambda x: x['data'], reverse=True)
+    return timeline
+
+
+@login_required
+def extrato_cliente_view(request, cliente_id):
+    cliente, loja_contexto = _obter_cliente_e_loja(request.user, cliente_id)
+
+    if request.method == 'POST':
+        _processar_pagamento(request, cliente, loja_contexto)
+        return redirect('extrato_cliente', cliente_id=cliente.id)
 
     context = {
         'cliente': cliente,
-        'timeline': timeline,
+        'timeline': _construir_timeline(cliente),
     }
-    return render(request, 'interfaces/extrato_cliente.html', context)
+    return render(request, TEMPLATE_EXTRATO_CLIENTE, context)

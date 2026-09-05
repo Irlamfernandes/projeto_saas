@@ -96,7 +96,7 @@
 
     </div>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 text-white border-t border-gray-800 flex justify-around items-center py-2 z-50 shadow-lg">
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 text-white border-t border-gray-800 flex justify-around items-center py-2 z-50 shadow-lg" aria-label="Menu de Navegação Móvel">
         <a href="{% url 'dashboard' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'dashboard' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
             <span class="text-lg">📊</span>
             <span>Visão</span>

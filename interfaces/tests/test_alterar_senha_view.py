@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.loja_model import LojaModel
+from interfaces.views.alterar_senha_view import TEMPLATE_ALTERAR_SENHA
 
 User = get_user_model()
 
@@ -27,8 +28,6 @@ class AlterarSenhaViewTest(TestCase):
             deve_trocar_senha=False
         )
         
-        # Supondo que a URL se chame 'alterar_senha' e 'dashboard'
-        # Ajuste os nomes das rotas se diferirem no seu urls.py
         self.url_alterar_senha = reverse('alterar_senha')
         self.url_dashboard = reverse('dashboard')
 
@@ -48,7 +47,7 @@ class AlterarSenhaViewTest(TestCase):
         self.client.force_login(self.user_troca)
         response = self.client.get(self.url_alterar_senha)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'interfaces/alterar_senha.html')
+        self.assertTemplateUsed(response, TEMPLATE_ALTERAR_SENHA)
 
     def test_post_senhas_vazias_retorna_erro(self):
         """POST com campos de senha vazios deve exibir erro."""

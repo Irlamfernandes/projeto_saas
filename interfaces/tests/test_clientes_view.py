@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
+from interfaces.views.clientes_view import TEMPLATE_CLIENTES  # Importa a constante da view
 
 User = get_user_model()
 
@@ -50,15 +51,16 @@ class ClientesViewTest(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_usuario_comum_ve_apenas_clientes_da_sua_loja(self):
-        """Usuário comum visualiza somente os clientes pertencentes à sua loja."""
+        """Usuário comum visualiza somente os clientes pertencentes à sua loja e valida template."""
         self.client.force_login(self.user_loja1)
         response = self.client.get(self.url_clientes)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, TEMPLATE_CLIENTES)
         self.assertContains(response, "Carlos Silva")
         self.assertNotContains(response, "Ana Souza")
 
     def test_superuser_ve_todos_os_clientes(self):
-        """Superusuário visualiza clientes de todas as lojas."""
+        """Superusuário visualiza clientes de todas las lojas."""
         self.client.force_login(self.superuser)
         response = self.client.get(self.url_clientes)
         self.assertEqual(response.status_code, 200)
