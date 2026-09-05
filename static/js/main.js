@@ -23,22 +23,26 @@ function inicializarCalculadoraPrecos() {
     if (!custoInput || !vendaInput) return;
 
     if (margemInput) {
-        margemInput.addEventListener('input', function() {
-            const custo = parseFloat(custoInput.value) || 0;
-            const margem = parseFloat(margemInput.value) || 0;
-            if (custo > 0) {
-                vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
-            }
-        });
+        margemInput.addEventListener('input', () => atualizarPrecoVenda(custoInput, margemInput, vendaInput));
     }
 
-    vendaInput.addEventListener('input', function() {
-        const custo = parseFloat(custoInput.value) || 0;
-        const venda = parseFloat(vendaInput.value) || 0;
-        if (custo > 0 && venda >= custo && margemInput) {
-            margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
-        }
-    });
+    vendaInput.addEventListener('input', () => atualizarMargemLucro(custoInput, margemInput, vendaInput));
+}
+
+function atualizarPrecoVenda(custoInput, margemInput, vendaInput) {
+    const custo = parseFloat(custoInput.value) || 0;
+    const margem = parseFloat(margemInput.value) || 0;
+    
+    if (custo <= 0) return;
+    vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
+}
+
+function atualizarMargemLucro(custoInput, margemInput, vendaInput) {
+    const custo = parseFloat(custoInput.value) || 0;
+    const venda = parseFloat(vendaInput.value) || 0;
+    
+    if (!margemInput || custo <= 0 || venda < custo) return;
+    margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
 }
 
 function inicializarCategoriaPadrao() {

@@ -94,12 +94,12 @@ def exportar_pdf_modular_view(request, tipo):
 
     dados = _montar_contexto_relatorio(loja_contexto, request)
 
-    buffer = io.BytesIO()
-    gerar_relatorio_pdf_secao(tipo_limpo, dados, buffer)
-    buffer.seek(0)
+    arquivo_buffer = io.BytesIO()
+    gerar_relatorio_pdf_secao(tipo_limpo, dados, arquivo_buffer)
+    arquivo_buffer.seek(0)
 
     filename = f"relatorio_{tipo_limpo}.pdf"
-    return FileResponse(buffer, content_type='application/pdf', as_attachment=True, filename=filename)
+    return FileResponse(arquivo_buffer, content_type='application/pdf', as_attachment=True, filename=filename)
 
 
 @login_required
@@ -116,9 +116,9 @@ def exportar_excel_modular_view(request, tipo):
 
     dados = _montar_contexto_relatorio(loja_contexto, request)
 
-    buffer = io.BytesIO()
-    gerar_relatorio_excel_secao(tipo_limpo, dados, buffer)
-    buffer.seek(0)
+    arquivo_buffer = io.BytesIO()
+    gerar_relatorio_excel_secao(tipo_limpo, dados, arquivo_buffer)
+    arquivo_buffer.seek(0)
 
     filename = f"relatorio_{tipo_limpo}.xlsx"
-    return FileResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, filename=filename)
+    return FileResponse(arquivo_buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, filename=filename)

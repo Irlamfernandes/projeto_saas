@@ -5,6 +5,12 @@ from reportlab.lib import colors
 from django.core.exceptions import PermissionDenied
 import openpyxl
 
+# Constantes para eliminar duplicações literais apontadas pelo SonarQube
+ABA_CLIENTES_DEVENDO = "Clientes Devendo"
+ABA_ESTOQUE = "Estoque"
+ABA_CREDITO = "Clientes com Crédito"
+
+
 def _criar_tabela_padrao(dados, col_widths):
     """Cria e estiliza tabelas do PDF uniformemente."""
     t = Table(dados, colWidths=col_widths)
@@ -14,6 +20,7 @@ def _criar_tabela_padrao(dados, col_widths):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
     ]))
     return t
+
 
 def _adicionar_secao_resumo(story, contexto_dados, titulo_style):
     story.append(Paragraph("<b>Resumo Executivo e Indicadores</b>", titulo_style))
@@ -28,6 +35,7 @@ def _adicionar_secao_resumo(story, contexto_dados, titulo_style):
     story.append(_criar_tabela_padrao(dados, [200, 312]))
     story.append(Spacer(1, 15))
 
+
 def _adicionar_secao_temporal(story, contexto_dados, titulo_style):
     story.append(Paragraph("<b>Desempenho por Ciclo Temporal</b>", titulo_style))
     story.append(Spacer(1, 10))
@@ -40,6 +48,7 @@ def _adicionar_secao_temporal(story, contexto_dados, titulo_style):
     ]
     story.append(_criar_tabela_padrao(dados, [200, 312]))
 
+
 def _adicionar_secao_devendo(story, contexto_dados, loja_usuario, titulo_style):
     story.append(Paragraph("<b>Relatório de Clientes Devendo (Fiado)</b>", titulo_style))
     story.append(Spacer(1, 10))
@@ -50,6 +59,7 @@ def _adicionar_secao_devendo(story, contexto_dados, loja_usuario, titulo_style):
         dados.append([cliente.nome, f"R$ {cliente.saldo_geral:.2f}"])
     story.append(_criar_tabela_padrao(dados, [300, 212]))
 
+
 def _adicionar_secao_credito(story, contexto_dados, loja_usuario, titulo_style):
     story.append(Paragraph("<b>Relatório de Clientes com Crédito</b>", titulo_style))
     story.append(Spacer(1, 10))
@@ -59,6 +69,7 @@ def _adicionar_secao_credito(story, contexto_dados, loja_usuario, titulo_style):
             continue
         dados.append([cliente.nome, f"R$ {abs(cliente.saldo_geral):.2f}"])
     story.append(_criar_tabela_padrao(dados, [300, 212]))
+
 
 def _adicionar_secao_estoque(story, contexto_dados, loja_usuario, titulo_style):
     story.append(Paragraph("<b>Inventário de Estoque Completo</b>", titulo_style))
@@ -71,7 +82,6 @@ def _adicionar_secao_estoque(story, contexto_dados, loja_usuario, titulo_style):
     story.append(_criar_tabela_padrao(dados_estoque, [250, 130, 132]))
 
 
-
 def _preencher_aba_resumo(ws, contexto_dados):
     ws.title = "Resumo Executivo"
     ws.append(["Métrica", "Valor (R$)"])
@@ -80,30 +90,32 @@ def _preencher_aba_resumo(ws, contexto_dados):
     ws.append(["Total a Receber", float(contexto_dados.get('total_fiado_pendente', 0))])
     ws.append(["Crédito de Clientes", float(contexto_dados.get('total_credito_clientes', 0))])
 
+
 def _preencher_aba_estoque(ws, contexto_dados, loja_usuario):
-    ws.title = "Estoque"
+    ws.title = ABA_ESTOQUE
     ws.append(["Produto", "Preço de Venda", "Quantidade em Estoque"])
     for prod in contexto_dados.get('estoque_ordenado', []):
         if loja_usuario and prod.loja != loja_usuario:
             continue
         ws.append([prod.nome, float(prod.preco_venda), prod.quantidade_estoque])
 
+
 def _preencher_aba_devendo(ws, contexto_dados, loja_usuario):
-    ws.title = "Clientes Devendo"
+    ws.title = ABA_CLIENTES_DEVENDO
     ws.append(["Cliente", "Valor Devido"])
     for cliente in contexto_dados.get('clientes_devendo', []):
         if loja_usuario and cliente.loja != loja_usuario:
             continue
         ws.append([cliente.nome, float(cliente.saldo_geral)])
 
+
 def _preencher_aba_credito(ws, contexto_dados, loja_usuario):
-    ws.title = "Clientes com Crédito"
+    ws.title = ABA_CREDITO
     ws.append(["Cliente", "Crédito Disponível"])
     for cliente in contexto_dados.get('clientes_credito', []):
         if loja_usuario and cliente.loja != loja_usuario:
             continue
         ws.append([cliente.nome, float(abs(cliente.saldo_geral))])
-
 
 
 def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo, loja_usuario=None):
@@ -149,20 +161,21 @@ def gerar_relatorio_excel_secao(tipo_secao, contexto_dados, caminho_arquivo, loj
         'credito': lambda: _preencher_aba_credito(ws, contexto_dados, loja_usuario),
         'geral': lambda: [
             _preencher_aba_resumo(ws, contexto_dados),
-            _preencher_aba_estoque(wb.create_sheet(title="Estoque"), contexto_dados, loja_usuario),
-            _preencher_aba_devendo(wb.create_sheet(title="Clientes Devendo"), contexto_dados, loja_usuario),
+            _preencher_aba_estoque(wb.create_sheet(title=ABA_ESTOQUE), contexto_dados, loja_usuario),
+            _preencher_aba_devendo(wb.create_sheet(title=ABA_CLIENTES_DEVENDO), contexto_dados, loja_usuario),
         ]
     }
 
     if tipo_secao in handlers:
         handlers[tipo_secao]()
     else:
-        # Fallback padrão (equivalente ao seu antigo else global)
+        # Fallback padrão
         _preencher_aba_resumo(ws, contexto_dados)
-        _preencher_aba_estoque(wb.create_sheet(title="Estoque"), contexto_dados, loja_usuario)
-        _preencher_aba_devendo(wb.create_sheet(title="Clientes Devendo"), contexto_dados, loja_usuario)
+        _preencher_aba_estoque(wb.create_sheet(title=ABA_ESTOQUE), contexto_dados, loja_usuario)
+        _preencher_aba_devendo(wb.create_sheet(title=ABA_CLIENTES_DEVENDO), contexto_dados, loja_usuario)
 
     wb.save(caminho_arquivo)
+
 
 gerar_relatorio_pdf = gerar_relatorio_pdf_secao
 gerar_relatorio_excel = gerar_relatorio_excel_secao

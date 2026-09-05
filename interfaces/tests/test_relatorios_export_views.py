@@ -1,4 +1,3 @@
-from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -98,7 +97,6 @@ class RelatoriosExportViewsTest(TestCase):
         """Parâmetros de data mal formatados geram ValueError e são ignorados silenciosamente."""
         self.client.force_login(self.user_loja1)
         url = reverse('exportar_pdf_modular', args=['vendas'])
-        # Envia strings que quebram o datetime.strptime ('%Y-%m-%d')
         response = self.client.get(url, {'data_inicio': 'data-errada', 'data_fim': '31/12/2026'})
         
         self.assertEqual(response.status_code, 200)
