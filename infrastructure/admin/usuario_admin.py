@@ -45,7 +45,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         nova_senha = ''.join(secrets.choice(alphabet) for _ in range(8))
         user.set_password(nova_senha)
         user.deve_trocar_senha = True
-        user.save()
+        user.save(update_fields=['password', 'deve_trocar_senha'])
 
         messages.success(
             request, 

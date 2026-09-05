@@ -39,9 +39,6 @@ def clientes_view(request):
 
         loja_destino = request.user.loja if not request.user.is_superuser else None
         
-        if not request.user.is_superuser and not loja_destino:
-            raise PermissionDenied("Impossível criar cliente sem uma loja associada.")
-
         cliente = Cliente(
             loja=request.user.loja,
             nome=nome,

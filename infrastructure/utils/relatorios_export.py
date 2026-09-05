@@ -6,7 +6,9 @@ from django.core.exceptions import PermissionDenied
 import openpyxl
 
 def gerar_relatorio_pdf_secao(tipo_secao, contexto_dados, caminho_arquivo, loja_usuario=None):
-    if loja_usuario and hasattr(contexto_dados, 'loja') and contexto_dados.loja != loja_usuario:
+    loja_contexto = contexto_dados.get('loja') if isinstance(contexto_dados, dict) else getattr(contexto_dados, 'loja', None)
+    
+    if loja_usuario and loja_contexto and loja_contexto != loja_usuario:
         raise PermissionDenied("Acesso negado: Tentativa de exportar dados de outra loja.")
 
     doc = SimpleDocTemplate(caminho_arquivo, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
