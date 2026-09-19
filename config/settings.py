@@ -17,6 +17,9 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 # Restringe os hosts permitidos com base no ambiente
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+#Mercado Pago Access Token
+MERCADO_PAGO_ACCESS_TOKEN = os.environ.get('MERCADO_PAGO_ACCESS_TOKEN', default='TEST-TOKEN-MOCK')
+
 
 # Application definition
 INSTALLED_APPS = [

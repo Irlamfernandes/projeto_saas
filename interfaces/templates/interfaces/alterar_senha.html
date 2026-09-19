@@ -12,12 +12,20 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
     <div class="bg-white p-8 rounded-xl shadow-md w-96">
-        <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">Primeiro Acesso</h1>
-        <p class="text-sm text-gray-600 mb-6 text-center">Por segurança, defina uma nova senha pessoal para continuar.</p>
+        <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">
+            {% if obrigatorio %}Primeiro Acesso{% else %}Alterar Senha{% endif %}
+        </h1>
+        <p class="text-sm text-gray-600 mb-6 text-center">
+            {% if obrigatorio %}Por segurança, defina uma nova senha pessoal para continuar.{% else %}Insira sua nova senha abaixo.{% endif %}
+        </p>
         
-        {% if error %}
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm" role="alert">
-                {{ error }}
+        {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                    <div class="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
 
@@ -52,13 +60,18 @@
                 >
             </div>
 
-            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                Salvar Nova Senha e Entrar
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition cursor-pointer">
+                Salvar Nova Senha
             </button>
         </form>
+
+        {% if not obrigatorio %}
+            <div class="mt-4 text-center">
+                <a href="{% url 'conta' %}" class="text-sm text-indigo-600 hover:underline">Voltar para Minha Conta</a>
+            </div>
+        {% endif %}
     </div>
 
-    {% load static %}
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

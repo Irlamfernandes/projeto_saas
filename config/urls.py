@@ -3,10 +3,10 @@ from django.urls import path
 from django.shortcuts import redirect
 from django.contrib.auth.views import LogoutView
 from interfaces.views import (
-    extrato_pdf_view, login_view, dashboard_view, alterar_senha_view, produtos_view, 
+    conta_view, extrato_pdf_view, login_view, dashboard_view, alterar_senha_view, produtos_view, 
     produto_editar_view, clientes_view, cliente_editar_view, vendas_view, 
     extrato_cliente_view, venda_editar_view, relatorio_view, exportar_excel_modular_view,
-    exportar_pdf_modular_view
+    exportar_pdf_modular_view, assinatura_view
 )
 
 urlpatterns = [
@@ -32,4 +32,8 @@ urlpatterns = [
     path('relatorios/', relatorio_view, name='relatorios'),
     path('relatorios/exportar/pdf/<str:tipo>/', exportar_pdf_modular_view, name='exportar_pdf_modular'),
     path('relatorios/exportar/excel/<str:tipo>/', exportar_excel_modular_view, name='exportar_excel_modular'),
+
+    path('conta/', conta_view, name='conta'),
+    
+    path('loja/<uuid:loja_id>/assinatura/', assinatura_view, name='assinatura'),
 ]

@@ -1,0 +1,35 @@
+{% extends 'interfaces/base.html' %}
+
+{% block header_title %}Pagamento da Fatura via Pix{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6">
+    <div class="bg-white shadow-sm rounded-xl p-8 border border-gray-200 text-center">
+        <h2 class="text-xl font-bold text-gray-800 mb-1">Escaneie o QR Code</h2>
+        <p class="text-gray-600 mb-6">Valor a pagar: <span class="font-bold text-gray-900">R$ {{ fatura.valor }}</span></p>
+        
+        {% if fatura.qr_code_imagem_url %}
+            <div class="flex justify-center mb-6">
+                <img src="data:image/png;base64,{{ fatura.qr_code_imagem_url }}" alt="QR Code Pix" class="w-60 h-60 border p-2 rounded-lg shadow-sm">
+            </div>
+        {% else %}
+            <p class="text-red-500 mb-6">QR Code de imagem não encontrado na fatura.</p>
+        {% endif %}
+
+        <div class="text-left">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Pix Copia e Cola:</label>
+            <div class="flex gap-2">
+                <input type="text" id="pixCopiaCola" value="{{ fatura.qr_code_pix }}" readonly class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-600 focus:outline-none">
+                <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('pixCopiaCola').value); alert('Código Pix copiado com sucesso!');" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition cursor-pointer whitespace-nowrap">
+                    Copiar
+                </button>
+            </div>
+        </div>
+        
+        <div class="mt-8 pt-6 border-t border-gray-100 flex justify-between items-center">
+            <a href="{% url 'assinatura' loja.id %}" class="text-sm text-indigo-600 hover:underline font-medium">← Voltar para os planos</a>
+            <span class="text-xs text-gray-400">Status: {{ fatura.status }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

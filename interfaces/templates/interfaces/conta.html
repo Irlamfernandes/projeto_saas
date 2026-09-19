@@ -1,0 +1,41 @@
+{% extends 'interfaces/base.html' %}
+
+{% block header_title %}Minha Conta{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto py-6">
+    <div class="bg-white shadow-sm rounded-xl p-8 border border-gray-200">
+        
+        <div class="mb-6 border-b pb-4">
+            <h2 class="text-lg font-bold text-gray-800">Dados do Usuário</h2>
+            <p class="text-sm text-gray-600 mt-1">Usuário: <span class="font-semibold text-gray-900">{{ request.user.username }}</span></p>
+            <p class="text-sm text-gray-600">E-mail: <span class="font-semibold text-gray-900">{{ request.user.email|default:"Não informado" }}</span></p>
+            {% if loja %}
+                <p class="text-sm text-gray-600">Loja Vinculada: <span class="font-semibold text-gray-900">{{ loja.nome_loja }}</span></p>
+            {% endif %}
+        </div>
+
+        <div class="space-y-4">
+            <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wider">Ações da Conta</h3>
+            
+            {% if loja %}
+                <a href="{% url 'assinatura' loja.id %}" class="block w-full text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition">
+                    💳 Gerenciar Assinatura e Planos (Pix)
+                </a>
+            {% endif %}
+
+            <a href="{% url 'alterar_senha' %}" class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 px-4 rounded-lg transition border border-gray-300">
+                🔒 Alterar Senha
+            </a>
+
+            <form action="{% url 'logout' %}" method="POST" class="pt-4 border-t">
+                {% csrf_token %}
+                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-lg transition cursor-pointer">
+                    🚪 Sair da Conta
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

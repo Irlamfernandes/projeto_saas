@@ -3,3 +3,4 @@ from .usuario_model import UsuarioModel, CustomUsernameValidator
 from .produto import Produto
 from .cliente import Cliente
 from .venda import Venda, ItemVenda, PagamentoCliente
+from .fatura_assinatura import FaturaAssinatura

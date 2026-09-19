@@ -1,3 +1,4 @@
+from datetime import date
 import uuid
 from django.test import TestCase
 from infrastructure.models.loja_model import LojaModel
@@ -35,3 +36,12 @@ class LojaModelTest(TestCase):
         self.assertEqual(LojaModel._meta.db_table, 'lojas')
         self.assertEqual(str(LojaModel._meta.verbose_name), 'Loja')
         self.assertEqual(str(LojaModel._meta.verbose_name_plural), 'Lojas')
+
+    def test_loja_vencimento_assinatura(self):
+        """Verifica se a data de vencimento da assinatura pode ser salva corretamente."""
+        hoje = date.today()
+        loja_com_vencimento = LojaModel.objects.create(
+            nome_loja="Loja Assinante",
+            vencimento_assinatura=hoje
+        )
+        self.assertEqual(loja_com_vencimento.vencimento_assinatura, hoje)
