@@ -1,7 +1,12 @@
+let imagensGaleria = [];
+let indiceImagemAtual = 0;
+
 document.addEventListener('DOMContentLoaded', function() {
     inicializarFocoInputs();
     inicializarCalculadoraPrecos();
     inicializarCategoriaPadrao();
+    inicializarFecharModalAoClicarFora();
+    inicializarModalGaleria();
 });
 
 function inicializarFocoInputs() {
@@ -30,16 +35,16 @@ function inicializarCalculadoraPrecos() {
 }
 
 function atualizarPrecoVenda(custoInput, margemInput, vendaInput) {
-    const custo = parseFloat(custoInput.value) || 0;
-    const margem = parseFloat(margemInput.value) || 0;
+    const custo = Number.parseFloat(custoInput.value) || 0;
+    const margem = Number.parseFloat(margemInput.value) || 0;
     
     if (custo <= 0) return;
     vendaInput.value = (custo + (custo * (margem / 100))).toFixed(2);
 }
 
 function atualizarMargemLucro(custoInput, margemInput, vendaInput) {
-    const custo = parseFloat(custoInput.value) || 0;
-    const venda = parseFloat(vendaInput.value) || 0;
+    const custo = Number.parseFloat(custoInput.value) || 0;
+    const venda = Number.parseFloat(vendaInput.value) || 0;
     
     if (!margemInput || custo <= 0 || venda < custo) return;
     margemInput.value = (((venda - custo) / custo) * 100).toFixed(2);
@@ -52,7 +57,6 @@ function inicializarCategoriaPadrao() {
         tratarMudancaCategoria(selectCategoria);
     }
 }
-
 
 function tratarMudancaCategoria(select) {
     const inputNova = document.getElementById('input-nova-categoria');
@@ -72,7 +76,7 @@ function tratarMudancaCategoria(select) {
 
 function marcarParaRemover(id, wrapper) {
     const inputRemover = document.getElementById('remover_imagens');
-    let idsAtuais = inputRemover.value ? inputRemover.value.split(',') : [];
+    const idsAtuais = inputRemover.value ? inputRemover.value.split(',') : [];
     
     if (!idsAtuais.includes(id)) {
         idsAtuais.push(id);
@@ -99,23 +103,120 @@ function abrirModalEdicaoCliente(id, nome, telefone, email, endereco) {
     document.getElementById('edit-cli-email').value = email;
     document.getElementById('edit-cli-endereco').value = endereco;
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    if (typeof modal.showModal === 'function') {
+        modal.showModal();
+    }
 }
 
 function fecharModalEdicaoCliente() {
     const modal = document.getElementById('modal-edicao-cliente');
     if (!modal) return;
-    modal.classList.remove('flex');
-    modal.classList.add('hidden');
+    
+    if (typeof modal.close === 'function') {
+        modal.close();
+    }
 }
 
-/* istanbul ignore next */
+function inicializarFecharModalAoClicarFora() {
+    const modal = document.getElementById('modal-edicao-cliente');
+    if (!modal) return;
+
+    modal.addEventListener('click', (event) => {
+        const rect = modal.getBoundingClientRect();
+        const isInDialog = (
+            rect.top <= event.clientY &&
+            event.clientY <= rect.top + rect.height &&
+            rect.left <= event.clientX &&
+            event.clientX <= rect.left + rect.width
+        );
+        if (!isInDialog) {
+            fecharModalEdicaoCliente();
+        }
+    });
+}
+
+function inicializarModalGaleria() {
+    const modal = document.getElementById('modal-imagem');
+    if (!modal) return;
+
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            fecharModalDireto();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+            fecharModalDireto();
+        } else if (!modal.classList.contains('hidden')) {
+            if (event.key === 'ArrowLeft') mudarImagem(-1);
+            if (event.key === 'ArrowRight') mudarImagem(1);
+        }
+    });
+}
+
+function abrirModalGaleria(listaUrls, indiceInicial = 0) {
+    if (!listaUrls || listaUrls.length === 0) return;
+
+    imagensGaleria = listaUrls;
+    indiceImagemAtual = indiceInicial;
+
+    const modal = document.getElementById('modal-imagem');
+    if (!modal) return;
+
+    atualizarExibicaoGaleria();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function mudarImagem(direcao) {
+    if (imagensGaleria.length <= 1) return;
+
+    indiceImagemAtual += direcao;
+    if (indiceImagemAtual < 0) {
+        indiceImagemAtual = imagensGaleria.length - 1;
+    } else if (indiceImagemAtual >= imagensGaleria.length) {
+        indiceImagemAtual = 0;
+    }
+
+    atualizarExibicaoGaleria();
+}
+
+function atualizarExibicaoGaleria() {
+    const imgElement = document.getElementById('modal-imagem-src');
+    const indicador = document.getElementById('modal-indicador');
+    const btnAnt = document.getElementById('btn-anterior');
+    const btnProx = document.getElementById('btn-proximo');
+
+    if (imgElement) {
+        imgElement.src = imagensGaleria[indiceImagemAtual];
+    }
+
+    if (indicador) {
+        indicador.textContent = `${indiceImagemAtual + 1} de ${imagensGaleria.length}`;
+    }
+
+    const exibirControles = imagensGaleria.length > 1;
+    if (btnAnt) btnAnt.style.display = exibirControles ? 'block' : 'none';
+    if (btnProx) btnProx.style.display = exibirControles ? 'block' : 'none';
+}
+
+function fecharModalDireto() {
+    const modal = document.getElementById('modal-imagem');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { 
         tratarMudancaCategoria, 
         marcarParaRemover, 
         abrirModalEdicaoCliente, 
-        fecharModalEdicaoCliente 
+        fecharModalEdicaoCliente,
+        fecharModalDireto,
+        abrirModalGaleria,
+        mudarImagem
     };
 }

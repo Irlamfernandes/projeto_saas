@@ -146,11 +146,14 @@
                                 {% with primeira_imagem=produto.imagens.first %}
                                     {% if primeira_imagem %}
                                         {% with urls_imagens=produto.imagens.all %}
-                                        <img src="{{ primeira_imagem.imagem_url }}" alt="{{ produto.nome }}" 
-                                             onclick="abrirModalGaleria([{% for img in urls_imagens %}'{{ img.imagem_url }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)" 
-                                             style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem; object-fit: cover;" 
-                                             class="rounded border border-gray-200 shrink-0 mt-0.5 cursor-pointer hover:opacity-80 transition" 
-                                             title="Clique para ampliar galeria">
+                                        <button type="button" 
+                                                onclick="abrirModalGaleria([{% for img in urls_imagens %}'{{ img.imagem_url }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)" 
+                                                class="shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0 cursor-pointer" 
+                                                title="Clique para ampliar galeria">
+                                            <img src="{{ primeira_imagem.imagem_url }}" alt="{{ produto.nome }}" 
+                                                 style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem; object-fit: cover;" 
+                                                 class="rounded border border-gray-200 hover:opacity-80 transition">
+                                        </button>
                                         {% endwith %}
                                     {% else %}
                                         <div style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem;" class="bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs shrink-0 mt-0.5">
@@ -205,8 +208,8 @@
 
 </div>
 
-<div id="modal-imagem" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4" onclick="fecharModalImagem(event)">
-    <div class="relative flex flex-col items-center justify-center max-w-5xl w-full max-h-[90vh]" onclick="event.stopPropagation()">
+<div id="modal-imagem" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4">
+    <div class="relative flex flex-col items-center justify-center max-w-5xl w-full max-h-[90vh]">
         
         <button type="button" class="absolute -top-12 right-0 bg-gray-800 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center gap-1.5 border border-gray-700 z-30" onclick="fecharModalDireto()">
             ✕ Fechar
@@ -218,7 +221,7 @@
                 ❮ Anterior
             </button>
 
-            <img id="modal-imagem-src" src="" alt="Imagem ampliada do produto" class="max-w-[70vw] max-h-[78vh] object-contain rounded-xl shadow-2xl bg-black/50 border border-gray-800">
+            <img id="modal-imagem-src" src="" alt="Foto ampliada do produto" class="max-w-[70vw] max-h-[78vh] object-contain rounded-xl shadow-2xl bg-black/50 border border-gray-800">
 
             <button id="btn-proximo" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(1)" title="Próxima foto">
                 Próxima ❯

@@ -108,8 +108,8 @@
 
 </div>
 
-<div id="modal-edicao-cliente" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
-    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 max-w-lg w-full">
+<dialog id="modal-edicao-cliente" class="rounded-xl shadow-lg border border-gray-200 max-w-lg w-full p-0 backdrop:bg-black/50" aria-labelledby="modal-titulo">
+    <div class="p-6">
         <div class="flex justify-between items-center mb-4">
             <h3 id="modal-titulo" class="text-lg font-bold text-gray-800">Editar Cliente</h3>
             <button type="button" onclick="fecharModalEdicaoCliente()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer" aria-label="Fechar">&times;</button>
@@ -148,7 +148,7 @@
             </div>
         </form>
     </div>
-</div>
+</dialog>
 {% endblock %}
 
 {% block extra_js %}

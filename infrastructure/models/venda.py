@@ -9,7 +9,7 @@ from infrastructure.models.produto import Produto
 
 class Venda(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='vendas', db_index=True)
-    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, related_name='vendas', db_index=True)
+    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, default=None, blank=True, related_name='vendas', db_index=True)
     data_venda = models.DateTimeField(default=timezone.now, db_index=True)
     data_atualizacao = models.DateTimeField(auto_now=True, db_index=True)
     valor_total = models.DecimalField(
@@ -18,7 +18,7 @@ class Venda(models.Model):
         default=Decimal('0.00'),
         validators=[MinValueValidator(Decimal('0.00'))]
     )
-    observacoes = models.TextField(blank=True, null=True)
+    observacoes = models.TextField(blank=True, null=True, default=None)
 
     class Meta:
         db_table = 'vendas'
@@ -88,7 +88,7 @@ class PagamentoCliente(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))]
     )
     data_pagamento = models.DateTimeField(auto_now_add=True, db_index=True)
-    observacao = models.CharField(max_length=255, blank=True, null=True)
+    observacao = models.CharField(max_length=255, blank=True, null=True, default=None)
 
     class Meta:
         db_table = 'pagamentos_cliente'
