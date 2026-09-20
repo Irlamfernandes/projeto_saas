@@ -260,7 +260,8 @@ class ProdutoEditarViewTest(TestCase):
     def test_remover_imagem_supabase_url_vazia(self):
         """Cobre o retorno antecipado (guard clause) quando a URL da imagem é vazia."""
         from interfaces.views.produto_editar_view import _remover_imagem_supabase
-        # Não deve lançar exceção nem fazer requisição HTTP
-        _remover_imagem_supabase("")
-        _remover_imagem_supabase(None)
-        self.assertTrue(True)
+        
+        with patch('requests.delete') as mock_delete:
+            _remover_imagem_supabase("")
+            _remover_imagem_supabase(None)
+            mock_delete.assert_not_called()

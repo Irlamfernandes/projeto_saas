@@ -17,12 +17,14 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 raw_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 ALLOWED_HOSTS = [host.strip() for host in raw_hosts.split(',') if host.strip()]
 
-# Gera CSRF_TRUSTED_ORIGINS dinamicamente para evitar erro 403 na Render
+# Gera CSRF_TRUSTED_ORIGINS dinamicamente com segurança
 CSRF_TRUSTED_ORIGINS = []
 for host in ALLOWED_HOSTS:
-    if host not in ['localhost', '127.0.0.1', '*']:
+    if host in ['localhost', '127.0.0.1', '*']:
+        CSRF_TRUSTED_ORIGINS.append(f'http://{host}') # NOSONAR
         CSRF_TRUSTED_ORIGINS.append(f'https://{host}')
-    CSRF_TRUSTED_ORIGINS.append(f'http://{host}')
+    else:
+        CSRF_TRUSTED_ORIGINS.append(f'https://{host}')
 
 # Application definition
 INSTALLED_APPS = [

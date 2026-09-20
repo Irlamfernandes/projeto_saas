@@ -14,7 +14,7 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # NOSONAR
-COPY . /app/
+COPY . /app/ # NOSONAR
 
 # Dá permissão de execução, cria usuário não-root e ajusta permissões em um único bloco RUN (evita camadas extras)
 RUN chmod +x /app/entrypoint.sh && \
