@@ -9,12 +9,12 @@
     <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
         <form method="GET" action="" class="flex flex-wrap items-end gap-4">
             <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Início</label>
-                <input type="date" name="data_inicio" value="{{ data_inicio }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                <label for="data_inicio" class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Início</label>
+                <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
             </div>
             <div>
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Fim</label>
-                <input type="date" name="data_fim" value="{{ data_fim }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
+                <label for="data_fim" class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Fim</label>
+                <input type="date" id="data_fim" name="data_fim" value="{{ data_fim }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition shadow-sm cursor-pointer">

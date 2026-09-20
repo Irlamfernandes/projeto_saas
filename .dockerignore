@@ -1,11 +1,37 @@
+# Venvs e Cache Python
+.venv/
 venv/
+ENV/
+env/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Arquivos Sensíveis e Variáveis de Ambiente
 .env
-.git
+.env.*
+*.pem
+*.key
+
+# Versionamento Git e Ferramentas
+.git/
 .gitignore
+.github/
+sonar-project.properties
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Mídias e Estáticos Gerados
 staticfiles/
 media/
 
-shared
-sonar-project.properties
+# IDEs e Arquivos do Sistema Operacional
+.vscode/
+.idea/
+.DS_Store
+*.sqlite3
+*.db

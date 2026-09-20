@@ -31,7 +31,7 @@ def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None):
 
     loja_nome = cliente.loja.nome_loja if hasattr(cliente.loja, 'nome_loja') else "Minha Loja"
     story.append(Paragraph(f"<b>{loja_nome}</b>", titulo_style))
-    story.append(Paragraph(f"Extrato Oficial de Conta / Caderneta", subtitulo_style))
+    story.append(Paragraph("Extrato Oficial de Conta / Caderneta", subtitulo_style))
     
     story.append(Paragraph(f"<b>Cliente:</b> {cliente.nome}", styles['Normal']))
     story.append(Paragraph(f"<b>Telefone:</b> {cliente.telefone or 'Não informado'}", styles['Normal']))

@@ -29,7 +29,6 @@ class UsuarioModel(AbstractUser):
         on_delete=models.CASCADE, 
         related_name='usuarios', 
         null=True,
-        default=None, 
         blank=True,
         db_index=True
     )

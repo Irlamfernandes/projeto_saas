@@ -5,11 +5,11 @@ from infrastructure.models.loja_model import LojaModel
 
 class Produto(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='produtos')
-    codigo_interno = models.CharField(max_length=50, blank=True, null=True, default=None, db_index=True)
+    codigo_interno = models.CharField(max_length=50, blank=True, default='', db_index=True)
     
     nome = models.CharField(max_length=150, db_index=True)
-    categoria = models.CharField(max_length=100, blank=True, null=True, default=None, db_index=True)
-    descricao = models.TextField(blank=True, null=True, default=None)
+    categoria = models.CharField(max_length=100, blank=True, default='', db_index=True)
+    descricao = models.TextField(blank=True, default='')
     
     preco_custo = models.DecimalField(
         max_digits=10, 
