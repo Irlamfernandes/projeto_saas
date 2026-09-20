@@ -85,7 +85,9 @@ class ProdutoEditarViewTest(TestCase):
         self.client.force_login(self.superuser)
         response = self.client.post(self._get_url_editar(self.produto_loja2.pk), {
             'nome': 'Editado pelo Admin',
-            'preco_venda': '45.00'
+            'preco_venda': '45.00',
+            'preco_custo': '15.00',
+            'quantidade_estoque': '5'
         })
         self.assertRedirects(response, self.url_produtos)
         
@@ -195,12 +197,13 @@ class ProdutoEditarViewTest(TestCase):
             mock_delete.return_value.status_code = 200
             response = self.client.post(self._get_url_editar(self.produto_loja1.pk), {
                 'nome': 'Produto Sem Imagem',
+                'preco_custo': '10.00',
                 'preco_venda': '20.00',
                 'quantidade_estoque': '10',
                 'remover_imagens': str(imagem_obj.id)
             })
 
-        self.assertRedirects(response, self.url_produtos, fetch_redirect_response=False)
+        self.assertRedirects(response, self.url_produtos)
         self.assertFalse(ProdutoImagem.objects.filter(pk=imagem_obj.id).exists())
 
     def test_editar_produto_com_upload_de_novas_imagens_multiplas(self):

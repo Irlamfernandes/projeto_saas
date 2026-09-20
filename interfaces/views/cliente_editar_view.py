@@ -37,9 +37,9 @@ def cliente_editar_view(request, pk):
         return redirect('clientes')
 
     cliente.nome = nome
-    cliente.telefone = telefone or None
-    cliente.email = email or None
-    cliente.endereco = endereco or None
+    cliente.telefone = telefone
+    cliente.email = email
+    cliente.endereco = endereco
     
     try:
         cliente.full_clean()

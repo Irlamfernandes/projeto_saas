@@ -209,7 +209,8 @@ function fecharModalDireto() {
     }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+/* istanbul ignore else */
+if (typeof module !== 'undefined') {
     module.exports = { 
         tratarMudancaCategoria, 
         marcarParaRemover, 

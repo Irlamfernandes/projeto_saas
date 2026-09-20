@@ -98,10 +98,10 @@ def _processar_criacao_produto(request, loja_contexto):
 
     novo_produto = Produto(
         loja=loja_contexto,
-        codigo_interno=codigo_interno or None,
+        codigo_interno=codigo_interno,
         nome=nome,
-        categoria=categoria or None,
-        descricao=descricao or None,
+        categoria=categoria,
+        descricao=descricao,
         preco_custo=preco_custo,
         preco_venda=preco_venda,
         margem_lucro=margem_lucro,

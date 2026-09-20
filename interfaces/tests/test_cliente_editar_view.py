@@ -83,7 +83,10 @@ class ClienteEditarViewTest(TestCase):
         """Superusuário consegue editar clientes de qualquer loja."""
         self.client.force_login(self.superuser)
         response = self.client.post(self._get_url_editar(self.cliente_loja2.pk), {
-            'nome': 'Editado pelo Admin'
+            'nome': 'Editado pelo Admin',
+            'telefone': self.cliente_loja2.telefone or '',
+            'email': self.cliente_loja2.email or '',
+            'endereco': self.cliente_loja2.endereco or '',
         })
         self.assertRedirects(response, self.url_clientes)
         

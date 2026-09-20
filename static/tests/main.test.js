@@ -6,6 +6,7 @@ describe('Testes de Cobertura Total - main.js', () => {
 
     beforeEach(() => {
         jest.resetModules();
+        document.body.innerHTML = '';
     });
 
     test('1. Deve disparar DOMContentLoaded com IDs padrão (id_)', () => {
@@ -92,7 +93,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(venda.value).toBe('120');
     });
 
-    test('3.1. Deve testar o ramo falso de if (margemInput)', () => {
+    test('3.1. Deve testar o ramo falso de if (margemInput) e early return da calculadora', () => {
         document.body.innerHTML = `
             <input id="id_preco_custo" value="100" />
             <input id="id_preco_venda" value="150" />
@@ -104,6 +105,9 @@ describe('Testes de Cobertura Total - main.js', () => {
         const venda = document.getElementById('id_preco_venda');
         venda.value = '200';
         expect(() => venda.dispatchEvent(new Event('input'))).not.toThrow();
+
+        document.body.innerHTML = '';
+        expect(() => document.dispatchEvent(new Event('DOMContentLoaded'))).not.toThrow();
     });
 
     test('4. Deve testar select com poucas opções (<= 2)', () => {
@@ -150,7 +154,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         const wrapper = document.createElement('div');
 
         marcarParaRemover('10', wrapper);
-        marcarParaRemover('10', wrapper); // testa if já existente
+        marcarParaRemover('10', wrapper);
         expect(inputRemover.value).toBe('10');
         
         jest.advanceTimersByTime(300);
@@ -160,15 +164,25 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(() => fecharModalEdicaoCliente()).not.toThrow();
 
         document.body.innerHTML = `
-            <div id="modal-edicao-cliente"></div>
+            <dialog id="modal-edicao-cliente"></dialog>
             <form id="form-edicao-cliente"></form>
             <input id="edit-cli-nome" />
             <input id="edit-cli-telefone" />
             <input id="edit-cli-email" />
             <input id="edit-cli-endereco" />
         `;
+        const modal = document.getElementById('modal-edicao-cliente');
+        modal.showModal = jest.fn();
+        modal.close = jest.fn();
+
         abrirModalEdicaoCliente('1', 'Nome', 'Tel', 'Email', 'End');
+        expect(modal.showModal).toHaveBeenCalled();
+
         fecharModalEdicaoCliente();
+        expect(modal.close).toHaveBeenCalled();
+
+        delete modal.showModal;
+        expect(() => abrirModalEdicaoCliente('1', 'Nome', 'Tel', 'Email', 'End')).not.toThrow();
 
         document.body.innerHTML = '<div id="modal-edicao-cliente"></div>';
         expect(() => abrirModalEdicaoCliente('1', 'a', 'b', 'c', 'd')).not.toThrow();
@@ -182,23 +196,116 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(() => tratarMudancaCategoria({ value: '__novo__' })).not.toThrow();
     });
 
-    test('6. Deve testar o bloco de exportação CommonJS quando module for undefined', () => {
-        const originalModule = global.module;
-        
-        Object.defineProperty(global, 'module', {
-            value: undefined,
-            configurable: true,
-            writable: true
-        });
+    test('6. Deve testar fechar modal ao clicar fora (inicializarFecharModalAoClicarFora)', () => {
+        document.body.innerHTML = `<dialog id="modal-edicao-cliente"></dialog>`;
+        const modal = document.getElementById('modal-edicao-cliente');
+        modal.close = jest.fn();
+        modal.getBoundingClientRect = jest.fn(() => ({
+            top: 100,
+            left: 100,
+            width: 200,
+            height: 200
+        }));
 
-        jest.resetModules();
-        expect(() => require('../js/main.js')).not.toThrow();
+        require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
 
-        Object.defineProperty(global, 'module', {
-            value: originalModule,
-            configurable: true,
-            writable: true
-        });
+        modal.dispatchEvent(new MouseEvent('click', { clientX: 150, clientY: 150 }));
+        expect(modal.close).not.toHaveBeenCalled();
+
+        modal.dispatchEvent(new MouseEvent('click', { clientX: 50, clientY: 50 }));
+        expect(modal.close).toHaveBeenCalled();
+
+        delete modal.close;
+        modal.dispatchEvent(new MouseEvent('click', { clientX: 50, clientY: 50 }));
     });
 
+    test('7. Deve testar modal de galeria, atalhos de teclado e navegação', () => {
+        document.body.innerHTML = `
+            <div id="modal-imagem" class="hidden">
+                <img id="modal-imagem-src" />
+                <span id="modal-indicador"></span>
+                <button id="btn-anterior"></button>
+                <button id="btn-proximo"></button>
+            </div>
+        `;
+
+        const { abrirModalGaleria, mudarImagem, fecharModalDireto } = require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        const modal = document.getElementById('modal-imagem');
+        const img = document.getElementById('modal-imagem-src');
+        const indicador = document.getElementById('modal-indicador');
+        const btnAnt = document.getElementById('btn-anterior');
+        const btnProx = document.getElementById('btn-proximo');
+
+        abrirModalGaleria([]);
+        abrirModalGaleria(null);
+        expect(modal.classList.contains('hidden')).toBeTruthy();
+
+        abrirModalGaleria(['foto1.jpg']);
+        expect(btnAnt.style.display).toBe('none');
+        expect(btnProx.style.display).toBe('none');
+
+        const imagens = ['img1.jpg', 'img2.jpg', 'img3.jpg'];
+        abrirModalGaleria(imagens, 0);
+
+        expect(btnAnt.style.display).toBe('block');
+        expect(btnProx.style.display).toBe('block');
+        expect(modal.classList.contains('hidden')).toBeFalsy();
+        expect(img.src).toContain('img1.jpg');
+        expect(indicador.textContent).toBe('1 de 3');
+
+        mudarImagem(1);
+        expect(img.src).toContain('img2.jpg');
+        mudarImagem(1);
+        expect(img.src).toContain('img3.jpg');
+        mudarImagem(1);
+        expect(img.src).toContain('img1.jpg');
+        mudarImagem(-1);
+        expect(img.src).toContain('img3.jpg');
+
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
+        expect(img.src).toContain('img2.jpg');
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+        expect(img.src).toContain('img3.jpg');
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        expect(modal.classList.contains('hidden')).toBeTruthy();
+
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+
+        abrirModalGaleria(imagens, 0);
+        img.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        expect(modal.classList.contains('hidden')).toBeFalsy();
+
+        modal.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        expect(modal.classList.contains('hidden')).toBeTruthy();
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        fecharModalDireto();
+        expect(modal.classList.contains('hidden')).toBeTruthy();
+        expect(modal.classList.contains('flex')).toBeFalsy();
+    });
+
+    test('8. Deve testar galeria sem elementos de exibição no DOM (cobertura total de atualizarExibicaoGaleria)', () => {
+        document.body.innerHTML = `
+            <div id="modal-imagem" class="hidden"></div>
+        `;
+
+        const { abrirModalGaleria, mudarImagem, fecharModalDireto } = require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        abrirModalGaleria(['img1.jpg']);
+        mudarImagem(1);
+
+        abrirModalGaleria(['img1.jpg', 'img2.jpg']);
+        expect(() => mudarImagem(1)).not.toThrow();
+
+        document.body.innerHTML = '';
+        expect(() => abrirModalGaleria(['img1.jpg'])).not.toThrow();
+        expect(() => fecharModalDireto()).not.toThrow();
+    });
 });

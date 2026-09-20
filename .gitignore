@@ -28,7 +28,6 @@ MANIFEST
 node_modules/
 
 shared
-sonar-project.properties
 
 # Installer logs
 pip-log.txt

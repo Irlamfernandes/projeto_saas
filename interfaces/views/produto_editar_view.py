@@ -113,10 +113,10 @@ def produto_editar_view(request, pk):
         messages.error(request, "Os valores numéricos informados (preços ou estoque) são inválidos.")
         return redirect('editar_produto', pk=produto.pk)
 
-    produto.codigo_interno = codigo_interno or None
+    produto.codigo_interno = codigo_interno
     produto.nome = nome
-    produto.categoria = categoria or None
-    produto.descricao = descricao or None
+    produto.categoria = categoria
+    produto.descricao = descricao
     produto.preco_custo = preco_custo
     produto.preco_venda = preco_venda
     produto.margem_lucro = margem_lucro
