@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 {% load static %}
 
 {% block title %}Produtos - Gestão{% endblock %}
@@ -143,18 +144,16 @@
                     <tr class="hover:bg-gray-50 transition">
                         <td class="py-3 px-4 font-medium text-gray-900">
                             <div class="flex items-start gap-3">
-                                {% with primeira_imagem=produto.imagens.first %}
-                                    {% if primeira_imagem %}
-                                        {% with urls_imagens=produto.imagens.all %}
+                                {% with imagens=produto.imagens.all %}
+                                    {% if imagens %}
                                         <button type="button" 
-                                                onclick="abrirModalGaleria([{% for img in urls_imagens %}'{{ img.imagem_url }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)" 
+                                                onclick="abrirModalGaleria([{% for img in imagens %}'{{ img.imagem_url|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)" 
                                                 class="shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0 cursor-pointer" 
                                                 title="Clique para ampliar galeria">
-                                            <img src="{{ primeira_imagem.imagem_url }}" alt="{{ produto.nome }}" 
+                                            <img src="{{ imagens.0.imagem_url }}" alt="{{ produto.nome }}" 
                                                  style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem; object-fit: cover;" 
                                                  class="rounded border border-gray-200 hover:opacity-80 transition">
                                         </button>
-                                        {% endwith %}
                                     {% else %}
                                         <div style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem;" class="bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs shrink-0 mt-0.5">
                                             📦
@@ -186,8 +185,8 @@
                                 {{ produto.quantidade_estoque }} un.
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap align-middle">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
-                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap align-middle">R$ {{ produto.preco_venda|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap align-middle">R$ {{ produto.preco_custo|moeda }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap align-middle">R$ {{ produto.preco_venda|moeda }}</td>
                         <td class="py-3 px-4 text-center whitespace-nowrap align-middle">
                             <a href="{% url 'editar_produto' produto.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
                                 Editar
@@ -204,6 +203,7 @@
                 </tbody>
             </table>
         </div>
+        {% include 'interfaces/_paginacao.html' %}
     </div>
 
 </div>

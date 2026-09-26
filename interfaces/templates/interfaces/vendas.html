@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 
 {% block title %}Vendas - Gestão{% endblock %}
 {% block header_title %}Gerenciar Vendas{% endblock %}
@@ -20,7 +21,7 @@
                         <option value="{{ cliente.id }}">
                             {{ cliente.nome }} 
                             {% with saldo=cliente.saldo_geral %}
-                                {% if saldo > 0 %} (Devendo R$ {{ saldo|default:0|floatformat:2 }})
+                                {% if saldo > 0 %} (Devendo R$ {{ saldo|moeda }})
                                 {% elif saldo < 0 %} (Com Crédito)
                                 {% endif %}
                             {% endwith %}
@@ -36,7 +37,7 @@
                 <datalist id="lista-produtos">
                     {% for prod in produtos %}
                         <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">
-                            {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|default:0|floatformat:2 }} [Estoque: {{ prod.quantidade_estoque }}]
+                            {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|moeda }} [Estoque: {{ prod.quantidade_estoque }}]
                         </option>
                     {% endfor %}
                 </datalist>
@@ -87,10 +88,10 @@
                         </td>
                         <td class="py-3 px-4 text-xs text-gray-600">
                             {% for item in venda.itens.all %}
-                                <span class="block">{{ item.quantidade }}x {{ item.produto.nome }} (R$ {{ item.preco_unitario|default:0|floatformat:2 }})</span>
+                                <span class="block">{{ item.quantidade }}x {{ item.produto.nome }} (R$ {{ item.preco_unitario|moeda }})</span>
                             {% endfor %}
                         </td>
-                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap">R$ {{ venda.valor_total|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap">R$ {{ venda.valor_total|moeda }}</td>
                         
                         <td class="py-3 px-4 text-center whitespace-nowrap">
                             <div class="flex items-center justify-center gap-2">
@@ -118,6 +119,7 @@
                 </tbody>
             </table>
         </div>
+        {% include 'interfaces/_paginacao.html' %}
     </div>
 
 </div>

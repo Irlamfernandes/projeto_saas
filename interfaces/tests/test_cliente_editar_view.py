@@ -1,3 +1,4 @@
+from django.contrib.messages import get_messages
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -16,14 +17,17 @@ class ClienteEditarViewTest(TestCase):
         self.loja2 = LojaModel.objects.create(nome_loja="Loja Beta", ativo=True)
 
         self.superuser = User.objects.create_superuser(
+            deve_trocar_senha=False,
             username="admin", password="password"
         )
         self.user_loja1 = User.objects.create_user(
+            deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
         
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
+                deve_trocar_senha=False,
                 username="user_sem_loja", password="password", loja=None
             )
 
@@ -123,3 +127,16 @@ class ClienteEditarViewTest(TestCase):
                 'nome': 'Nome Válido'
             })
             self.assertRedirects(response, self.url_clientes)
+
+
+    def test_limpar_campos_opcionais(self):
+        """Regressão: apagar e-mail/telefone na edição não pode quebrar."""
+        self.client.force_login(self.user_loja1)
+
+        response = self.client.post(self._get_url_editar(self.cliente_loja1.pk), {
+            'nome': 'Cliente Atualizado', 'telefone': '', 'email': '', 'endereco': '',
+        })
+
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)], ["Cliente atualizado com sucesso!"])
+        self.cliente_loja1.refresh_from_db()
+        self.assertEqual((self.cliente_loja1.telefone, self.cliente_loja1.email), ('', ''))

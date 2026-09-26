@@ -9,3 +9,6 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.3
+      # Processos do Gunicorn (lido automaticamente por ele). 2 cabe nos 512 MB do plano free.
+      - key: WEB_CONCURRENCY
+        value: 2

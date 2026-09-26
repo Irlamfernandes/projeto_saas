@@ -1,133 +1,95 @@
-import os
-import tempfile
+import io
 from decimal import Decimal
+from types import SimpleNamespace
 import openpyxl
-from django.core.exceptions import PermissionDenied
-from django.test import TestCase
-from infrastructure.models.cliente import Cliente
-from infrastructure.models.loja_model import LojaModel
-from infrastructure.models.produto import Produto
+from django.test import SimpleTestCase
+from application.relatorios.selectors import Relatorio
 from infrastructure.utils.relatorios_export import (
-    gerar_relatorio_pdf_secao,
-    gerar_relatorio_excel_secao,
-    gerar_relatorio_pdf,
-    gerar_relatorio_excel
+    FORMATO_MOEDA_EXCEL, SECOES_POR_TIPO, TIPOS_DE_RELATORIO, _texto_pdf, gerar_relatorio_excel, gerar_relatorio_pdf,
 )
 
 
-class RelatoriosExportTest(TestCase):
+def _relatorio(**campos):
+    base = dict(
+        total_geral_vendas=Decimal('1000.00'), ticket_medio=Decimal('50.00'),
+        vendas_hoje_valor=Decimal('10.00'), vendas_semana_valor=Decimal('70.00'),
+        vendas_mes_valor=Decimal('300.00'), vendas_ano_valor=Decimal('900.00'),
+        clientes_devendo=[SimpleNamespace(nome="Ana", saldo_calculado=Decimal('120.50'))],
+        total_fiado_pendente=Decimal('120.50'),
+        clientes_credito=[SimpleNamespace(nome="Bia", valor_credito=Decimal('20.00'))],
+        total_credito_clientes=Decimal('20.00'),
+        estoque_ordenado=[SimpleNamespace(nome="Arroz", preco_venda=Decimal('25.90'), quantidade_estoque=3)],
+    )
+    return Relatorio(**{**base, **campos})
 
-    def setUp(self):
-        # Lojas
-        self.loja1 = LojaModel.objects.create(nome_loja="Loja Central", ativo=True)
-        self.loja2 = LojaModel.objects.create(nome_loja="Loja Secundária", ativo=True)
 
-        # Contexto de dados padrão (mock dict para relatórios)
-        self.contexto = {
-            'loja': self.loja1,
-            'total_geral_vendas': Decimal('1500.00'),
-            'ticket_medio': Decimal('150.00'),
-            'total_fiado_pendente': Decimal('300.00'),
-            'total_credito_clientes': Decimal('50.00'),
-            'vendas_hoje_valor': Decimal('200.00'),
-            'vendas_semana_valor': Decimal('800.00'),
-            'vendas_mes_valor': Decimal('1500.00'),
-            'vendas_ano_valor': Decimal('5000.00'),
+def _abrir_excel(tipo, relatorio=None):
+    arquivo = io.BytesIO()
+    gerar_relatorio_excel(tipo, relatorio or _relatorio(), arquivo)
+    arquivo.seek(0)
+    return openpyxl.load_workbook(arquivo)
+
+
+class ExportacaoPdfTest(SimpleTestCase):
+
+    def test_gera_pdf_para_todos_os_tipos(self):
+        for tipo in TIPOS_DE_RELATORIO:
+            with self.subTest(tipo=tipo):
+                arquivo = io.BytesIO()
+                gerar_relatorio_pdf(tipo, _relatorio(), arquivo)
+                self.assertTrue(arquivo.getvalue().startswith(b"%PDF"))
+
+    def test_gera_pdf_sem_dados(self):
+        arquivo = io.BytesIO()
+        gerar_relatorio_pdf('geral', _relatorio(clientes_devendo=[], clientes_credito=[], estoque_ordenado=[]), arquivo)
+        self.assertTrue(arquivo.getvalue().startswith(b"%PDF"))
+
+    def test_formatacao_dos_valores(self):
+        self.assertEqual(_texto_pdf(Decimal('10.5')), "R$ 10.50")
+        self.assertEqual(_texto_pdf(3), "3")
+        self.assertEqual(_texto_pdf("Arroz"), "Arroz")
+
+
+class ExportacaoExcelTest(SimpleTestCase):
+
+    def test_abas_por_tipo(self):
+        esperado = {
+            'resumo': ["Resumo Executivo"],
+            'temporal': ["Desempenho Temporal"],
+            'devendo': ["Clientes Devendo"],
+            'credito': ["Clientes com Crédito"],
+            'estoque': ["Estoque"],
+            'geral': ["Resumo Executivo", "Desempenho Temporal", "Clientes Devendo", "Clientes com Crédito", "Estoque"],
         }
+        self.assertEqual(set(esperado), TIPOS_DE_RELATORIO)
+        for tipo, abas in esperado.items():
+            with self.subTest(tipo=tipo):
+                self.assertEqual(_abrir_excel(tipo).sheetnames, abas)
 
-        # Clientes
-        self.cliente_loja1 = Cliente.objects.create(loja=self.loja1, nome="João Devendo")
-        self.cliente_loja2 = Cliente.objects.create(loja=self.loja2, nome="Cliente Outra Loja")
+    def test_excel_temporal_traz_os_periodos(self):
+        """Regressão: o Excel 'temporal' caía no fallback e vinha sem os dados de período."""
+        linhas = list(_abrir_excel('temporal').active.values)
+        self.assertEqual(linhas, [
+            ("Período", "Faturamento"), ("Hoje", 10), ("Últimos 7 dias", 70), ("Este Mês", 300), ("Este Ano", 900),
+        ])
 
-        self.contexto['clientes_devendo'] = [self.cliente_loja1, self.cliente_loja2]
-        self.contexto['clientes_credito'] = [self.cliente_loja1, self.cliente_loja2]
+    def test_valores_monetarios_sao_numeros_formatados(self):
+        aba = _abrir_excel('estoque').active
+        self.assertEqual([c.value for c in aba[2]], ["Arroz", 25.9, 3])
+        self.assertEqual(aba['B2'].number_format, FORMATO_MOEDA_EXCEL)
+        self.assertEqual(aba['C2'].data_type, 'n')
 
-        # Produtos
-        self.prod_loja1 = Produto.objects.create(loja=self.loja1, nome="Caneta", preco_venda=Decimal('2.00'), quantidade_estoque=100)
-        self.prod_loja2 = Produto.objects.create(loja=self.loja2, nome="Caderno", preco_venda=Decimal('20.00'), quantidade_estoque=10)
+    def test_credito_e_exportado_como_valor_positivo(self):
+        self.assertEqual(list(_abrir_excel('credito').active.values)[1], ("Bia", 20))
 
-        self.contexto['estoque_ordenado'] = [self.prod_loja1, self.prod_loja2]
+    def test_nome_de_cliente_nunca_vira_formula(self):
+        """Regressão: '=HYPERLINK(...)' no nome do cliente virava fórmula ativa na planilha."""
+        for nome in ['=HYPERLINK("http://x","clique")', '+1+1', '-2+3', '@SUM(A1)']:
+            with self.subTest(nome=nome):
+                devedor = SimpleNamespace(nome=nome, saldo_calculado=Decimal('1.00'))
+                celula = _abrir_excel('devendo', _relatorio(clientes_devendo=[devedor])).active['A2']
+                self.assertEqual((celula.data_type, celula.value), ('s', nome))
 
-        # Arquivos temporários
-        self.temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-        self.temp_pdf.close()
-        self.caminho_pdf = self.temp_pdf.name
-
-        self.temp_excel = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False)
-        self.temp_excel.close()
-        self.caminho_excel = self.temp_excel.name
-
-    def tearDown(self):
-        for caminho in [self.caminho_pdf, self.caminho_excel]:
-            if os.path.exists(caminho):
-                os.unlink(caminho)
-
-    # ---------------------------------------------------------
-    # Testes de Segurança / Permissão
-    # ---------------------------------------------------------
-    def test_gerar_relatorio_pdf_permission_denied(self):
-        """Deve lançar PermissionDenied se o contexto pertencer a outra loja."""
-        with self.assertRaises(PermissionDenied):
-            gerar_relatorio_pdf_secao('resumo', self.contexto, self.caminho_pdf, loja_usuario=self.loja2)
-
-    # ---------------------------------------------------------
-    # Testes de Geração de PDF por Seção
-    # ---------------------------------------------------------
-    def test_gerar_pdf_secao_resumo_e_geral(self):
-        """Testa geração de PDF para as seções resumo e geral."""
-        for tipo in ['resumo', 'geral']:
-            gerar_relatorio_pdf_secao(tipo, self.contexto, self.caminho_pdf, loja_usuario=self.loja1)
-            self.assertTrue(os.path.exists(self.caminho_pdf))
-            self.assertGreater(os.path.getsize(self.caminho_pdf), 0)
-
-    def test_gerar_pdf_secao_temporal(self):
-        """Testa geração de PDF para a seção temporal."""
-        gerar_relatorio_pdf_secao('temporal', self.contexto, self.caminho_pdf, loja_usuario=self.loja1)
-        self.assertTrue(os.path.exists(self.caminho_pdf))
-
-    def test_gerar_pdf_secao_devendo_e_credito(self):
-        """Testa geração de PDF para clientes devendo e com crédito (com filtro de loja)."""
-        gerar_relatorio_pdf_secao('devendo', self.contexto, self.caminho_pdf, loja_usuario=self.loja1)
-        gerar_relatorio_pdf_secao('credito', self.contexto, self.caminho_pdf, loja_usuario=self.loja1)
-        self.assertTrue(os.path.exists(self.caminho_pdf))
-
-    def test_gerar_pdf_secao_estoque(self):
-        """Testa geração de PDF para o inventário de estoque."""
-        gerar_relatorio_pdf_secao('estoque', self.contexto, self.caminho_pdf, loja_usuario=self.loja1)
-        self.assertTrue(os.path.exists(self.caminho_pdf))
-
-    # ---------------------------------------------------------
-    # Testes de Geração de Excel por Seção
-    # ---------------------------------------------------------
-    def test_gerar_excel_secoes_especificas(self):
-        """Testa a geração de Excel para resumo, estoque, devendo e credito."""
-        secoes = ['resumo', 'estoque', 'devendo', 'credito']
-        for secao in secoes:
-            gerar_relatorio_excel_secao(secao, self.contexto, self.caminho_excel, loja_usuario=self.loja1)
-            self.assertTrue(os.path.exists(self.caminho_excel))
-            wb = openpyxl.load_workbook(self.caminho_excel)
-            self.assertIn(wb.active.title, ["Resumo Executivo", "Estoque", "Clientes Devendo", "Clientes com Crédito"])
-
-    def test_gerar_excel_secao_geral(self):
-        """Testa a opção 'geral' que cria múltiplas abas consolidadas no Excel."""
-        gerar_relatorio_excel_secao('geral', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
-        self.assertTrue(os.path.exists(self.caminho_excel))
-        
-        wb = openpyxl.load_workbook(self.caminho_excel)
-        # Deve conter múltiplas planilhas criadas para a exportação geral
-        self.assertGreaterEqual(len(wb.sheetnames), 3)
-
-    def test_aliases_funcoes(self):
-        """Verifica se os apelidos (aliases) das funções apontam corretamente."""
-        gerar_relatorio_pdf('resumo', self.contexto, self.caminho_pdf, loja_usuario=self.loja1)
-        gerar_relatorio_excel('resumo', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
-        self.assertTrue(os.path.exists(self.caminho_pdf))
-        self.assertTrue(os.path.exists(self.caminho_excel))
-
-    def test_gerar_excel_secao_desconhecida_fallback(self):
-        """Testa o bloco else (fallback) para uma seção Excel desconhecida."""
-        gerar_relatorio_excel_secao('secao_inexistente', self.contexto, self.caminho_excel, loja_usuario=self.loja1)
-        self.assertTrue(os.path.exists(self.caminho_excel))
-        wb = openpyxl.load_workbook(self.caminho_excel)
-        # O fallback padrão cria a aba de Resumo e Estoque
-        self.assertGreaterEqual(len(wb.sheetnames), 2)
+    def test_geral_e_a_uniao_das_secoes(self):
+        secoes_individuais = [SECOES_POR_TIPO[t][0] for t in ('resumo', 'temporal', 'devendo', 'credito', 'estoque')]
+        self.assertEqual(list(SECOES_POR_TIPO['geral']), secoes_individuais)

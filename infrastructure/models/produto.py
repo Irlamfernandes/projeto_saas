@@ -44,6 +44,11 @@ class Produto(models.Model):
         db_table = 'produtos'
         verbose_name = 'Produto'
         verbose_name_plural = 'Produtos'
+        indexes = [
+            models.Index(fields=['loja', '-data_criacao'], name='produto_loja_criacao_idx'),
+            # Estoque baixo (dashboard) e inventário ordenado (relatório).
+            models.Index(fields=['loja', 'quantidade_estoque'], name='produto_loja_estoque_idx'),
+        ]
 
 
 class ProdutoImagem(models.Model):

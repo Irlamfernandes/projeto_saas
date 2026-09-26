@@ -68,3 +68,31 @@ class ClienteModelTest(TestCase):
 
         # Saldo esperado: 200.50 - 70.00 = 130.50
         self.assertEqual(self.cliente.saldo_geral, Decimal('130.50'))
+
+class SaldoAnotadoTest(TestCase):
+    """O saldo calculado em lote (com_saldo) deve bater com o saldo individual e evitar N+1."""
+
+    def setUp(self):
+        self.loja = LojaModel.objects.create(nome_loja="Loja A")
+        self.devendo = Cliente.objects.create(loja=self.loja, nome="Devendo")
+        self.credito = Cliente.objects.create(loja=self.loja, nome="Crédito")
+        self.zerado = Cliente.objects.create(loja=self.loja, nome="Zerado")
+        Venda.objects.create(loja=self.loja, cliente=self.devendo, valor_total=Decimal('100.00'))
+        Venda.objects.create(loja=self.loja, cliente=self.devendo, valor_total=Decimal('50.50'))
+        PagamentoCliente.objects.create(loja=self.loja, cliente=self.devendo, valor=Decimal('30.00'))
+        PagamentoCliente.objects.create(loja=self.loja, cliente=self.credito, valor=Decimal('20.00'))
+
+    def test_valores(self):
+        saldos = dict(Cliente.objects.com_saldo().values_list('nome', 'saldo_calculado'))
+        self.assertEqual(saldos, {
+            "Devendo": Decimal('120.50'), "Crédito": Decimal('-20.00'), "Zerado": Decimal('0.00'),
+        })
+
+    def test_saldo_geral_usa_o_valor_anotado_sem_novas_consultas(self):
+        clientes = list(Cliente.objects.com_saldo())
+        with self.assertNumQueries(0):
+            self.assertEqual([c.saldo_geral for c in clientes], [Decimal('120.50'), Decimal('-20.00'), Decimal('0.00')])
+
+    def test_permite_filtrar_e_ordenar_pelo_saldo(self):
+        devedores = Cliente.objects.com_saldo().filter(saldo_calculado__gt=0)
+        self.assertEqual(list(devedores), [self.devendo])

@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs shell migrate superuser test
+.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test css
 
 # Sobe os containers em background fazendo build
 up:
@@ -39,3 +39,12 @@ superuser:
 # Coleta arquivos estáticos (útil para produção)
 collectstatic:
 	docker compose exec web python manage.py collectstatic --noinput
+
+# Roda as suítes Python (com cobertura) e JS localmente; requer requirements-dev.txt e npm install
+test:
+	python -m pytest --cov --cov-report=term-missing
+	npm test
+
+# Recompila o Tailwind (static/css/output.css é versionado: rode após mudar classes nos templates)
+css:
+	npm run build:css

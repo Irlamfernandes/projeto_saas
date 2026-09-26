@@ -24,6 +24,10 @@ class Venda(models.Model):
         db_table = 'vendas'
         verbose_name = 'Venda'
         verbose_name_plural = 'Vendas'
+        indexes = [
+            # Listagem da loja (mais recentes primeiro) e somas do dashboard por período.
+            models.Index(fields=['loja', '-data_venda'], name='venda_loja_data_idx'),
+        ]
 
     def clean(self):
         super().clean()

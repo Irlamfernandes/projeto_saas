@@ -1,14 +1,15 @@
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto, ProdutoImagem
+from tests.apoio import StorageFalso, imagem_de_teste
 
 User = get_user_model()
+STORAGE = 'application.produtos.services.SupabaseStorage.from_settings'
 
 
 class ProdutosViewTest(TestCase):
@@ -17,221 +18,135 @@ class ProdutosViewTest(TestCase):
         self.loja1 = LojaModel.objects.create(nome_loja="Loja Alpha", ativo=True)
         self.loja2 = LojaModel.objects.create(nome_loja="Loja Beta", ativo=True)
 
-        self.superuser = User.objects.create_superuser(
-            username="admin", password="password"
-        )
-        self.user_loja1 = User.objects.create_user(
-            username="user_loja1", password="password", loja=self.loja1
-        )
-        
-        # Cria usuário sem loja ignorando o full_clean para testar permissão
+        self.superuser = User.objects.create_superuser(deve_trocar_senha=False, username="admin", password="password")
+        self.user_loja1 = User.objects.create_user(deve_trocar_senha=False, username="user_loja1", password="password", loja=self.loja1)
         with patch('django.db.models.Model.full_clean'):
-            self.user_sem_loja = User.objects.create_user(
-                username="user_sem_loja", password="password", loja=None
-            )
+            self.user_sem_loja = User.objects.create_user(deve_trocar_senha=False, username="user_sem_loja", password="password", loja=None)
 
         self.produto_l1 = Produto.objects.create(
-            loja=self.loja1, 
-            codigo_interno="COD01",
-            nome="Camiseta Polo", 
-            categoria="Vestuário",
-            preco_venda=Decimal('50.00'),
-            quantidade_estoque=2  # Baixo estoque
+            loja=self.loja1, codigo_interno="COD01", nome="Camiseta Polo", categoria="Vestuário",
+            preco_venda=Decimal('50.00'), quantidade_estoque=2,
         )
         self.produto_l2 = Produto.objects.create(
-            loja=self.loja2, 
-            codigo_interno="COD02",
-            nome="Calça Jeans", 
-            categoria="Vestuário",
-            preco_venda=Decimal('100.00'),
-            quantidade_estoque=20
+            loja=self.loja2, codigo_interno="COD02", nome="Calça Jeans", categoria="Vestuário",
+            preco_venda=Decimal('100.00'), quantidade_estoque=20,
         )
+        self.url = reverse('produtos')
+        self.storage = StorageFalso()
 
-        self.url_produtos = reverse('produtos')
+    def _mensagens(self, response):
+        return [str(m) for m in get_messages(response.wsgi_request)]
+
+    def _cadastrar(self, usuario=None, **dados):
+        self.client.force_login(usuario or self.user_loja1)
+        with patch(STORAGE, return_value=self.storage):
+            return self.client.post(self.url, {'nome': 'Tênis', 'preco_venda': '199,99', **dados})
+
+    # --- listagem ---------------------------------------------------------
 
     def test_usuario_sem_loja_recebe_permission_denied(self):
-        """Usuário comum sem loja associada recebe 403 ao acessar a listagem de produtos."""
         with patch('django.db.models.Model.full_clean'):
             self.client.force_login(self.user_sem_loja)
-        response = self.client.get(self.url_produtos)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
 
     def test_usuario_comum_ve_apenas_produtos_da_sua_loja(self):
-        """Usuário comum visualiza somente os produtos pertencentes à sua loja."""
         self.client.force_login(self.user_loja1)
-        response = self.client.get(self.url_produtos)
-        
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get(self.url)
+
         self.assertContains(response, "Camiseta Polo")
         self.assertNotContains(response, "Calça Jeans")
 
     def test_superuser_ve_todos_os_produtos(self):
-        """Superusuário visualiza produtos de todas as lojas."""
         self.client.force_login(self.superuser)
-        response = self.client.get(self.url_produtos)
-        
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get(self.url)
+
         self.assertContains(response, "Camiseta Polo")
         self.assertContains(response, "Calça Jeans")
 
-    def test_filtro_busca_por_nome_ou_codigo(self):
-        """Filtra produtos corretamente usando o parâmetro de busca 'q'."""
+    def test_filtros_sao_aplicados_e_devolvidos_ao_template(self):
         self.client.force_login(self.superuser)
-        response = self.client.get(self.url_produtos, {'q': 'COD01'})
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Camiseta Polo")
-        self.assertNotContains(response, "Calça Jeans")
+        response = self.client.get(self.url, {'q': 'COD01', 'categoria': 'Vestuário', 'baixo_estoque': '1', 'ordem': 'nome'})
 
-    def test_busca_muito_longa_redireciona_com_erro(self):
-        """Busca com mais de 100 caracteres exibe mensagem de erro e redireciona."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.get(self.url_produtos, {'q': 'a' * 101})
-        self.assertRedirects(response, self.url_produtos)
+        self.assertEqual(list(response.context['produtos']), [self.produto_l1])
+        self.assertEqual(response.context['filtro_busca'], 'COD01')
+        self.assertEqual(response.context['filtro_categoria'], 'Vestuário')
+        self.assertEqual(response.context['filtro_ordem'], 'nome')
+        self.assertTrue(response.context['filtro_baixo_estoque'])
+        self.assertEqual(response.context['categorias_existentes'], ['Vestuário'])
 
-    def test_filtro_baixo_estoque(self):
-        """Filtra apenas produtos com quantidade em estoque menor ou igual a 5."""
+    def test_ordenacao_invalida_usa_o_padrao(self):
         self.client.force_login(self.superuser)
-        response = self.client.get(self.url_produtos, {'baixo_estoque': '1'})
-        
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Camiseta Polo")
-        self.assertNotContains(response, "Calça Jeans")
+        response = self.client.get(self.url, {'ordem': 'coluna_proibida'})
+        self.assertEqual(response.context['filtro_ordem'], '-data_criacao')
 
-    def test_ordenacao_valida_e_invalida(self):
-        """Aplica ordenação permitida e aplica fallback caso receba parâmetro inválido."""
-        self.client.force_login(self.superuser)
-        
-        # Ordem válida
-        response = self.client.get(self.url_produtos, {'ordem': 'preco_venda'})
-        self.assertEqual(response.status_code, 200)
-
-        # Ordem inválida (deve aplicar o fallback sem quebrar)
-        response_invalida = self.client.get(self.url_produtos, {'ordem': 'coluna_proibida'})
-        self.assertEqual(response_invalida.status_code, 200)
-
-    def test_cadastrar_produto_com_sucesso(self):
-        """Usuário comum cadastra novo produto com sucesso convertendo vírgulas para ponto."""
+    def test_filtro_invalido_redireciona_com_erro(self):
         self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url_produtos, {
-            'nome': 'Tênis Esportivo',
-            'preco_venda': '199,99',
-            'preco_custo': '100,00',
-            'quantidade_estoque': '10',
-            'categoria': 'Calçados'
-        })
-        self.assertRedirects(response, self.url_produtos)
-        
-        produto_criado = Produto.objects.filter(nome='Tênis Esportivo', loja=self.loja1).first()
-        self.assertIsNotNone(produto_criado)
-        self.assertEqual(produto_criado.preco_venda, Decimal('199.99'))
+        response = self.client.get(self.url, {'q': 'a' * 101})
 
-    def test_cadastrar_produto_sem_nome_exibe_erro(self):
-        """Tentar cadastrar produto sem o campo nome exibe mensagem de erro."""
+        self.assertRedirects(response, self.url)
+        self.assertEqual(self._mensagens(response), ["O termo de busca é muito longo."])
+
+    def test_url_de_imagem_e_escapada_no_javascript_da_galeria(self):
+        """Regressão: aspas na URL da imagem permitiam injetar JavaScript no onclick (XSS)."""
+        ProdutoImagem.objects.create(produto=self.produto_l1, imagem_url="https://x.co/a.png');alert(1);//")
         self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url_produtos, {
-            'nome': '',
-            'preco_venda': '50.00'
-        })
-        self.assertRedirects(response, self.url_produtos)
 
-    def test_cadastrar_produto_valores_numericos_invalidos(self):
-        """Enviar preços ou estoque mal formatados exibe mensagem de erro."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url_produtos, {
-            'nome': 'Produto Errado',
-            'preco_venda': 'abc',
-            'quantidade_estoque': 'xyz'
-        })
-        self.assertRedirects(response, self.url_produtos)
+        response = self.client.get(self.url)
 
-    def test_erro_validacao_model_ao_cadastrar(self):
-        """Captura ValidationError lançado pelo model durante o full_clean do produto."""
-        self.client.force_login(self.user_loja1)
-        
-        err = ValidationError({'preco_venda': ['Preço inválido']})
-        with patch('infrastructure.models.produto.Produto.full_clean', side_effect=err):
-            response = self.client.post(self.url_produtos, {
-                'nome': 'Produto Válido',
-                'preco_venda': '10.00'
-            })
-            self.assertRedirects(response, self.url_produtos)
+        self.assertNotContains(response, "abrirModalGaleria(['https://x.co/a.png&#x27;")
+        self.assertContains(response, "abrirModalGaleria(['https://x.co/a.png\\u0027)\\u003Balert(1)")
 
-    def test_filtro_categoria_muito_longo_redireciona_com_erro(self):
-        """Filtro de categoria com mais de 100 caracteres exibe mensagem de erro e redireciona."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.get(self.url_produtos, {'categoria': 'a' * 101})
-        self.assertRedirects(response, self.url_produtos)
+    # --- cadastro ---------------------------------------------------------
 
-    def test_cadastrar_produto_campos_excedem_tamanho_maximo(self):
-        """Enviar dados de cadastro que estouram os limites de tamanho exibe erro."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url_produtos, {
-            'nome': 'a' * 151,
-            'codigo_interno': '1' * 51,
-            'categoria': 'c' * 101
-        })
-        self.assertRedirects(response, self.url_produtos)
+    def test_cadastra_produto_na_loja_do_usuario(self):
+        response = self._cadastrar(preco_custo='100,00', quantidade_estoque='10', categoria='Calçados')
 
-    def test_superuser_sem_loja_contexto_nao_cadastra(self):
-        """Superusuário sem loja de contexto associada recebe erro ao tentar cadastrar produto."""
-        self.client.force_login(self.superuser)
-        response = self.client.post(self.url_produtos, {
-            'nome': 'Produto Superuser Sem Loja',
-            'preco_venda': '10.00'
-        })
-        self.assertRedirects(response, self.url_produtos)
+        self.assertRedirects(response, self.url)
+        produto = Produto.objects.get(nome='Tênis')
+        self.assertEqual(produto.loja, self.loja1)
+        self.assertEqual(produto.preco_venda, Decimal('199.99'))
+        self.assertEqual(self._mensagens(response), ["Produto e imagens cadastrados com sucesso!"])
 
-    def test_cadastrar_produto_com_upload_de_imagens(self):
-        """Cadastra novo produto enviando arquivos de imagem associados via Supabase."""
-        self.client.force_login(self.user_loja1)
-        
-        img_file = SimpleUploadedFile("produto.jpg", b"dados_img", content_type="image/jpeg")
+    def test_cadastra_produto_com_varias_imagens(self):
+        self._cadastrar(imagens=[imagem_de_teste('f1.png'), imagem_de_teste('f2.png')])
 
-        with patch('interfaces.views.produtos_view.upload_imagem_supabase', return_value="https://exemplo.supabase.co/img.jpg"):
-            response = self.client.post(self.url_produtos, {
-                'nome': 'Produto Com Imagem',
-                'preco_venda': '50.00',
-                'imagens': img_file
-            })
+        produto = Produto.objects.get(nome='Tênis')
+        self.assertEqual(produto.imagens.count(), 2)
+        self.assertEqual(len(self.storage.enviados), 2)
 
-        self.assertRedirects(response, self.url_produtos)
+    def test_dados_invalidos_nao_cadastram(self):
+        response = self._cadastrar(nome='')
 
-    def test_erro_generico_ao_cadastrar_produto(self):
-        """Captura exceção genérica lançada ao salvar o produto e exibe mensagem de erro."""
-        self.client.force_login(self.user_loja1)
-        
-        with patch('infrastructure.models.produto.Produto.save', side_effect=Exception("Erro de BD")):
-            response = self.client.post(self.url_produtos, {
-                'nome': 'Produto Exceção',
-                'preco_venda': '10.00'
-            })
-            self.assertRedirects(response, self.url_produtos)
+        self.assertRedirects(response, self.url)
+        self.assertEqual(self._mensagens(response), ["O nome do produto é obrigatório."])
+        self.assertFalse(Produto.objects.filter(loja=self.loja1, nome='').exists())
 
-    def test_filtro_por_categoria_valida(self):
-        """Filtra produtos corretamente usando o parâmetro de categoria válido."""
-        self.client.force_login(self.superuser)
-        response = self.client.get(self.url_produtos, {'categoria': 'Vestuário'})
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Camiseta Polo")
-        self.assertContains(response, "Calça Jeans")
+    def test_arquivo_que_nao_e_imagem_e_recusado_antes_do_envio(self):
+        falso = imagem_de_teste('ok.png')
+        falso.file.write(b'lixo')
+        falso.file.seek(0)
+        falso.file.truncate(4)
 
-    def test_cadastrar_produto_com_multiplas_imagens(self):
-        """Cadastra novo produto enviando múltiplas imagens pelo loop de imagens."""
-        self.client.force_login(self.user_loja1)
-        
-        img1 = SimpleUploadedFile("foto1.jpg", b"dados1", content_type="image/jpeg")
-        img2 = SimpleUploadedFile("foto2.jpg", b"dados2", content_type="image/jpeg")
+        response = self._cadastrar(imagens=[falso])
 
-        with patch('interfaces.views.produtos_view.upload_imagem_supabase', side_effect=["url1.jpg", "url2.jpg"]):
-            response = self.client.post(self.url_produtos, {
-                'nome': 'Produto Multimagens',
-                'preco_venda': '80.00',
-                'imagens': [img1, img2]
-            })
+        self.assertEqual(self._mensagens(response), ["Envie apenas imagens válidas (JPG, PNG ou WEBP)."])
+        self.assertEqual(self.storage.enviados, [])
 
-        self.assertRedirects(response, self.url_produtos)
-        
-        produto_criado = Produto.objects.filter(nome='Produto Multimagens').first()
-        self.assertIsNotNone(produto_criado)
-        self.assertEqual(ProdutoImagem.objects.filter(produto=produto_criado).count(), 2)
+    def test_superuser_sem_loja_nao_cadastra(self):
+        response = self._cadastrar(usuario=self.superuser)
+
+        self.assertEqual(self._mensagens(response), ["Superusuários devem associar o produto a uma loja específica."])
+        self.assertFalse(Produto.objects.filter(nome='Tênis').exists())
+
+    def test_falha_no_storage_mostra_mensagem_amigavel_e_nao_salva(self):
+        """Antes o erro interno (str(e)) era exibido ao usuário e o produto ficava salvo sem imagens."""
+        self.storage = StorageFalso(falhar_no_envio=0)
+
+        with self.assertLogs('application.produtos.services', 'ERROR'):
+            response = self._cadastrar(imagens=[imagem_de_teste()])
+
+        self.assertEqual(
+            self._mensagens(response),
+            ["Não foi possível enviar as imagens agora. Nada foi salvo; tente novamente."],
+        )
+        self.assertFalse(Produto.objects.filter(nome='Tênis').exists())

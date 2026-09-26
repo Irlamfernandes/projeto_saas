@@ -8,4 +8,4 @@ echo "Coletando arquivos estáticos..."
 python manage.py collectstatic --no-input
 
 echo "Iniciando Gunicorn..."
-exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}
+exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers ${WEB_CONCURRENCY:-2}

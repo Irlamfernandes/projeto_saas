@@ -1,51 +1,17 @@
 from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
-from infrastructure.models.cliente import Cliente
+from application.clientes.selectors import clientes_do_usuario
+from interfaces.decorators import loja_required
+from interfaces.forms import ClienteForm
+from interfaces.views.comum import executar_formulario
 
 
-def _obter_cliente_autorizado(request, pk):
-    """Auxiliar para verificar permissões e buscar o cliente com segurança."""
-    if not request.user.is_superuser and not request.user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
-    if request.user.is_superuser:
-        return get_object_or_404(Cliente, pk=pk)
-    
-    return get_object_or_404(Cliente, pk=pk, loja=request.user.loja)
-
-
-@login_required
+@loja_required
 def cliente_editar_view(request, pk):
-    cliente = _obter_cliente_autorizado(request, pk)
+    """A edição acontece num modal da listagem; aqui só se processa o POST."""
+    cliente = get_object_or_404(clientes_do_usuario(request.user), pk=pk)
 
-    if request.method != 'POST':
-        return redirect('clientes')
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        executar_formulario(request, form, acao=form.save, mensagem_sucesso="Cliente atualizado com sucesso!")
 
-    nome = request.POST.get('nome', '').strip()
-    telefone = request.POST.get('telefone', '').strip()
-    email = request.POST.get('email', '').strip()
-    endereco = request.POST.get('endereco', '').strip()
-
-    if not nome:
-        messages.error(request, "O nome do cliente é obrigatório.")
-        return redirect('clientes')
-
-    if len(nome) > 255 or len(telefone) > 20 or len(email) > 254:
-        messages.error(request, "Um ou mais campos excedem o tamanho máximo permitido.")
-        return redirect('clientes')
-
-    cliente.nome = nome
-    cliente.telefone = telefone
-    cliente.email = email
-    cliente.endereco = endereco
-    
-    try:
-        cliente.full_clean()
-        cliente.save()
-        messages.success(request, "Cliente atualizado com sucesso!")
-    except ValidationError:
-        messages.error(request, "Erro de validação ao atualizar o cliente.")
-    
     return redirect('clientes')
