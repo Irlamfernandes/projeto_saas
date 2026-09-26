@@ -30,8 +30,16 @@ def atualizar_produto(produto, imagens_novas=(), ids_imagens_remover=(), storage
 
 
 def _anexar_imagens(produto, imagens, storage):
-    for imagem in imagens:
-        ProdutoImagem.objects.create(produto=produto, imagem_url=_enviar(storage, imagem, produto.pk))
+    enviadas = []
+    try:
+        for imagem in imagens:
+            enviadas.append(_enviar(storage, imagem, produto.pk))
+            ProdutoImagem.objects.create(produto=produto, imagem_url=enviadas[-1])
+    except Exception:
+        # O banco vai desfazer os registros; os arquivos já enviados precisam ser apagados à mão.
+        for url in enviadas:
+            storage.remover(url)
+        raise
 
 
 def _enviar(storage, imagem, pasta):

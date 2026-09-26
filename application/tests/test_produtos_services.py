@@ -46,6 +46,16 @@ class CadastrarProdutoTest(TestCase):
 
         self.assertFalse(Produto.objects.exists())
         self.assertFalse(ProdutoImagem.objects.exists())
+        self.assertEqual(storage.removidos, storage.enviados, "arquivo já enviado não pode ficar órfão no bucket")
+        self.assertEqual(len(storage.removidos), 1)
+
+    def test_erro_no_banco_apos_envio_tambem_apaga_o_arquivo(self):
+        with patch('application.produtos.services.ProdutoImagem.objects.create', side_effect=RuntimeError("banco caiu")):
+            with self.assertRaises(RuntimeError):
+                cadastrar_produto(self._novo(self.loja), [imagem_de_teste()], storage=self.storage)
+
+        self.assertEqual(self.storage.removidos, self.storage.enviados)
+        self.assertEqual(len(self.storage.removidos), 1)
 
 
 class AtualizarProdutoTest(TestCase):
