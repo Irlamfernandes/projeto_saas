@@ -189,3 +189,32 @@ class VendaEditarViewTest(TestCase):
         
         self.venda.refresh_from_db()
         self.assertIsNone(self.venda.cliente)
+
+    def test_edicao_pelo_codigo_interno(self):
+        """Regressão: o campo vem preenchido com o código interno e isso gerava HTTP 500."""
+        self.client.force_login(self.user_loja1)
+        response = self.client.post(self.url, {
+            'cliente': self.cliente.id, 'produto': 'PB002', 'quantidade': 1,
+        })
+
+        self.assertRedirects(response, reverse('vendas'))
+        self.assertEqual(self.venda.itens.get().produto, self.produto2)
+
+    def test_superuser_nao_move_venda_para_cliente_de_outra_loja(self):
+        """Antes o superusuário podia escolher cliente de outra loja e a validação do model dava HTTP 500."""
+        cliente_loja2 = Cliente.objects.create(loja=self.loja2, nome="Cliente Beta")
+        self.client.force_login(self.superuser)
+        response = self.client.post(self.url, {
+            'cliente': cliente_loja2.id, 'produto': 'PA001', 'quantidade': 1,
+        })
+
+        self.assertRedirects(response, self.url)
+        self.venda.refresh_from_db()
+        self.assertEqual(self.venda.cliente, self.cliente)
+
+    def test_usuario_de_loja_inativa_recebe_permission_denied(self):
+        self.loja1.ativo = False
+        self.loja1.save()
+        self.client.force_login(self.user_loja1)
+
+        self.assertEqual(self.client.get(self.url).status_code, 403)

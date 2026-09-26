@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.loja_model import LojaModel
@@ -199,3 +200,39 @@ class VendasViewTest(TestCase):
         venda = Venda.objects.filter(observacoes='Venda do superuser').first()
         self.assertIsNotNone(venda)
         self.assertEqual(venda.valor_total, Decimal('100.00'))
+
+    def _vender(self, produto, **extra):
+        self.client.force_login(self.user_loja1)
+        dados = {'cliente': self.cliente1.id, 'produto': produto, 'quantidade': 1, 'valor_pago': '', **extra}
+        return self.client.post(self.url, dados)
+
+    def test_venda_pelo_codigo_interno(self):
+        """Regressão: o datalist envia o código interno e isso gerava HTTP 500."""
+        response = self._vender('pa001')
+
+        self.assertRedirects(response, self.url)
+        self.assertEqual(Venda.objects.get().itens.get().produto, self.produto1)
+
+    def test_venda_pelo_nome_do_produto(self):
+        """Regressão: produto sem código é enviado pelo nome e isso gerava HTTP 500."""
+        self._vender('Produto A')
+        self.assertEqual(Venda.objects.get().itens.get().produto, self.produto1)
+
+    def test_produto_digitado_inexistente_exibe_erro_sem_quebrar(self):
+        response = self._vender('Fanta')
+
+        self.assertRedirects(response, self.url)
+        self.assertFalse(Venda.objects.exists())
+        mensagens = [str(m) for m in get_messages(response.wsgi_request)]
+        self.assertEqual(mensagens, ["Produto 'Fanta' não foi encontrado pelo Código Interno ou Nome."])
+
+    def test_usuario_de_loja_inativa_recebe_permission_denied(self):
+        self.loja1.ativo = False
+        self.loja1.save()
+        self.client.force_login(self.user_loja1)
+
+        self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_usuario_comum_nao_vende_para_cliente_de_outra_loja(self):
+        self._vender('PA001', cliente=self.cliente2.id)
+        self.assertFalse(Venda.objects.exists())
