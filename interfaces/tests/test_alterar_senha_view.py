@@ -31,13 +31,48 @@ class AlterarSenhaViewTest(TestCase):
         response = self.client.get(self.url)
         self.assertRedirects(response, f"{reverse('login')}?next={self.url}", fetch_redirect_response=False)
 
-    def test_quem_ja_trocou_a_senha_vai_para_o_dashboard(self):
-        self.client.force_login(self.user_normal)
-        self.assertRedirects(self.client.get(self.url), self.url_dashboard)
-
-    def test_get_exibe_o_formulario(self):
+    def test_troca_obrigatoria_nao_pede_a_senha_atual(self):
         self.client.force_login(self.user_troca)
-        self.assertTemplateUsed(self.client.get(self.url), TEMPLATE_ALTERAR_SENHA)
+        response = self.client.get(self.url)
+
+        self.assertTemplateUsed(response, TEMPLATE_ALTERAR_SENHA)
+        self.assertContains(response, "Primeiro Acesso")
+        self.assertNotContains(response, 'name="senha_atual"')
+
+    # --- troca voluntária -------------------------------------------------
+
+    def test_troca_voluntaria_pede_a_senha_atual(self):
+        self.client.force_login(self.user_normal)
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "Alterar Senha")
+        self.assertContains(response, 'name="senha_atual"')
+
+    def test_troca_voluntaria_com_senha_atual_errada_ou_ausente(self):
+        self.client.force_login(self.user_normal)
+        casos = {'errada': ('outra-senha', "A senha atual está incorreta."), 'ausente': ('', "Informe sua senha atual.")}
+        for caso, (atual, mensagem) in casos.items():
+            with self.subTest(caso):
+                response = self.client.post(self.url, {
+                    'senha_atual': atual, 'nova_senha': SENHA_FORTE, 'confirmacao_senha': SENHA_FORTE,
+                })
+                self.assertContains(response, mensagem)
+                self.user_normal.refresh_from_db()
+                self.assertTrue(self.user_normal.check_password('definitiva1'))
+
+    def test_troca_voluntaria_com_sucesso(self):
+        self.client.force_login(self.user_normal)
+        response = self.client.post(self.url, {
+            'senha_atual': 'definitiva1', 'nova_senha': SENHA_FORTE, 'confirmacao_senha': SENHA_FORTE,
+        })
+
+        self.assertRedirects(response, self.url_dashboard)
+        self.user_normal.refresh_from_db()
+        self.assertTrue(self.user_normal.check_password(SENHA_FORTE))
+
+    def test_menu_tem_link_para_alterar_a_senha(self):
+        self.client.force_login(self.user_normal)
+        self.assertContains(self.client.get(self.url_dashboard), f'href="{self.url}"')
 
     def test_erros_aparecem_na_pagina(self):
         """Regressão: as mensagens iam para `messages`, que esta página não exibe; o usuário não via o motivo."""
