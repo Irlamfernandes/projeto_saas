@@ -1,2 +1,3 @@
 from .login_form import LoginForm
 from .venda_form import NovaVendaForm, EditarVendaForm
+from .produto_form import ProdutoForm, EditarProdutoForm, FiltroProdutosForm

@@ -1,93 +1,140 @@
 import io
-from unittest.mock import patch, MagicMock
-from django.test import TestCase
+from unittest.mock import MagicMock, patch
+from django.test import SimpleTestCase, override_settings
 from requests.exceptions import RequestException
 from infrastructure.utils.supabase_storage import (
-    limpar_nome_arquivo,
-    upload_imagem_supabase,
-    SupabaseConfigError,
-    SupabaseAPIError
+    SupabaseAPIError, SupabaseConfigError, SupabaseStorage, gerar_nome_unico,
 )
 
+BASE = "https://xyz.supabase.co"
 
-class SupabaseStorageTest(TestCase):
 
-    def test_limpar_nome_arquivo(self):
-        """Testa a remoção de acentos e formatação de nomes de arquivos."""
-        nome_sujo = "Foto de Produto com Çaracteres & Acentuação.jpg"
-        nome_limpo = limpar_nome_arquivo(nome_sujo)
-        self.assertEqual(nome_limpo, "Foto_de_Produto_com_Caracteres_&_Acentuacao.jpg")
+def _arquivo(nome="foto.JPG", conteudo=b"bytes"):
+    arquivo = io.BytesIO(conteudo)
+    arquivo.name = nome
+    return arquivo
 
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_URL', None)
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_KEY', 'some_key')
-    def test_upload_missing_url_raises_exception(self):
-        """Deve lançar exceção se a URL do Supabase não estiver configurada."""
-        file_obj = io.BytesIO(b"conteudo")
-        file_obj.name = "teste.jpg"
 
-        with self.assertRaises(SupabaseConfigError) as ctx:
-            upload_imagem_supabase(file_obj, produto_id=1)
-        self.assertIn("Credenciais do Supabase não configuradas", str(ctx.exception))
+def _resposta(status, texto=""):
+    resposta = MagicMock(status_code=status, text=texto)
+    return resposta
 
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_KEY', None)
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_URL', 'https://xyz.supabase.co')
-    def test_upload_missing_key_raises_exception(self):
-        """Deve lançar exceção se a Key do Supabase não estiver configurada."""
-        file_obj = io.BytesIO(b"conteudo")
-        file_obj.name = "teste.jpg"
 
-        with self.assertRaises(SupabaseConfigError) as ctx:
-            upload_imagem_supabase(file_obj, produto_id=1)
-        self.assertIn("Credenciais do Supabase não configuradas", str(ctx.exception))
+class GerarNomeUnicoTest(SimpleTestCase):
 
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_KEY', 'test_key')
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_URL', 'https://xyz.supabase.co/rest/v1')
-    @patch('infrastructure.utils.supabase_storage.requests.post')
-    def test_upload_success(self, mock_post):
-        """Realiza o upload com sucesso e retorna a URL pública."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_post.return_value = mock_response
+    def test_preserva_apenas_a_extensao_em_minusculas(self):
+        nome = gerar_nome_unico("Minha Foto Çá.JPG")
+        self.assertRegex(nome, r"^[0-9a-f]{32}\.jpg$")
 
-        file_obj = io.BytesIO(b"imagem_bytes")
-        file_obj.name = "foto capivara.jpg"
-        file_obj.content_type = "image/jpeg"
+    def test_descarta_extensao_com_caracteres_perigosos(self):
+        """Regressão: o nome original ia para a URL e permitia injetar JavaScript no template."""
+        self.assertRegex(gerar_nome_unico("x.png');alert(1)"), r"^[0-9a-f]{32}$")
 
-        url_publica = upload_imagem_supabase(file_obj, produto_id=10)
+    def test_sem_nome_ou_sem_extensao(self):
+        self.assertRegex(gerar_nome_unico(None), r"^[0-9a-f]{32}$")
+        self.assertRegex(gerar_nome_unico("arquivo"), r"^[0-9a-f]{32}$")
 
-        self.assertTrue(mock_post.called)
-        self.assertEqual(
-            url_publica, 
-            "https://xyz.supabase.co/storage/v1/object/public/imagens/10/foto_capivara.jpg"
+    def test_nomes_nunca_se_repetem(self):
+        self.assertNotEqual(gerar_nome_unico("a.png"), gerar_nome_unico("a.png"))
+
+
+@patch('infrastructure.utils.supabase_storage.requests')
+class EnviarTest(SimpleTestCase):
+
+    def setUp(self):
+        self.storage = SupabaseStorage(f"{BASE}/rest/v1/", "chave")
+
+    def test_envia_com_nome_unico_e_retorna_url_publica(self, requests_mock):
+        requests_mock.post.return_value = _resposta(200)
+
+        url = self.storage.enviar(_arquivo(), pasta=10)
+
+        chamada = requests_mock.post.call_args
+        caminho = chamada.args[0].removeprefix(f"{BASE}/storage/v1/object/imagens/")
+        self.assertRegex(caminho, r"^10/[0-9a-f]{32}\.jpg$")
+        self.assertEqual(url, f"{BASE}/storage/v1/object/public/imagens/{caminho}")
+        self.assertEqual(chamada.kwargs['data'], b"bytes")
+        self.assertEqual(chamada.kwargs['timeout'], SupabaseStorage.TIMEOUT_SEGUNDOS)
+        headers = chamada.kwargs['headers']
+        self.assertEqual(headers['Content-Type'], 'image/jpeg')
+        self.assertEqual(headers['Authorization'], 'Bearer chave')
+        self.assertNotIn('x-upsert', headers)
+
+    def test_tipo_desconhecido_vira_octet_stream(self, requests_mock):
+        requests_mock.post.return_value = _resposta(201)
+
+        self.storage.enviar(_arquivo(nome="sem_extensao"), pasta=1)
+
+        self.assertEqual(requests_mock.post.call_args.kwargs['headers']['Content-Type'], 'application/octet-stream')
+
+    def test_sem_credenciais_nao_envia(self, requests_mock):
+        for url, chave in [("", "chave"), (BASE, None)]:
+            with self.subTest(url=url, chave=chave), self.assertRaises(SupabaseConfigError):
+                SupabaseStorage(url, chave).enviar(_arquivo(), pasta=1)
+        requests_mock.post.assert_not_called()
+
+    def test_status_de_erro(self, requests_mock):
+        requests_mock.post.return_value = _resposta(400, "Bad Request")
+
+        with self.assertRaisesMessage(SupabaseAPIError, "(400): Bad Request"):
+            self.storage.enviar(_arquivo(), pasta=1)
+
+    def test_falha_de_rede(self, requests_mock):
+        requests_mock.RequestException = RequestException
+        requests_mock.post.side_effect = RequestException("timeout")
+
+        with self.assertRaisesMessage(SupabaseAPIError, "timeout"):
+            self.storage.enviar(_arquivo(), pasta=1)
+
+
+@patch('infrastructure.utils.supabase_storage.requests')
+class RemoverTest(SimpleTestCase):
+    URL = f"{BASE}/storage/v1/object/public/imagens/10/abc.jpg"
+
+    def setUp(self):
+        self.storage = SupabaseStorage(BASE, "chave")
+
+    def test_remove_o_objeto_da_url_publica(self, requests_mock):
+        requests_mock.delete.return_value = _resposta(200)
+
+        self.storage.remover(self.URL)
+
+        requests_mock.delete.assert_called_once_with(
+            f"{BASE}/storage/v1/object/imagens/10/abc.jpg",
+            headers={'apikey': 'chave', 'Authorization': 'Bearer chave'},
+            timeout=SupabaseStorage.TIMEOUT_SEGUNDOS,
         )
 
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_KEY', 'test_key')
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_URL', 'https://xyz.supabase.co')
-    @patch('infrastructure.utils.supabase_storage.requests.post')
-    def test_upload_api_error_status(self, mock_post):
-        """Lança exceção se o Supabase retornar um status code de erro (ex: 400)."""
-        mock_response = MagicMock()
-        mock_response.status_code = 400
-        mock_response.text = "Bad Request"
-        mock_post.return_value = mock_response
+    def test_ignora_urls_que_nao_sao_do_bucket(self, requests_mock):
+        for url in [None, "", "https://outro.site/foto.jpg", f"{BASE}/storage/v1/object/public/imagens/"]:
+            with self.subTest(url=url):
+                self.storage.remover(url)
+        requests_mock.delete.assert_not_called()
 
-        file_obj = io.BytesIO(b"dados")
-        file_obj.name = "arquivo.jpg"
+    def test_sem_credenciais_nao_tenta_remover(self, requests_mock):
+        SupabaseStorage(BASE, "").remover(self.URL)
+        requests_mock.delete.assert_not_called()
 
-        with self.assertRaises(SupabaseAPIError) as ctx:
-            upload_imagem_supabase(file_obj, produto_id=5)
-        self.assertIn("Erro na API do Supabase (400)", str(ctx.exception))
+    def test_falhas_sao_registradas_e_nao_propagadas(self, requests_mock):
+        requests_mock.RequestException = RequestException
+        casos = {
+            'rede': {'side_effect': RequestException("caiu")},
+            'status': {'side_effect': None, 'return_value': _resposta(500)},
+        }
+        for caso, comportamento in casos.items():
+            with self.subTest(caso), self.assertLogs('infrastructure.utils.supabase_storage', 'WARNING'):
+                requests_mock.delete.configure_mock(**comportamento)
+                self.storage.remover(self.URL)
 
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_KEY', 'test_key')
-    @patch('infrastructure.utils.supabase_storage.SUPABASE_URL', 'https://xyz.supabase.co')
-    @patch('infrastructure.utils.supabase_storage.requests.post')
-    def test_upload_request_exception(self, mock_post):
-        """Lança exceção se ocorrer um erro de requisição (rede/conexão)."""
-        mock_post.side_effect = RequestException("Erro de conexão")
 
-        file_obj = io.BytesIO(b"dados")
-        file_obj.name = "arquivo.jpg"
+class FromSettingsTest(SimpleTestCase):
 
-        with self.assertRaises(SupabaseAPIError) as ctx:
-            upload_imagem_supabase(file_obj, produto_id=5)
-        self.assertIn("Erro no Supabase Storage", str(ctx.exception))
+    @override_settings(SUPABASE_URL=f"{BASE}/rest/v1", SUPABASE_KEY="chave-settings")
+    @patch('infrastructure.utils.supabase_storage.requests')
+    def test_usa_credenciais_do_settings(self, requests_mock):
+        requests_mock.post.return_value = _resposta(200)
+
+        url = SupabaseStorage.from_settings().enviar(_arquivo(), pasta=1)
+
+        self.assertTrue(url.startswith(f"{BASE}/storage/v1/object/public/imagens/1/"))
+        self.assertEqual(requests_mock.post.call_args.kwargs['headers']['apikey'], "chave-settings")
