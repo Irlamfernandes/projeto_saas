@@ -49,23 +49,23 @@ class Painel(_Contexto):
 
 def faturamento_por_periodo(vendas, inicios):
     """Soma das vendas no total e a partir de cada início informado, numa única consulta."""
-    somas = {nome: _soma(Q(data_venda__gte=inicio)) for nome, inicio in inicios.items()}
-    return vendas.aggregate(total=_soma(), **somas)
+    somas = {nome: soma_das_vendas(Q(data_venda__gte=inicio)) for nome, inicio in inicios.items()}
+    return vendas.aggregate(total=soma_das_vendas(), **somas)
 
 
-def filtrar_por_intervalo(vendas, inicio=None, fim=None):
-    """Filtra por datas (inclusivas) no calendário local."""
+def filtrar_por_intervalo(queryset, inicio=None, fim=None, campo='data_venda'):
+    """Filtra por datas (inclusivas) no calendário local. `campo` é o datetime a comparar."""
     if inicio:
-        vendas = vendas.filter(data_venda__date__gte=inicio)
+        queryset = queryset.filter(**{f'{campo}__date__gte': inicio})
     if fim:
-        vendas = vendas.filter(data_venda__date__lte=fim)
-    return vendas
+        queryset = queryset.filter(**{f'{campo}__date__lte': fim})
+    return queryset
 
 
 def montar_relatorio(user, inicio=None, fim=None, agora=None):
     vendas = filtrar_por_loja(Venda.objects.all(), user)
     no_intervalo = filtrar_por_intervalo(vendas, inicio, fim).aggregate(
-        total=_soma(), ticket=Coalesce(Avg('valor_total'), _ZERO, output_field=_DINHEIRO),
+        total=soma_das_vendas(), ticket=Coalesce(Avg('valor_total'), _ZERO, output_field=_DINHEIRO),
     )
     periodos = inicios_dos_periodos(agora)
     por_periodo = faturamento_por_periodo(
@@ -114,5 +114,6 @@ def montar_painel(user, limite_estoque=LIMITE_ESTOQUE_BAIXO_PADRAO, agora=None):
     )
 
 
-def _soma(filtro=None):
+def soma_das_vendas(filtro=None):
+    """Soma de valor_total (zero quando não há vendas), opcionalmente filtrada."""
     return Coalesce(Sum('valor_total', filter=filtro), _ZERO, output_field=_DINHEIRO)

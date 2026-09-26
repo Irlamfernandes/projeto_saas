@@ -31,3 +31,55 @@ class StorageFalso:
 
     def remover(self, url_publica):
         self.removidos.append(url_publica)
+
+
+class CenarioDeLoja:
+    """Monta dados de uma loja para testes de relatórios, com datas no fuso local."""
+
+    def __init__(self, nome_loja="Loja Teste"):
+        from infrastructure.models import LojaModel
+        self.loja = LojaModel.objects.create(nome_loja=nome_loja)
+
+    @staticmethod
+    def quando(ano, mes, dia, hora=12, minuto=0):
+        from datetime import datetime
+        from zoneinfo import ZoneInfo
+        return datetime(ano, mes, dia, hora, minuto, tzinfo=ZoneInfo('America/Sao_Paulo'))
+
+    def produto(self, nome, preco_venda='10.00', preco_custo='0.00', estoque=10, categoria=''):
+        from decimal import Decimal
+        from infrastructure.models import Produto
+        return Produto.objects.create(
+            loja=self.loja, nome=nome, categoria=categoria, quantidade_estoque=estoque,
+            preco_venda=Decimal(preco_venda), preco_custo=Decimal(preco_custo),
+        )
+
+    def cliente(self, nome):
+        from infrastructure.models import Cliente
+        return Cliente.objects.create(loja=self.loja, nome=nome)
+
+    def venda(self, quando, itens, cliente=None):
+        """`itens`: lista de (produto, quantidade[, preço unitário]). O total é a soma dos itens."""
+        from decimal import Decimal
+        from infrastructure.models import ItemVenda, Venda
+        linhas = []
+        for produto, quantidade, *preco in itens:
+            linhas.append((produto, quantidade, Decimal(preco[0]) if preco else produto.preco_venda))
+        venda = Venda.objects.create(
+            loja=self.loja, cliente=cliente, data_venda=quando,
+            valor_total=sum((q * preco for _, q, preco in linhas), Decimal('0.00')),
+        )
+        for produto, quantidade, preco in linhas:
+            ItemVenda.objects.create(venda=venda, produto=produto, quantidade=quantidade, preco_unitario=preco)
+        return venda
+
+    def pagamento(self, cliente, valor, quando):
+        from decimal import Decimal
+        from infrastructure.models import PagamentoCliente
+        pagamento = PagamentoCliente.objects.create(loja=self.loja, cliente=cliente, valor=Decimal(valor))
+        PagamentoCliente.objects.filter(pk=pagamento.pk).update(data_pagamento=quando)  # auto_now_add
+        return pagamento
+
+    def usuario(self):
+        from types import SimpleNamespace
+        return SimpleNamespace(is_superuser=False, loja=self.loja)

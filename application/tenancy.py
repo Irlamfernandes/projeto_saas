@@ -11,11 +11,14 @@ def verificar_acesso_loja(user):
         raise PermissionDenied("Acesso negado: esta loja está desativada.")
 
 
-def filtrar_por_loja(queryset, user):
-    """Restringe o queryset à loja do usuário. Superusuário enxerga todas as lojas."""
+def filtrar_por_loja(queryset, user, campo='loja'):
+    """Restringe o queryset à loja do usuário. Superusuário enxerga todas as lojas.
+
+    `campo` aponta para a loja quando ela vem por relação (ex.: 'venda__loja' em itens de venda).
+    """
     if user.is_superuser:
         return queryset
-    return queryset.filter(loja=user.loja)
+    return queryset.filter(**{campo: user.loja})
 
 
 def loja_desativada(user):
