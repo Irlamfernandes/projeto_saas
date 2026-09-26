@@ -79,3 +79,17 @@ def test_backend_de_autenticacao_e_conexao(recarregar):
     settings = recarregar(DJANGO_SECRET_KEY='x')
     assert settings.AUTHENTICATION_BACKENDS == ['infrastructure.autenticacao.BackendComLoja']
     assert settings.DATABASES['default']['CONN_HEALTH_CHECKS'] is True
+
+
+def test_postgres_fixa_search_path_e_desliga_cursores_de_servidor(recarregar):
+    """Regressão: pelo pooler do Supabase a conexão às vezes vinha com search_path=vault e o
+    migrate tentava criar django_migrations no schema errado (permission denied for schema vault)."""
+    banco = recarregar(DJANGO_SECRET_KEY='x', DATABASE_URL='postgresql://u:s@db.exemplo.com:5432/postgres').DATABASES['default']
+    assert banco['OPTIONS']['options'] == '-c search_path=public'
+    assert banco['DISABLE_SERVER_SIDE_CURSORS'] is True
+
+
+def test_sqlite_local_nao_recebe_opcoes_de_postgres(recarregar):
+    banco = recarregar(DJANGO_DEBUG='True').DATABASES['default']
+    assert banco['ENGINE'] == 'django.db.backends.sqlite3'
+    assert 'options' not in banco.get('OPTIONS', {})
