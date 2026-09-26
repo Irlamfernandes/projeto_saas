@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 {% load static %}
 
 {% block title %}Produtos - Gestão{% endblock %}
@@ -184,8 +185,8 @@
                                 {{ produto.quantidade_estoque }} un.
                             </span>
                         </td>
-                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap align-middle">R$ {{ produto.preco_custo|default:0|floatformat:2 }}</td>
-                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap align-middle">R$ {{ produto.preco_venda|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap align-middle">R$ {{ produto.preco_custo|moeda }}</td>
+                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap align-middle">R$ {{ produto.preco_venda|moeda }}</td>
                         <td class="py-3 px-4 text-center whitespace-nowrap align-middle">
                             <a href="{% url 'editar_produto' produto.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
                                 Editar
@@ -202,6 +203,7 @@
                 </tbody>
             </table>
         </div>
+        {% include 'interfaces/_paginacao.html' %}
     </div>
 
 </div>

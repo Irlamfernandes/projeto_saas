@@ -5,7 +5,7 @@ from application.produtos.services import cadastrar_produto
 from infrastructure.models import Produto
 from interfaces.decorators import loja_required
 from interfaces.forms import FiltroProdutosForm, ProdutoForm
-from interfaces.views.comum import executar_formulario, primeiro_erro
+from interfaces.views.comum import executar_formulario, paginar, primeiro_erro
 
 TEMPLATE_PRODUTOS = 'interfaces/produtos.html'
 
@@ -28,8 +28,10 @@ def produtos_view(request):
 
     produtos = produtos_do_usuario(request.user)
     criterios = filtro.criterios()
+    pagina = paginar(request, filtrar_produtos(produtos, **criterios))
     context = {
-        'produtos': filtrar_produtos(produtos, **criterios),
+        'produtos': pagina,
+        'page_obj': pagina,
         'categorias_existentes': categorias_em_uso(produtos),
         'filtro_busca': criterios['busca'],
         'filtro_categoria': criterios['categoria'],

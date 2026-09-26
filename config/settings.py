@@ -81,6 +81,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Model de Usuário
 AUTH_USER_MODEL = 'infrastructure.UsuarioModel'
+AUTHENTICATION_BACKENDS = ['infrastructure.autenticacao.BackendComLoja']
 
 # Configuração de Banco com fallback local e suporte a SSL no Supabase
 DEFAULT_DB_URL = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
@@ -91,6 +92,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default=DATABASE_URL or DEFAULT_DB_URL,
         conn_max_age=600,
+        conn_health_checks=True,  # conexões persistentes podem ser fechadas pelo Supabase
         ssl_require=os.environ.get('DATABASE_SSL_REQUIRE', str(IS_PRODUCTION)) == 'True',
     )
 }

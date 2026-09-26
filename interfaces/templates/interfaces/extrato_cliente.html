@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 
 {% block title %}Caderneta de {{ cliente.nome }}{% endblock %}
 {% block header_title %}Extrato da Caderneta: {{ cliente.nome }}{% endblock %}
@@ -18,9 +19,9 @@
                 <span class="block text-xs uppercase font-semibold mb-1 opacity-80">Situação Atual na Casa</span>
                 <span class="text-xl sm:text-2xl font-black block truncate">
                     {% if cliente.saldo_geral > 0 %}
-                        Devendo R$ {{ cliente.saldo_geral|default:0|floatformat:2 }}
+                        Devendo R$ {{ cliente.saldo_geral|moeda }}
                     {% elif cliente.saldo_geral < 0 %}
-                        Crédito: R$ {{ cliente.saldo_geral|stringformat:"s"|slice:"1:"|default:0|floatformat:2 }}
+                        Crédito: R$ {{ cliente.saldo_geral|moeda_absoluta }}
                     {% else %}
                         Tudo Certo (Quitado)
                     {% endif %}
@@ -33,7 +34,7 @@
                 </a>
 
                 {% with loja_nome=cliente.loja.nome_loja %}
-                <a href="https://wa.me/55{{ cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-'|cut:'.' }}?text=Olá%20{{ cliente.nome|urlencode }},%20aqui%20está%20o%20resumo%20oficial%20da%20sua%20conta%20na%20{{ loja_nome|urlencode }}.%20Situação%20atual:%20R$%20{{ cliente.saldo_geral|default:0|floatformat:2 }}.%20Confira%20seu%20extrato%20completo%20com%20as%20últimas%20compras." 
+                <a href="https://wa.me/55{{ cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-'|cut:'.' }}?text=Olá%20{{ cliente.nome|urlencode }},%20aqui%20está%20o%20resumo%20oficial%20da%20sua%20conta%20na%20{{ loja_nome|urlencode }}.%20Situação%20atual:%20R$%20{{ cliente.saldo_geral|moeda }}.%20Confira%20seu%20extrato%20completo%20com%20as%20últimas%20compras." 
                    target="_blank" 
                    rel="noopener noreferrer" 
                    class="flex items-center justify-center gap-2 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg transition text-sm shadow-sm cursor-pointer">
@@ -101,7 +102,7 @@
                             {% endif %}
                         </td>
                         <td class="py-3.5 px-4 text-right font-bold whitespace-nowrap {% if item.tipo == 'compra' %}text-red-600{% else %}text-emerald-600{% endif %}">
-                            {% if item.tipo == 'compra' %}-{% else %}+{% endif %} R$ {{ item.valor|default:0|floatformat:2 }}
+                            {% if item.tipo == 'compra' %}-{% else %}+{% endif %} R$ {{ item.valor|moeda }}
                         </td>
                     </tr>
                     {% empty %}

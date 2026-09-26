@@ -40,6 +40,13 @@ class Cliente(models.Model):
 
     objects = ClienteQuerySet.as_manager()
 
+    class Meta:
+        indexes = [
+            # Select de clientes (ordem alfabética) e listagem (mais recentes primeiro).
+            models.Index(fields=['loja', 'nome'], name='cliente_loja_nome_idx'),
+            models.Index(fields=['loja', '-data_criacao'], name='cliente_loja_criacao_idx'),
+        ]
+
     @property
     def saldo_geral(self):
         """Positivo: cliente devendo. Negativo: cliente com crédito."""

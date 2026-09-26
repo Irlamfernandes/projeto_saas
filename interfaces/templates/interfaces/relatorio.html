@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 
 {% block title %}Relatórios e Indicadores{% endblock %}
 {% block header_title %}Painel Completo de Relatórios{% endblock %}
@@ -53,19 +54,19 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span class="text-xs font-medium text-gray-500 uppercase">Faturamento Total</span>
-                <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ total_geral_vendas|default:0|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ total_geral_vendas|moeda }}</p>
             </div>
             <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
                 <span class="text-xs font-medium text-gray-500 uppercase">Ticket Médio</span>
-                <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ ticket_medio|default:0|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ ticket_medio|moeda }}</p>
             </div>
             <div class="p-4 bg-red-50/50 rounded-lg border border-red-100">
                 <span class="text-xs font-medium text-red-500 uppercase">Total a Receber (Fiado)</span>
-                <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ total_fiado_pendente|default:0|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ total_fiado_pendente|moeda }}</p>
             </div>
             <div class="p-4 bg-green-50/50 rounded-lg border border-green-100">
                 <span class="text-xs font-medium text-green-600 uppercase">Créditos de Clientes</span>
-                <p class="text-2xl font-bold text-green-700 mt-1">R$ {{ total_credito_clientes|default:0|floatformat:2 }}</p>
+                <p class="text-2xl font-bold text-green-700 mt-1">R$ {{ total_credito_clientes|moeda }}</p>
             </div>
         </div>
     </div>
@@ -81,19 +82,19 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Hoje</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_hoje_valor|default:0|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_hoje_valor|moeda }}</p>
             </div>
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Últimos 7 dias</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_semana_valor|default:0|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_semana_valor|moeda }}</p>
             </div>
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Este Mês</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_mes_valor|default:0|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_mes_valor|moeda }}</p>
             </div>
             <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
                 <span class="text-xs font-medium text-gray-400 uppercase">Este Ano</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_ano_valor|default:0|floatformat:2 }}</p>
+                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_ano_valor|moeda }}</p>
             </div>
         </div>
     </div>
@@ -122,7 +123,7 @@
                         {% for cliente in clientes_devendo %}
                         <tr class="hover:bg-gray-50">
                             <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-red-600">R$ {{ cliente.saldo_geral|default:0|floatformat:2 }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-red-600">R$ {{ cliente.saldo_geral|moeda }}</td>
                             <td class="py-2.5 px-3 text-center">
                                 <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
                             </td>
@@ -159,7 +160,7 @@
                         {% for cliente in clientes_credito %}
                         <tr class="hover:bg-gray-50">
                             <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-green-600">R$ {{ cliente.valor_credito|default:0|floatformat:2 }}</td>
+                            <td class="py-2.5 px-3 text-right font-bold text-green-600">R$ {{ cliente.valor_credito|moeda }}</td>
                             <td class="py-2.5 px-3 text-center">
                                 <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
                             </td>
@@ -198,7 +199,7 @@
                     {% for prod in estoque_ordenado %}
                     <tr class="hover:bg-gray-50">
                         <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
-                        <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda|default:0|floatformat:2 }}</td>
+                        <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda|moeda }}</td>
                         <td class="py-3 px-4 text-center">
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% elif prod.quantidade_estoque <= 5 %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ prod.quantidade_estoque }} un.

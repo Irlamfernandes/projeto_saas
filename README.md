@@ -33,6 +33,10 @@ Convenções:
   qualquer outra exceção é bug e vai para o log (nunca exibir `str(e)` na tela).
 - Consultas por loja passam por `filtrar_por_loja(queryset, user)`.
 - Saldo de clientes em lote: `Cliente.objects.com_saldo()` (evita N+1).
+- Listas longas são paginadas com `paginar()` + `{% include 'interfaces/_paginacao.html' %}`
+  (50 por página; `?pagina=` preserva os filtros).
+- Valores em reais nos templates: `{% load formatacao %}` e `{{ valor|moeda }}` (mesma saída do
+  `floatformat:2` em pt-BR, bem mais rápido em listas).
 
 ## Rodando localmente
 
@@ -71,6 +75,7 @@ a trocá-la.
 | `SUPABASE_URL`, `SUPABASE_KEY` | para upload | Bucket `imagens` do Supabase Storage. |
 | `DJANGO_SECURE_SSL_REDIRECT` | não | Padrão `True` em produção; `False` só para rodar sem HTTPS. |
 | `DJANGO_HSTS_SECONDS` | não | Padrão `3600`. Aumente para `31536000` depois de validar o HTTPS. |
+| `WEB_CONCURRENCY` | não | Processos do Gunicorn (padrão `2` no Docker e no `render.yaml`). |
 
 ## Testes e qualidade
 

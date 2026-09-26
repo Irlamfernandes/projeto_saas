@@ -73,3 +73,9 @@ def test_validadores_de_senha(recarregar):
 
 def test_login_url_aponta_para_a_tela_de_login(recarregar):
     assert recarregar(DJANGO_SECRET_KEY='x').LOGIN_URL == 'login'
+
+
+def test_backend_de_autenticacao_e_conexao(recarregar):
+    settings = recarregar(DJANGO_SECRET_KEY='x')
+    assert settings.AUTHENTICATION_BACKENDS == ['infrastructure.autenticacao.BackendComLoja']
+    assert settings.DATABASES['default']['CONN_HEALTH_CHECKS'] is True

@@ -1,7 +1,10 @@
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 from application.exceptions import RegraDeNegocioError
+
+ITENS_POR_PAGINA = 50
 
 
 def executar_formulario(request, form, acao, mensagem_sucesso):
@@ -38,3 +41,8 @@ def redirecionar_apos_login(request, user, next_url=None):
     if user.is_superuser or user.is_staff:
         return redirect('/admin/')
     return redirect('dashboard')
+
+
+def paginar(request, queryset, por_pagina=ITENS_POR_PAGINA):
+    """Página pedida em ?pagina= (inválida ou fora do intervalo cai na primeira/última)."""
+    return Paginator(queryset, por_pagina).get_page(request.GET.get('pagina'))

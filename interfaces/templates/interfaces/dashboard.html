@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 
 {% block title %}Dashboard - Visão Geral{% endblock %}
 
@@ -28,42 +29,42 @@
         
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Hoje</h4>
-            <p class="text-xl sm:text-2xl font-bold text-indigo-600 mt-1 truncate">R$ {{ vendas_hoje|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-indigo-600 mt-1 truncate">R$ {{ vendas_hoje|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Últimos 7 dias</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_semana|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_semana|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Quinzenal</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_quinzena|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_quinzena|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Mês</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_mes|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_mes|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Bimestral</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_bimestre|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_bimestre|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Trimestral</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_trimestre|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_trimestre|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Ano</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_ano|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_ano|moeda }}</p>
         </div>
 
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200 bg-indigo-50/50">
             <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Faturamento Total</h4>
-            <p class="text-xl sm:text-2xl font-bold text-indigo-700 mt-1 truncate">R$ {{ total_geral|default:0|floatformat:2 }}</p>
+            <p class="text-xl sm:text-2xl font-bold text-indigo-700 mt-1 truncate">R$ {{ total_geral|moeda }}</p>
         </div>
 
     </div>
@@ -104,7 +105,7 @@
                 <tr class="hover:bg-gray-50">
                     <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
                     <td class="py-3 px-4 text-gray-500 text-xs">{{ prod.codigo_interno|default:"N/D" }}</td>
-                    <td class="py-3 px-4 text-gray-600 whitespace-nowrap">R$ {{ prod.preco_venda|default:0|floatformat:2 }}</td>
+                    <td class="py-3 px-4 text-gray-600 whitespace-nowrap">R$ {{ prod.preco_venda|moeda }}</td>
                     <td class="py-3 px-4 text-center whitespace-nowrap">
                         <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                             {{ prod.quantidade_estoque }} un.

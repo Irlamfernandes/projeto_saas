@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load formatacao %}
 
 {% block title %}Editar Venda #{{ venda.id }}{% endblock %}
 {% block header_title %}Editar Venda #{{ venda.id }}{% endblock %}
@@ -29,7 +30,7 @@
             <datalist id="lista-produtos">
                 {% for prod in produtos %}
                     <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">
-                        {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|default:0|floatformat:2 }} [Estoque: {{ prod.quantidade_estoque }}]
+                        {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|moeda }} [Estoque: {{ prod.quantidade_estoque }}]
                     </option>
                 {% endfor %}
             </datalist>

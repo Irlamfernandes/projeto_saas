@@ -4,7 +4,7 @@ from application.vendas.selectors import produtos_em_estoque_do_usuario, vendas_
 from application.vendas.services import registrar_venda
 from interfaces.decorators import loja_required
 from interfaces.forms import NovaVendaForm
-from interfaces.views.comum import executar_formulario
+from interfaces.views.comum import executar_formulario, paginar
 
 
 @loja_required
@@ -20,8 +20,10 @@ def vendas_view(request):
         )
         return redirect('vendas')
 
+    vendas = paginar(request, vendas_do_usuario(request.user))
     context = {
-        'vendas': vendas_do_usuario(request.user),
+        'vendas': vendas,
+        'page_obj': vendas,
         'produtos': produtos_em_estoque_do_usuario(request.user),
         'clientes': clientes.com_saldo(),
     }
