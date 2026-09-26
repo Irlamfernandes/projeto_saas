@@ -97,6 +97,14 @@ DATABASES = {
     )
 }
 
+if DATABASES['default']['ENGINE'] == 'django.db.backends.postgresql':
+    # Os poolers do Supabase compartilham conexões entre clientes: um search_path alterado por
+    # outro cliente (ex.: "vault") pode vazar para a nossa sessão e o Django passa a procurar/criar
+    # tabelas no schema errado. Fixar o search_path em toda conexão elimina isso.
+    DATABASES['default'].setdefault('OPTIONS', {})['options'] = '-c search_path=public'
+    # Exigido pelo Django com pooler em modo transação (porta 6543), onde cursores de servidor quebram.
+    DATABASES['default']['DISABLE_SERVER_SIDE_CURSORS'] = True
+
 # Segurança em produção (atrás do proxy HTTPS do Render)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
