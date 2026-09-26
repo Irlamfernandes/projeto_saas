@@ -1,17 +1,22 @@
 import os
 from pathlib import Path
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = (
-    os.getenv('DJANGO_SECRET_KEY')
-    or os.getenv('SECRET_KEY')
-    or 'django-insecure-dummy-key-for-tests-12345'
-)
+def _env_bool(nome, padrao):
+    return os.environ.get(nome, str(padrao)) == 'True'
 
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+
+DEBUG = _env_bool('DJANGO_DEBUG', False)
+
+# Em produção (DEBUG desligado) a chave é obrigatória: nunca cair numa chave conhecida.
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY no ambiente (obrigatória com DJANGO_DEBUG desligado).")
+    SECRET_KEY = 'django-insecure-somente-para-desenvolvimento-local'
 
 # Trata hosts permitidos
 raw_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
@@ -52,6 +57,7 @@ MIDDLEWARE = [
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ROOT_URLCONF = 'config.urls'
+LOGIN_URL = 'login'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Templates (Mantendo o caminho correto das suas interfaces)
@@ -89,18 +95,21 @@ DATABASES = {
     )
 }
 
-# Configurações de segurança de cabeçalho em ambiente produtivo
+# Segurança em produção (atrás do proxy HTTPS do Render)
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = _env_bool('DJANGO_SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Comece baixo e aumente (ex.: 31536000) depois de confirmar que tudo funciona só em HTTPS.
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '3600'))
 
 # Validação de senhas
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {
-            'min_length': 6,
-        }
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Internacionalização

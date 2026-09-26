@@ -19,14 +19,17 @@ class VendasViewTest(TestCase):
         self.loja2 = LojaModel.objects.create(nome_loja="Loja Beta", ativo=True)
 
         self.superuser = User.objects.create_superuser(
+            deve_trocar_senha=False,
             username="admin", password="password"
         )
         self.user_loja1 = User.objects.create_user(
+            deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
         
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
+                deve_trocar_senha=False,
                 username="user_sem_loja", password="password", loja=None
             )
 

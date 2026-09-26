@@ -12,7 +12,7 @@ class AcessoLojaInativaTest(TestCase):
 
     def setUp(self):
         self.loja = LojaModel.objects.create(nome_loja="Loja Fechada")
-        self.usuario = User.objects.create_user(username="operador", password="senha123", loja=self.loja)
+        self.usuario = User.objects.create_user(deve_trocar_senha=False, username="operador", password="senha123", loja=self.loja)
         cliente = Cliente.objects.create(loja=self.loja, nome="Cliente")
         produto = Produto.objects.create(loja=self.loja, nome="Produto", preco_venda=Decimal('1.00'))
         venda = Venda.objects.create(loja=self.loja)

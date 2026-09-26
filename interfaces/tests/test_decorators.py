@@ -19,12 +19,12 @@ class LojaRequiredTest(SimpleTestCase):
         return request
 
     def _usuario(self, **attrs):
-        return SimpleNamespace(is_authenticated=True, is_superuser=False, loja=None, **attrs)
+        return SimpleNamespace(is_authenticated=True, is_superuser=False, loja=None, deve_trocar_senha=False, **attrs)
 
     def test_anonimo_e_redirecionado_para_login(self):
         response = _view(self._request(AnonymousUser()))
         self.assertEqual(response.status_code, 302)
-        self.assertIn('login', response.url)
+        self.assertEqual(response.url, '/login/?next=/qualquer/')
 
     def test_usuario_de_loja_ativa_acessa(self):
         user = self._usuario()
@@ -36,6 +36,17 @@ class LojaRequiredTest(SimpleTestCase):
         user.loja = SimpleNamespace(ativo=False)
         with self.assertRaises(PermissionDenied):
             _view(self._request(user))
+
+    def test_senha_temporaria_obriga_a_troca_antes_de_tudo(self):
+        """Regressão: com senha temporária dava para ir direto ao /dashboard/ e nunca trocá-la."""
+        user = self._usuario()
+        user.loja = SimpleNamespace(ativo=True)
+        user.deve_trocar_senha = True
+
+        response = _view(self._request(user))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/alterar-senha/')
 
     def test_preserva_metadados_da_view(self):
         self.assertEqual(_view.__name__, '_view')

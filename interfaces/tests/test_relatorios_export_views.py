@@ -17,10 +17,10 @@ class RelatoriosExportViewsTest(TestCase):
     def setUp(self):
         self.loja1 = LojaModel.objects.create(nome_loja="Loja Alpha", ativo=True)
         self.loja2 = LojaModel.objects.create(nome_loja="Loja Beta", ativo=True)
-        self.superuser = User.objects.create_superuser(username="admin", password="password")
-        self.user_loja1 = User.objects.create_user(username="user_loja1", password="password", loja=self.loja1)
+        self.superuser = User.objects.create_superuser(deve_trocar_senha=False, username="admin", password="password")
+        self.user_loja1 = User.objects.create_user(deve_trocar_senha=False, username="user_loja1", password="password", loja=self.loja1)
         with patch('django.db.models.Model.full_clean'):
-            self.user_sem_loja = User.objects.create_user(username="user_sem_loja", password="password", loja=None)
+            self.user_sem_loja = User.objects.create_user(deve_trocar_senha=False, username="user_sem_loja", password="password", loja=None)
 
         self.cliente = Cliente.objects.create(loja=self.loja1, nome="Cliente Alpha")
         cliente2 = Cliente.objects.create(loja=self.loja2, nome="Cliente Beta")
