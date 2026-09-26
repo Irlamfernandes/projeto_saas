@@ -1,6 +1,5 @@
 from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from interfaces.decorators import loja_required
 from django.db.models import Sum, Avg
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -13,9 +12,6 @@ TEMPLATE_RELATORIO = 'interfaces/relatorio.html'
 
 def _obter_dados_base_loja(user):
     """Retorna os querysets filtrados com base nas permissões da loja ou superuser."""
-    if not user.is_superuser and not user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     if user.is_superuser:
         return (
             Venda.objects.all().order_by('-data_venda'),
@@ -65,7 +61,7 @@ def _processar_clientes_saldos(clientes_qs):
     return clientes_devendo, total_fiado_pendente, clientes_credito, total_credito_clientes
 
 
-@login_required
+@loja_required
 def relatorio_view(request):
     vendas_loja, produtos_loja, clientes_todos = _obter_dados_base_loja(request.user)
     vendas_filtradas, data_inicio_str, data_fim_str = _filtrar_vendas_por_data(vendas_loja, request)

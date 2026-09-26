@@ -1,8 +1,7 @@
 import io
 from datetime import datetime, timedelta
 from django.http import FileResponse, Http404
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from interfaces.decorators import loja_required
 from infrastructure.models.produto import Produto
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.venda import Venda
@@ -80,11 +79,8 @@ def _montar_contexto_relatorio(loja_contexto, request=None):
     }
 
 
-@login_required
+@loja_required
 def exportar_pdf_modular_view(request, tipo):
-    if not request.user.is_superuser and not request.user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     loja_contexto = None if request.user.is_superuser else request.user.loja
 
     tipos_permitidos = {'vendas', 'estoque', 'clientes', 'financeiro', 'geral', 'resumo', 'temporal', 'devendo', 'credito'}
@@ -102,11 +98,8 @@ def exportar_pdf_modular_view(request, tipo):
     return FileResponse(arquivo_buffer, content_type='application/pdf', as_attachment=True, filename=filename)
 
 
-@login_required
+@loja_required
 def exportar_excel_modular_view(request, tipo):
-    if not request.user.is_superuser and not request.user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     loja_contexto = None if request.user.is_superuser else request.user.loja
 
     tipos_permitidos = {'vendas', 'estoque', 'clientes', 'financeiro', 'geral', 'resumo', 'temporal', 'devendo', 'credito'}

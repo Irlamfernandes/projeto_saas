@@ -1,8 +1,8 @@
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+from interfaces.decorators import loja_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.venda import PagamentoCliente
 
@@ -11,9 +11,6 @@ TEMPLATE_EXTRATO_CLIENTE = 'interfaces/extrato_cliente.html'
 
 def _obter_cliente_e_loja(user, cliente_id):
     """Retorna o cliente verificado e o contexto da loja de acordo com as permissões."""
-    if not user.is_superuser and not user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     if user.is_superuser:
         cliente = get_object_or_404(Cliente, pk=cliente_id)
         return cliente, cliente.loja
@@ -81,7 +78,7 @@ def _construir_timeline(cliente):
     return timeline
 
 
-@login_required
+@loja_required
 def extrato_cliente_view(request, cliente_id):
     cliente, loja_contexto = _obter_cliente_e_loja(request.user, cliente_id)
 

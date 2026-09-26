@@ -2,7 +2,7 @@ from types import SimpleNamespace
 from unittest.mock import Mock
 import pytest
 from django.core.exceptions import PermissionDenied
-from application.tenancy import filtrar_por_loja, verificar_acesso_loja
+from application.tenancy import filtrar_por_loja, loja_desativada, verificar_acesso_loja
 
 
 def _usuario(is_superuser=False, loja=None):
@@ -42,3 +42,9 @@ def test_filtrar_por_loja_nao_restringe_superusuario():
 
     assert filtrar_por_loja(queryset, _usuario(is_superuser=True)) is queryset
     queryset.filter.assert_not_called()
+
+
+def test_loja_desativada():
+    assert loja_desativada(_usuario(loja=SimpleNamespace(ativo=False)))
+    assert not loja_desativada(_usuario(loja=SimpleNamespace(ativo=True)))
+    assert not loja_desativada(_usuario(is_superuser=True))

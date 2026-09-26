@@ -1,17 +1,13 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from interfaces.decorators import loja_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
 from django.db.models import Sum
 from django.utils import timezone
 from datetime import timedelta
 from infrastructure.models import Produto, Cliente, Venda
 
-@login_required
+@loja_required
 def dashboard_view(request):
-    if not request.user.is_superuser and not request.user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     if request.user.is_superuser:
         vendas_loja = Venda.objects.all()
         produtos_loja = Produto.objects.all()

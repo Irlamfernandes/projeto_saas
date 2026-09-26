@@ -1,22 +1,19 @@
 from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from interfaces.decorators import loja_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from infrastructure.models.cliente import Cliente
 
 
 def _obter_cliente_autorizado(request, pk):
     """Auxiliar para verificar permissões e buscar o cliente com segurança."""
-    if not request.user.is_superuser and not request.user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     if request.user.is_superuser:
         return get_object_or_404(Cliente, pk=pk)
     
     return get_object_or_404(Cliente, pk=pk, loja=request.user.loja)
 
 
-@login_required
+@loja_required
 def cliente_editar_view(request, pk):
     cliente = _obter_cliente_autorizado(request, pk)
 

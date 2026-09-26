@@ -1,8 +1,8 @@
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib.auth.decorators import login_required
+from interfaces.decorators import loja_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 import requests
 import os
 from infrastructure.models.produto import Produto, ProdutoImagem
@@ -13,9 +13,6 @@ TEMPLATE_EDITAR_PRODUTO = 'interfaces/produto_editar.html'
 
 def _obter_produto_autorizado(user, pk):
     """Busca o produto aplicando restrições de permissão por loja ou superuser."""
-    if not user.is_superuser and not user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     if user.is_superuser:
         return get_object_or_404(Produto, pk=pk)
     return get_object_or_404(Produto, pk=pk, loja=user.loja)
@@ -87,7 +84,7 @@ def _processar_novas_imagens(request, produto):
         )
 
 
-@login_required
+@loja_required
 def produto_editar_view(request, pk):
     produto = _obter_produto_autorizado(request.user, pk)
 

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from interfaces.decorators import loja_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from infrastructure.models.cliente import Cliente
 
 TEMPLATE_CLIENTES = 'interfaces/clientes.html'
@@ -9,9 +9,6 @@ TEMPLATE_CLIENTES = 'interfaces/clientes.html'
 
 def _obter_clientes_autorizados(user):
     """Retorna o queryset base de clientes de acordo com as permissões do usuário."""
-    if not user.is_superuser and not user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-    
     if user.is_superuser:
         return Cliente.objects.all()
     return Cliente.objects.filter(loja=user.loja)
@@ -62,7 +59,7 @@ def _processar_cadastro_cliente(request):
         messages.error(request, "Erro ao validar os dados do cliente.")
 
 
-@login_required
+@loja_required
 def clientes_view(request):
     clientes = _obter_clientes_autorizados(request.user)
 

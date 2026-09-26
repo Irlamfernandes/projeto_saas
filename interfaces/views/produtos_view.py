@@ -1,9 +1,9 @@
 from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
+from interfaces.decorators import loja_required
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from infrastructure.models.produto import Produto, ProdutoImagem
 from infrastructure.utils.supabase_storage import upload_imagem_supabase
 
@@ -12,9 +12,6 @@ TEMPLATE_PRODUTOS = 'interfaces/produtos.html'
 
 def _obter_produtos_base(user):
     """Retorna o queryset base e o contexto de loja dependendo das permissões do usuário."""
-    if not user.is_superuser and not user.loja:
-        raise PermissionDenied("Acesso negado: Usuário não está vinculado a nenhuma loja.")
-
     if user.is_superuser:
         return Produto.objects.all(), None
     return Produto.objects.filter(loja=user.loja), user.loja
@@ -123,7 +120,7 @@ def _processar_criacao_produto(request, loja_contexto):
         return str(e)
 
 
-@login_required
+@loja_required
 def produtos_view(request):
     produtos_qs, loja_contexto = _obter_produtos_base(request.user)
 
