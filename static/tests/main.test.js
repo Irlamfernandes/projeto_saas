@@ -18,6 +18,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         `;
         jest.useFakeTimers();
         window.HTMLElement.prototype.scrollIntoView = jest.fn();
+        window.matchMedia = jest.fn(() => ({ matches: true })); // tela de toque
 
         require('../js/main.js');
         document.dispatchEvent(new Event('DOMContentLoaded'));
@@ -39,6 +40,35 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(margem.value).toBe('100.00');
 
         jest.useRealTimers();
+        delete window.matchMedia;
+    });
+
+    test('1b. No computador, focar um campo não rola a página', () => {
+        document.body.innerHTML = '<input />';
+        jest.useFakeTimers();
+        window.HTMLElement.prototype.scrollIntoView = jest.fn();
+        window.matchMedia = jest.fn(() => ({ matches: false }));
+
+        require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        document.querySelector('input').dispatchEvent(new Event('focus'));
+        jest.advanceTimersByTime(300);
+
+        expect(window.HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
+        jest.useRealTimers();
+        delete window.matchMedia;
+    });
+
+    test('1c. Na edição, calcula o lucro ao abrir quando ele está zerado', () => {
+        document.body.innerHTML = `
+            <input id="id_preco_custo" value="8.10" />
+            <input id="id_margem_lucro" value="0.00" />
+            <input id="id_preco_venda" value="15.50" />
+        `;
+        require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        expect(document.getElementById('id_margem_lucro').value).toBe('91.36');
     });
 
     test('2. Deve testar IDs alternativos (edit-) forçando o lado direito do OR', () => {
@@ -142,10 +172,13 @@ describe('Testes de Cobertura Total - main.js', () => {
 
         tratarMudancaCategoria(select);
         expect(select.getAttribute('name')).toBe('categoria');
+        // Regressão: o campo de nova categoria (vazio) também se chamava "categoria" e sobrescrevia a escolha
+        expect(inputNova.hasAttribute('name')).toBeFalsy();
 
         select.value = '__novo__';
         tratarMudancaCategoria(select);
         expect(select.hasAttribute('name')).toBeFalsy();
+        expect(inputNova.getAttribute('name')).toBe('categoria');
 
         jest.useFakeTimers();
         const inputRemover = document.createElement('input');
@@ -250,8 +283,8 @@ describe('Testes de Cobertura Total - main.js', () => {
         const imagens = ['img1.jpg', 'img2.jpg', 'img3.jpg'];
         abrirModalGaleria(imagens, 0);
 
-        expect(btnAnt.style.display).toBe('block');
-        expect(btnProx.style.display).toBe('block');
+        expect(btnAnt.style.display).toBe('');
+        expect(btnProx.style.display).toBe('');
         expect(modal.classList.contains('hidden')).toBeFalsy();
         expect(img.src).toContain('img1.jpg');
         expect(indicador.textContent).toBe('1 de 3');

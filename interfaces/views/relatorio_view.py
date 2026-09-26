@@ -10,5 +10,5 @@ TEMPLATE_RELATORIO = 'interfaces/relatorio.html'
 def relatorio_view(request):
     inicio, fim = PeriodoForm(request.GET).intervalo()
     relatorio = montar_relatorio(request.user, inicio, fim)
-    context = {**relatorio.como_contexto(), 'data_inicio': inicio, 'data_fim': fim}
+    context = {**relatorio.como_contexto(), 'aba': 'geral', 'data_inicio': inicio, 'data_fim': fim}
     return render(request, TEMPLATE_RELATORIO, context)

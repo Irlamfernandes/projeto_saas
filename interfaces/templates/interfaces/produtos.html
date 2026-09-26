@@ -1,238 +1,176 @@
 {% extends 'interfaces/base.html' %}
 {% load formatacao %}
-{% load static %}
 
-{% block title %}Produtos - Gestão{% endblock %}
-
-{% block header_title %}Gerenciar Produtos{% endblock %}
+{% block title %}Produtos · Gestão da Loja{% endblock %}
+{% block header_title %}Produtos{% endblock %}
+{% block subtitulo %}Cadastre, encontre e acompanhe o estoque.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Adicionar Novo Produto</h3>
-        
-        <form method="POST" enctype="multipart/form-data">
+<div class="grid grid-cols-1 xl:grid-cols-[24rem_1fr] gap-5 items-start">
+
+    <section class="cartao cartao-corpo" aria-labelledby="t-novo">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-novo" class="titulo-cartao">Novo produto</h2><p class="subtitulo">Só o nome e o preço de venda são obrigatórios</p></div>
+        </div>
+        <form method="POST" enctype="multipart/form-data" class="grid gap-4">
             {% csrf_token %}
-            <div class="mb-4">
-                <label for="id_codigo_interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU (Opcional)</label>
-                <input type="text" id="id_codigo_interno" name="codigo_interno" placeholder="Ex: PRD001" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
-            <div class="mb-4">
-                <label for="id_nome_produto" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
-                <input type="text" id="id_nome_produto" name="nome" required placeholder="Ex: Bolo de Chocolate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+            <div class="campo">
+                <label for="id_nome_produto" class="rotulo">Nome do produto</label>
+                <input type="text" id="id_nome_produto" name="nome" required maxlength="150" placeholder="Ex.: Bolo de cenoura com chocolate" class="entrada">
+                <p class="ajuda">É assim que ele aparece na hora da venda e no extrato do cliente.</p>
             </div>
 
-            <div class="mb-4">
-                <label for="select-categoria" class="block text-gray-700 text-sm font-semibold mb-1">Categoria</label>
-                
-                <select id="select-categoria" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white mb-2" onchange="tratarMudancaCategoria(this)">
-                    <option value="">Selecione uma categoria...</option>
-                    {% for cat in categorias_existentes %}
-                        <option value="{{ cat }}">{{ cat }}</option>
-                    {% endfor %}
-                    <option value="__novo__">➕ Digitar nova categoria...</option>
-                </select>
-
-                <label for="input-nova-categoria" class="sr-only">Nome da nova categoria</label>
-                <input type="text" id="input-nova-categoria" name="categoria" placeholder="Digite o nome da nova categoria..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm hidden bg-white">
-            </div>
-
-            <div class="mb-4">
-                <label for="id_descricao_produto" class="block text-gray-700 text-sm font-semibold mb-1">Descrição (Opcional)</label>
-                <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Detalhes, tamanho, sabor..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"></textarea>
-            </div>
-
-            <div class="mb-4">
-                <label for="id_imagens_produto" class="block text-gray-700 text-sm font-semibold mb-1">Imagens do Produto (Opcional)</label>
-                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
-                <p class="text-xs text-gray-400 mt-1">Você pode selecionar várias fotos de uma vez.</p>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 mb-4">
-                <div>
-                    <label for="id_preco_custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_custo" name="preco_custo" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="campo">
+                    <label for="id_codigo_interno" class="rotulo">Código <span class="rotulo-opcional">opcional</span></label>
+                    <input type="text" id="id_codigo_interno" name="codigo_interno" maxlength="50" placeholder="Ex.: BOLO01" class="entrada">
                 </div>
-                <div>
-                    <label for="id_margem_lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
-                    <input type="number" step="0.01" id="id_margem_lucro" name="margem_lucro" placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-                </div>
-                <div>
-                    <label for="id_preco_venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
-                    <input type="number" step="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0.00" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+                <div class="campo">
+                    <label for="select-categoria" class="rotulo">Categoria <span class="rotulo-opcional">opcional</span></label>
+                    <select id="select-categoria" class="entrada" onchange="tratarMudancaCategoria(this)">
+                        <option value="">Sem categoria</option>
+                        {% for cat in categorias_existentes %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
+                        <option value="__novo__">+ Nova categoria…</option>
+                    </select>
                 </div>
             </div>
+            <label for="input-nova-categoria" class="sr-only">Nome da nova categoria</label>
+            <input type="text" id="input-nova-categoria" name="categoria" maxlength="100" placeholder="Nome da nova categoria" class="entrada hidden -mt-2">
+            <p class="ajuda -mt-2">O código é um apelido curto ou o código de barras, para achar o produto rápido na venda.</p>
 
-            <div class="mb-6">
-                <label for="id_quantidade_estoque" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade em Estoque</label>
-                <input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+            <fieldset class="grid gap-3 rounded-controle border border-linha p-3.5">
+                <legend class="px-1 text-sm font-semibold">Preço</legend>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="campo">
+                        <label for="id_preco_custo" class="text-xs font-semibold text-tinta-suave">Quanto você paga</label>
+                        <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0" id="id_preco_custo" name="preco_custo" placeholder="0,00" inputmode="decimal" class="tabular-nums"></div>
+                    </div>
+                    <div class="campo">
+                        <label for="id_margem_lucro" class="text-xs font-semibold text-tinta-suave">Lucro sobre o custo</label>
+                        <div class="entrada-grupo"><input type="number" step="0.01" min="0" id="id_margem_lucro" name="margem_lucro" placeholder="0" inputmode="decimal" class="tabular-nums"><span class="afixo-fim">%</span></div>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label for="id_preco_venda" class="rotulo">Quanto você cobra</label>
+                    <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0,00" inputmode="decimal" class="tabular-nums font-semibold"></div>
+                    <p class="ajuda">Preencha o custo e o lucro desejado que calculamos o preço. Ou digite o preço e calculamos o lucro.</p>
+                </div>
+            </fieldset>
+
+            <div class="campo">
+                <label for="id_quantidade_estoque" class="rotulo">Quantidade em estoque</label>
+                <div class="entrada-grupo"><input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
+                <p class="ajuda">Avisamos no início quando estiver acabando.</p>
             </div>
 
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                Salvar Produto
-            </button>
+            <div class="campo">
+                <label for="id_descricao_produto" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
+                <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Tamanho, sabor, cor…" class="entrada"></textarea>
+            </div>
+
+            <div class="campo">
+                <label for="id_imagens_produto" class="rotulo">Fotos <span class="rotulo-opcional">opcional</span></label>
+                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+                       class="block w-full text-sm text-tinta-suave file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200 cursor-pointer">
+                <p class="ajuda">JPG, PNG ou WEBP de até 5 MB. Pode escolher várias de uma vez.</p>
+            </div>
+
+            <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Salvar produto</button>
         </form>
-    </div>
+    </section>
 
-    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Seus Produtos Cadastrados</h3>
+    <section class="cartao cartao-corpo min-w-0" aria-labelledby="t-lista">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-lista" class="titulo-cartao">Produtos cadastrados</h2><p class="subtitulo">{{ page_obj.paginator.count }} produto{{ page_obj.paginator.count|pluralize }}{% if filtro_busca or filtro_categoria or filtro_baixo_estoque %} com os filtros escolhidos{% endif %}</p></div>
+        </div>
 
-        <form method="GET" class="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
+        <form method="GET" class="grid gap-3 rounded-controle bg-fundo p-3.5 mb-4" aria-label="Filtros de produtos">
+            <div class="grid grid-cols-1 sm:grid-cols-[1.4fr_1fr_1fr] gap-2.5">
+                <div class="entrada-grupo bg-white">
+                    <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
                     <label for="id_busca_produto" class="sr-only">Buscar produto</label>
-                    <input type="text" id="id_busca_produto" name="q" value="{{ filtro_busca }}" placeholder="Buscar produto..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="search" id="id_busca_produto" name="q" value="{{ filtro_busca }}" placeholder="Nome ou código">
                 </div>
-
-                <div>
-                    <label for="id_filtro_categoria" class="sr-only">Filtrar por categoria</label>
-                    <select id="id_filtro_categoria" name="categoria" class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Todas as categorias</option>
-                        {% for cat in categorias_existentes %}
-                            <option value="{{ cat }}" {% if filtro_categoria == cat %}selected{% endif %}>{{ cat }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label for="id_filtro_ordem" class="sr-only">Ordenar produtos</label>
-                    <select id="id_filtro_ordem" name="ordem" class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="-data_criacao" {% if filtro_ordem == '-data_criacao' %}selected{% endif %}>Mais recentes</option>
-                        <option value="nome" {% if filtro_ordem == 'nome' %}selected{% endif %}>Nome (A-Z)</option>
-                        <option value="preco_venda" {% if filtro_ordem == 'preco_venda' %}selected{% endif %}>Menor Preço</option>
-                        <option value="-preco_venda" {% if filtro_ordem == '-preco_venda' %}selected{% endif %}>Maior Preço</option>
-                        <option value="quantidade_estoque" {% if filtro_ordem == 'quantidade_estoque' %}selected{% endif %}>Menor Estoque</option>
-                        <option value="-quantidade_estoque" {% if filtro_ordem == '-quantidade_estoque' %}selected{% endif %}>Maior Estoque</option>
-                    </select>
-                </div>
+                <label for="id_filtro_categoria" class="sr-only">Categoria</label>
+                <select id="id_filtro_categoria" name="categoria" class="entrada">
+                    <option value="">Todas as categorias</option>
+                    {% for cat in categorias_existentes %}<option value="{{ cat }}" {% if filtro_categoria == cat %}selected{% endif %}>{{ cat }}</option>{% endfor %}
+                </select>
+                <label for="id_filtro_ordem" class="sr-only">Ordenar por</label>
+                <select id="id_filtro_ordem" name="ordem" class="entrada">
+                    <option value="-data_criacao" {% if filtro_ordem == '-data_criacao' %}selected{% endif %}>Mais recentes</option>
+                    <option value="nome" {% if filtro_ordem == 'nome' %}selected{% endif %}>Nome (A–Z)</option>
+                    <option value="preco_venda" {% if filtro_ordem == 'preco_venda' %}selected{% endif %}>Menor preço</option>
+                    <option value="-preco_venda" {% if filtro_ordem == '-preco_venda' %}selected{% endif %}>Maior preço</option>
+                    <option value="quantidade_estoque" {% if filtro_ordem == 'quantidade_estoque' %}selected{% endif %}>Menor estoque</option>
+                    <option value="-quantidade_estoque" {% if filtro_ordem == '-quantidade_estoque' %}selected{% endif %}>Maior estoque</option>
+                </select>
             </div>
-
-            <div class="flex flex-wrap items-center justify-between pt-1 gap-3">
-                <label class="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer">
-                    <input type="checkbox" name="baixo_estoque" value="1" {% if filtro_baixo_estoque %}checked{% endif %} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                    <span>Apenas estoque baixo (≤ 5 un.)</span>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <label class="flex items-center gap-2 text-sm text-tinta-suave cursor-pointer">
+                    <input type="checkbox" name="baixo_estoque" value="1" {% if filtro_baixo_estoque %}checked{% endif %} class="w-4 h-4 rounded border-linha text-marca-600 focus:ring-marca-500">
+                    Só estoque baixo (até 5 un.)
                 </label>
-
-                <div class="flex gap-2 w-full sm:w-auto justify-end">
-                    {% if filtro_busca or filtro_categoria or filtro_baixo_estoque or filtro_ordem != '-data_criacao' %}
-                    <a href="{% url 'produtos' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition font-semibold text-center flex items-center justify-center">
-                        Limpar
-                    </a>
-                    {% endif %}
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold cursor-pointer">
-                        Filtrar
-                    </button>
-                </div>
+                <span class="flex gap-2">
+                    {% if filtro_busca or filtro_categoria or filtro_baixo_estoque or filtro_ordem != '-data_criacao' %}<a href="{% url 'produtos' %}" class="btn-fantasma btn-pequeno">Limpar</a>{% endif %}
+                    <button type="submit" class="btn-primario btn-pequeno"><svg class="ico ico-sm"><use href="#i-filtro"/></svg>Filtrar</button>
+                </span>
             </div>
         </form>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <caption class="sr-only">Lista de produtos cadastrados no sistema</caption>
-                <thead>
-                    <tr class="border-b border-gray-200 text-gray-500 text-xs uppercase font-semibold">
-                        <th class="py-3 px-4">Produto</th>
-                        <th class="py-3 px-4 whitespace-nowrap">Estoque</th>
-                        <th class="py-3 px-4 whitespace-nowrap">Custo</th>
-                        <th class="py-3 px-4 whitespace-nowrap">Venda</th>
-                        <th class="py-3 px-4 text-center whitespace-nowrap">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+        <div class="relative overflow-x-auto">
+            <table class="tabela">
+                <caption class="sr-only">Lista de produtos cadastrados</caption>
+                <thead><tr><th scope="col">Produto e estoque</th><th scope="col" class="text-right">Preço</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+                <tbody>
                     {% for produto in produtos %}
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="py-3 px-4 font-medium text-gray-900">
-                            <div class="flex items-start gap-3">
+                    <tr>
+                        <td>
+                            <div class="flex items-center gap-2.5">
                                 {% with imagens=produto.imagens.all %}
                                     {% if imagens %}
-                                        <button type="button" 
-                                                onclick="abrirModalGaleria([{% for img in imagens %}'{{ img.imagem_url|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)" 
-                                                class="shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded p-0 cursor-pointer" 
-                                                title="Clique para ampliar galeria">
-                                            <img src="{{ imagens.0.imagem_url }}" alt="{{ produto.nome }}" 
-                                                 style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem; object-fit: cover;" 
-                                                 class="rounded border border-gray-200 hover:opacity-80 transition">
+                                        <button type="button"
+                                                onclick="abrirModalGaleria([{% for img in imagens %}'{{ img.imagem_url|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)"
+                                                class="relative shrink-0 rounded-lg focus-visible:ring-2 cursor-zoom-in" title="Ver fotos">
+                                            <img src="{{ imagens.0.imagem_url }}" alt="{{ produto.nome }}" loading="lazy" class="w-10 h-10 rounded-lg object-cover border border-linha">
+                                            {% if imagens|length > 1 %}<span class="absolute -right-1.5 -bottom-1.5 rounded-full bg-tinta px-1.5 text-[0.65rem] font-bold text-white">+{{ imagens|length|add:"-1" }}</span>{% endif %}
                                         </button>
-                                    {% else %}
-                                        <div style="width: 2rem; height: 2rem; min-width: 2rem; min-height: 2rem;" class="bg-gray-100 rounded border border-gray-200 flex items-center justify-center text-gray-400 text-xs shrink-0 mt-0.5">
-                                            📦
-                                        </div>
                                     {% endif %}
                                 {% endwith %}
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-gray-900 font-semibold leading-snug break-words">
-                                        {% if produto.codigo_interno %}
-                                        <span class="text-xs bg-gray-100 text-gray-600 font-mono px-1.5 py-0.5 rounded mr-1 inline-block">#{{ produto.codigo_interno }}</span>
-                                        {% endif %}
-                                        {{ produto.nome }}
-                                    </div>
-                                    <div class="flex flex-wrap items-center gap-2 mt-1">
-                                        {% if produto.categoria %}
-                                        <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-md">
-                                            {{ produto.categoria }}
-                                        </span>
-                                        {% endif %}
-                                        {% if produto.imagens.count > 1 %}
-                                        <span class="text-xs text-gray-400">+{{ produto.imagens.count|add:"-1" }} foto(s)</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                <span class="min-w-0">
+                                    <span class="block font-semibold leading-snug">{{ produto.nome }}</span>
+                                    <span class="flex flex-wrap items-center gap-1.5 mt-0.5 text-xs text-tinta-fraca">
+                                        {% if produto.codigo_interno %}<span class="font-mono">#{{ produto.codigo_interno }}</span>{% endif %}
+                                        {% if produto.categoria %}<span class="pilula-marca py-0">{{ produto.categoria }}</span>{% endif %}
+                                    </span>
+                                    <span class="mt-1.5 block">
+                                        {% if produto.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
+                                        {% elif produto.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ produto.quantidade_estoque }} un.</span>
+                                        {% else %}<span class="pilula-neutra">{{ produto.quantidade_estoque }} un.</span>{% endif %}
+                                    </span>
+                                </span>
                             </div>
                         </td>
-                        <td class="py-3 px-4 whitespace-nowrap align-middle">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold {% if produto.quantidade_estoque > 5 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                                {{ produto.quantidade_estoque }} un.
-                            </span>
-                        </td>
-                        <td class="py-3 px-4 text-gray-500 whitespace-nowrap align-middle">R$ {{ produto.preco_custo|moeda }}</td>
-                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap align-middle">R$ {{ produto.preco_venda|moeda }}</td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap align-middle">
-                            <a href="{% url 'editar_produto' produto.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
-                                Editar
-                            </a>
-                        </td>
+                        <td class="numero font-bold">R$ {{ produto.preco_venda|moeda }}<span class="block text-xs font-normal text-tinta-fraca whitespace-normal">custo R$&nbsp;{{ produto.preco_custo|moeda }}</span></td>
+                        <td class="text-right w-px"><a href="{% url 'editar_produto' produto.id %}" class="btn-fantasma btn-pequeno px-2" title="Editar {{ produto.nome }}"><svg class="ico ico-sm"><use href="#i-editar"/></svg><span class="sr-only">Editar</span></a></td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-8 text-gray-400">
-                            Nenhum produto encontrado com os filtros informados.
-                        </td>
-                    </tr>
+                    <tr><td colspan="3">{% include 'interfaces/_vazio.html' with icone='i-produto' titulo='Nenhum produto encontrado' texto='Cadastre um produto ao lado ou ajuste os filtros.' %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% include 'interfaces/_paginacao.html' %}
-    </div>
-
+    </section>
 </div>
 
-<div id="modal-imagem" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-4">
-    <div class="relative flex flex-col items-center justify-center max-w-5xl w-full max-h-[90vh]">
-        
-        <button type="button" class="absolute -top-12 right-0 bg-gray-800 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center gap-1.5 border border-gray-700 z-30" onclick="fecharModalDireto()">
-            ✕ Fechar
-        </button>
-        
-        <div class="flex items-center justify-center gap-4 w-full">
-            
-            <button id="btn-anterior" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(-1)" title="Foto anterior">
-                ❮ Anterior
-            </button>
-
-            <img id="modal-imagem-src" src="" alt="Foto ampliada do produto" class="max-w-[70vw] max-h-[78vh] object-contain rounded-xl shadow-2xl bg-black/50 border border-gray-800">
-
-            <button id="btn-proximo" type="button" class="bg-gray-800 hover:bg-indigo-600 text-white px-3 py-3 rounded-lg text-sm font-semibold transition shadow-md cursor-pointer flex items-center justify-center border border-gray-700 shrink-0 z-30" onclick="mudarImagem(1)" title="Próxima foto">
-                Próxima ❯
-            </button>
-        </div>
-
-        <div id="modal-indicador" class="mt-4 text-white text-xs sm:text-sm font-medium bg-gray-800/90 px-4 py-1.5 rounded-full border border-gray-700 tracking-wide shadow"></div>
+<div id="modal-imagem" class="fixed inset-0 z-50 hidden flex-col items-center justify-center gap-4 bg-tinta/95 px-4 pt-16 pb-6" role="dialog" aria-modal="true" aria-label="Fotos do produto">
+    <button type="button" class="btn-secundario btn-pequeno absolute top-4 right-4" onclick="fecharModalDireto()"><svg class="ico ico-sm"><use href="#i-fechar"/></svg>Fechar</button>
+    <img id="modal-imagem-src" src="" alt="Foto ampliada do produto" class="min-h-0 max-h-full max-w-full rounded-cartao object-contain">
+    <div class="flex shrink-0 items-center gap-3">
+        <button id="btn-anterior" type="button" class="btn-secundario px-3" onclick="mudarImagem(-1)" aria-label="Foto anterior"><svg class="ico rotate-180"><use href="#i-seta"/></svg></button>
+        <p id="modal-indicador" class="rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white tabular-nums"></p>
+        <button id="btn-proximo" type="button" class="btn-secundario px-3" onclick="mudarImagem(1)" aria-label="Próxima foto"><svg class="ico"><use href="#i-seta"/></svg></button>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}

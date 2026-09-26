@@ -55,19 +55,20 @@ class LoginFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('password', form.errors)
 
-    def test_widgets_e_atributos_tailwindcss(self):
-        """Verifica se os campos possuem os widgets, classes e placeholders corretos."""
+    def test_widgets_e_atributos(self):
+        """Campos usam o componente visual `entrada` e os atributos de preenchimento automático."""
         form = LoginForm()
         
         # Valida campo username
         username_html = str(form['username'])
-        self.assertIn('class="w-full px-4 py-2 border rounded-lg', username_html)
+        self.assertIn('class="entrada"', username_html)
         self.assertIn('placeholder="Seu nome de usuário"', username_html)
+        self.assertIn('autocapitalize="none"', username_html)
         self.assertIn('autocomplete="username"', username_html)
 
         # Valida campo password
         password_html = str(form['password'])
         self.assertIn('type="password"', password_html)
-        self.assertIn('class="w-full px-4 py-2 border rounded-lg', password_html)
-        self.assertIn('placeholder="********"', password_html)
+        self.assertIn('class="entrada"', password_html)
+        self.assertIn('placeholder="Sua senha"', password_html)
         self.assertIn('autocomplete="current-password"', password_html)

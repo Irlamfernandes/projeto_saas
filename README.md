@@ -92,6 +92,22 @@ make test        # pytest com cobertura + jest
 - A cobertura é configurada em `.coveragerc` e enviada ao SonarQube (`sonar-project.properties`).
   O objetivo é manter 100%.
 
+## Visual, gráficos e relatórios
+
+- **Tema "Petróleo"**: tokens em `tailwind.config.js` (`marca`, `destaque`, `tinta`, `fundo`, status
+  `bom`/`alerta`/`critico`) e componentes em `static/css/input.css` (`.cartao`, `.btn-primario`,
+  `.campo`/`.rotulo`/`.entrada`/`.ajuda`, `.pilula-*`, `.tabela`, `.kpi`...). Prefira os componentes a
+  repetir utilitários. Status sempre com ícone + texto, nunca só cor.
+- **Ícones**: sprite em `interfaces/templates/interfaces/_icones.html`, usado com
+  `<svg class="ico"><use href="#i-nome"/></svg>`.
+- **Gráficos**: a análise (em `application/relatorios/`) vira dados em `interfaces/graficos.py` e o
+  template inclui `interfaces/_grafico.html` (canvas + `json_script`). Quem desenha é
+  `static/js/graficos.js` com o Chart.js versionado em `static/vendor/` (sem CDN). As duas cores de
+  séries (marca x destaque) foram validadas para daltonismo.
+- **Relatórios**: `application/relatorios/` tem `vendas.py`, `produtos.py`, `clientes.py` e
+  `indicadores.py`; as páginas ficam em `/relatorios/` (visão geral, vendas, produtos, clientes).
+  O lucro estimado usa o preço de custo **atual** dos produtos (não há custo histórico).
+
 ## CSS (Tailwind)
 
 `static/css/output.css` é **versionado** e servido direto em produção. Sempre que adicionar ou

@@ -1,59 +1,53 @@
 {% extends 'interfaces/base.html' %}
 {% load formatacao %}
 
-{% block title %}Editar Venda #{{ venda.id }}{% endblock %}
-{% block header_title %}Editar Venda #{{ venda.id }}{% endblock %}
+{% block title %}Editar venda #{{ venda.id }} · Gestão da Loja{% endblock %}
+{% block voltar %}<a href="{% url 'vendas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Vendas</a>{% endblock %}
+{% block header_title %}Editar venda #{{ venda.id }}{% endblock %}
+{% block subtitulo %}Registrada em {{ venda.data_venda|date:"d/m/Y \à\s H:i" }} · total atual R$ {{ venda.valor_total|moeda }}{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-    <h3 class="text-lg font-bold text-gray-800 mb-4">Modificar Dados da Venda</h3>
-    
-    <form method="POST">
+<section class="cartao cartao-corpo max-w-2xl" aria-label="Dados da venda">
+    <form method="POST" class="grid gap-4">
         {% csrf_token %}
-        
-        <div class="mb-4">
-            <label for="id_cliente_venda" class="block text-gray-700 text-sm font-semibold mb-1">Cliente</label>
-            <select id="id_cliente_venda" name="cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option value="">Selecione o cliente...</option>
+        <div class="campo">
+            <label for="id_cliente_venda" class="rotulo">Cliente</label>
+            <select id="id_cliente_venda" name="cliente" required class="entrada">
+                <option value="">Escolha o cliente…</option>
                 {% for cliente in clientes %}
-                    <option value="{{ cliente.id }}" {% if venda.cliente and venda.cliente.id == cliente.id %}selected{% endif %}>
-                        {{ cliente.nome }}
-                    </option>
+                    <option value="{{ cliente.id }}" {% if venda.cliente and venda.cliente.id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        <div class="mb-4">
-            <label for="id_produto_venda" class="block text-gray-700 text-sm font-semibold mb-1">Produto (Nome ou Código Interno)</label>
-            <input type="text" id="id_produto_venda" name="produto" list="lista-produtos" required value="{% if item_atual.produto.codigo_interno %}{{ item_atual.produto.codigo_interno }}{% else %}{{ item_atual.produto.nome }}{% endif %}" placeholder="Digite o nome ou código..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            
+        <div class="campo">
+            <label for="id_produto_venda" class="rotulo">Produto</label>
+            <div class="entrada-grupo">
+                <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
+                <input type="text" id="id_produto_venda" name="produto" list="lista-produtos" required autocomplete="off" value="{% if item_atual.produto.codigo_interno %}{{ item_atual.produto.codigo_interno }}{% else %}{{ item_atual.produto.nome }}{% endif %}" placeholder="Digite o nome ou o código">
+            </div>
             <datalist id="lista-produtos">
                 {% for prod in produtos %}
-                    <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">
-                        {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|moeda }} [Estoque: {{ prod.quantidade_estoque }}]
-                    </option>
+                    <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">{{ prod.nome }} · R$ {{ prod.preco_venda|moeda }} · {{ prod.quantidade_estoque }} em estoque</option>
                 {% endfor %}
             </datalist>
+            <p class="ajuda">Ao trocar o produto ou a quantidade, o estoque é corrigido automaticamente.</p>
         </div>
 
-        <div class="mb-4">
-            <label for="id_quantidade_venda" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
-            <input type="number" id="id_quantidade_venda" name="quantidade" value="{{ item_atual.quantidade|default:1 }}" min="1" required class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+        <div class="campo max-w-xs">
+            <label for="id_quantidade_venda" class="rotulo">Quantidade</label>
+            <div class="entrada-grupo"><input type="number" id="id_quantidade_venda" name="quantidade" value="{{ item_atual.quantidade|default:1 }}" min="1" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
         </div>
 
-        <div class="mb-6">
-            <label for="id_observacoes_venda" class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
-            <textarea id="id_observacoes_venda" name="observacoes" rows="2" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">{{ venda.observacoes|default:'' }}</textarea>
+        <div class="campo">
+            <label for="id_observacoes_venda" class="rotulo">Observações <span class="rotulo-opcional">opcional</span></label>
+            <textarea id="id_observacoes_venda" name="observacoes" rows="2" class="entrada">{{ venda.observacoes|default:'' }}</textarea>
         </div>
 
-        <div class="flex gap-4">
-            <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                Salvar Alterações
-            </button>
-            <a href="{% url 'vendas' %}" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-sm text-center flex items-center justify-center">
-                Cancelar
-            </a>
+        <div class="flex flex-wrap justify-end gap-2 pt-2">
+            <a href="{% url 'vendas' %}" class="btn-secundario">Cancelar</a>
+            <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar alterações</button>
         </div>
     </form>
-</div>
+</section>
 {% endblock %}

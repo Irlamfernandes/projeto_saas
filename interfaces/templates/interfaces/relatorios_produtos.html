@@ -1,0 +1,151 @@
+{% extends 'interfaces/base.html' %}
+{% load static formatacao %}
+
+{% block title %}Relatórios de produtos · Gestão da Loja{% endblock %}
+{% block header_title %}Relatórios{% endblock %}
+{% block subtitulo %}O que dá lucro, o que vende e o que está parado.{% endblock %}
+
+{% block content %}
+{% include 'interfaces/_abas_relatorios.html' %}
+{% url 'relatorios_produtos' as limpar %}
+{% include 'interfaces/_filtro_periodo.html' with limpar=limpar ajuda='O período vale para lucro e curva ABC. Sem datas, mostramos os últimos 30 dias.' %}
+
+<section class="cartao cartao-corpo" aria-labelledby="t-lucro">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-lucro" class="titulo-cartao">Lucro estimado</h2><p class="subtitulo">Quanto sobra das vendas depois de pagar o custo dos produtos</p></div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="rounded-controle bg-fundo p-4"><p class="text-xs font-semibold text-tinta-suave">Vendido</p><p class="text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap mt-1">R$ {{ lucro.total.receita|moeda }}</p></div>
+        <div class="rounded-controle bg-fundo p-4"><p class="text-xs font-semibold text-tinta-suave">Custo dos produtos</p><p class="text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap mt-1">R$ {{ lucro.total.custo|moeda }}</p></div>
+        <div class="rounded-controle bg-marca-50 p-4"><p class="text-xs font-semibold text-marca-700">Lucro estimado</p><p class="text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap mt-1 text-marca-700">R$ {{ lucro.total.lucro|moeda }}</p></div>
+        <div class="rounded-controle bg-marca-50 p-4"><p class="text-xs font-semibold text-marca-700">Margem</p><p class="text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap mt-1 text-marca-700">{{ lucro.total.margem }}%</p><p class="ajuda mt-0.5">Do que você vendeu, quanto é lucro</p></div>
+    </div>
+    <p class="flex items-start gap-2 rounded-controle bg-fundo px-3.5 py-2.5 text-xs text-tinta-suave mb-4">
+        <svg class="ico ico-sm mt-px text-tinta-fraca"><use href="#i-info"/></svg>
+        <span>Usa o preço de custo <b>atual</b> de cada produto: se o custo mudou, vendas antigas são calculadas com o valor de hoje.
+        {% if lucro.produtos_sem_custo %}<b class="text-alerta-texto">{{ lucro.produtos_sem_custo }} produto{{ lucro.produtos_sem_custo|pluralize }} sem preço de custo</b> aparece{{ lucro.produtos_sem_custo|pluralize:"m" }} com lucro de 100%; cadastre o custo para o número ficar certo.{% endif %}</span>
+    </p>
+    {% if lucro.produtos %}
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-6 items-start">
+        <div>
+            <h3 class="text-sm font-semibold mb-2">Lucro por categoria</h3>
+            {% include 'interfaces/_grafico.html' with id='dados-lucro' tipo='barras-horizontais' dados=grafico_lucro descricao='Lucro estimado por categoria' %}
+        </div>
+        <div class="relative overflow-x-auto max-h-96">
+            <table class="tabela">
+                <caption class="sr-only">Lucro estimado por produto</caption>
+                <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right">Lucro</th><th scope="col" class="text-right">Margem</th></tr></thead>
+                <tbody>
+                    {% for l in lucro.produtos %}
+                    <tr>
+                        <td class="font-medium">{{ l.nome }}<span class="block text-xs font-normal text-tinta-fraca">vendeu R$ {{ l.receita|moeda }}</span>{% if l.sem_custo %} <span class="pilula-alerta ml-1" title="Sem preço de custo cadastrado"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>sem custo</span>{% endif %}</td>
+                        <td class="numero font-semibold">R$ {{ l.lucro|moeda }}</td>
+                        <td class="numero">{{ l.margem }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        {% include 'interfaces/_vazio.html' with icone='i-lucro' titulo='Nenhuma venda nesse período' %}
+    {% endif %}
+</section>
+
+<section class="cartao cartao-corpo" aria-labelledby="t-abc">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-abc" class="titulo-cartao">Curva ABC</h2><p class="subtitulo">Poucos produtos costumam fazer a maior parte do faturamento. Esses merecem mais atenção.</p></div>
+    </div>
+    {% if curva_abc %}
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+        {% for r in resumo_abc %}
+        <div class="rounded-controle border border-linha p-4">
+            <p class="flex items-center gap-2"><span class="{% if r.classe == 'A' %}pilula-marca{% elif r.classe == 'B' %}pilula-neutra{% else %}pilula-neutra opacity-70{% endif %}">Classe {{ r.classe }}</span><span class="text-xs text-tinta-fraca">{% if r.classe == 'A' %}essenciais{% elif r.classe == 'B' %}intermediários{% else %}pouca venda{% endif %}</span></p>
+            <p class="mt-2 text-sm"><b class="text-lg tabular-nums">{{ r.produtos }}</b> produto{{ r.produtos|pluralize }} · <b class="tabular-nums">{{ r.participacao }}%</b> do faturamento</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="relative overflow-x-auto max-h-96">
+        <table class="tabela">
+            <caption class="sr-only">Curva ABC de produtos</caption>
+            <thead><tr><th scope="col">Produto e classe</th><th scope="col" class="text-right">Faturamento</th></tr></thead>
+            <tbody>
+                {% for l in curva_abc %}
+                <tr>
+                    <td class="font-medium"><span class="{% if l.classe == 'A' %}pilula-marca{% else %}pilula-neutra{% endif %} mr-1.5">{{ l.classe }}</span>{{ l.nome }}<span class="block text-xs font-normal text-tinta-fraca">{{ l.participacao }}% do total · {{ l.acumulado }}% acumulado</span></td>
+                    <td class="numero align-top">R$ {{ l.faturamento|moeda }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        {% include 'interfaces/_vazio.html' with icone='i-abc' titulo='Nenhuma venda nesse período' %}
+    {% endif %}
+</section>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+    <section class="cartao cartao-corpo" id="reposicao" aria-labelledby="t-repor">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-repor" class="titulo-cartao">Previsão de reposição</h2><p class="subtitulo">Acabam em até 14 dias, pela média de vendas dos últimos 30 dias</p></div>
+        </div>
+        {% if reposicao %}
+        <div class="relative overflow-x-auto max-h-96">
+            <table class="tabela">
+                <caption class="sr-only">Produtos que precisam de reposição</caption>
+                <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right">Acaba em</th><th scope="col" class="text-right">Comprar</th></tr></thead>
+                <tbody>
+                    {% for r in reposicao %}
+                    <tr>
+                        <td><span class="font-medium">{{ r.nome }}</span><span class="block text-xs text-tinta-fraca">vende {{ r.media_diaria }} por dia · tem {{ r.estoque }} un.</span></td>
+                        <td class="text-right">
+                            {% if r.estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
+                            {% elif r.dias_restantes <= 2 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ r.dias_restantes }} dia{{ r.dias_restantes|pluralize }}</span>
+                            {% else %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-tempo"/></svg>{{ r.dias_restantes }} dias</span>{% endif %}
+                        </td>
+                        <td class="numero font-semibold" title="Cobre 14 dias de vendas">{{ r.sugestao_de_compra }} un.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {% include 'interfaces/_vazio.html' with icone='i-check' titulo='Nada para repor nos próximos 14 dias' %}
+        {% endif %}
+    </section>
+
+    <section class="cartao cartao-corpo" aria-labelledby="t-parados">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-parados" class="titulo-cartao">Produtos parados</h2><p class="subtitulo">Com estoque e sem venda há {{ dias_parado }} dias ou mais</p></div>
+            <nav class="abas p-0.5" aria-label="Tempo sem venda">
+                <a href="{% querystring parado=30 %}" class="aba py-1.5 {% if dias_parado == 30 %}aba-ativa{% endif %}">30 dias</a>
+                <a href="{% querystring parado=60 %}" class="aba py-1.5 {% if dias_parado == 60 %}aba-ativa{% endif %}">60 dias</a>
+                <a href="{% querystring parado=90 %}" class="aba py-1.5 {% if dias_parado == 90 %}aba-ativa{% endif %}">90 dias</a>
+            </nav>
+        </div>
+        {% if parados %}
+        <div class="relative overflow-x-auto max-h-96">
+            <table class="tabela">
+                <caption class="sr-only">Produtos parados no estoque</caption>
+                <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right" title="Estoque x preço de custo">Valor parado</th></tr></thead>
+                <tbody>
+                    {% for p in parados %}
+                    <tr>
+                        <td class="font-medium">{{ p.nome }}<span class="block text-xs font-normal text-tinta-fraca">{{ p.estoque }} un. em estoque · {% if p.dias_parado is None %}nunca vendeu{% else %}última venda há {{ p.dias_parado }} dias{% endif %}</span></td>
+                        <td class="numero" title="Estoque x preço de custo">R$ {{ p.valor_em_estoque|moeda }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {% include 'interfaces/_vazio.html' with icone='i-check' titulo='Nenhum produto parado' texto='Tudo que tem em estoque vendeu recentemente.' %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/graficos.js' %}"></script>
+{% endblock %}

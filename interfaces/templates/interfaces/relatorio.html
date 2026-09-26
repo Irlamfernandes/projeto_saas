@@ -1,220 +1,118 @@
 {% extends 'interfaces/base.html' %}
 {% load formatacao %}
 
-{% block title %}Relatórios e Indicadores{% endblock %}
-{% block header_title %}Painel Completo de Relatórios{% endblock %}
+{% block title %}Relatórios · Gestão da Loja{% endblock %}
+{% block header_title %}Relatórios{% endblock %}
+{% block subtitulo %}Números da loja para decidir com mais segurança.{% endblock %}
+{% block acoes %}
+    <a href="{% url 'exportar_pdf_modular' 'geral' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-secundario"><svg class="ico"><use href="#i-pdf"/></svg>Baixar tudo em PDF</a>
+    <a href="{% url 'exportar_excel_modular' 'geral' %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-secundario"><svg class="ico"><use href="#i-planilha"/></svg>Baixar tudo em Excel</a>
+{% endblock %}
 
 {% block content %}
-<div class="space-y-8">
+{% include 'interfaces/_abas_relatorios.html' %}
+{% url 'relatorios' as limpar %}
+{% include 'interfaces/_filtro_periodo.html' with limpar=limpar ajuda='O período vale para faturamento e ticket médio. Sem datas, considera todas as vendas.' %}
 
-    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-        <form method="GET" action="" class="flex flex-wrap items-end gap-4">
-            <div>
-                <label for="data_inicio" class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Início</label>
-                <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio|date:"Y-m-d" }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-            </div>
-            <div>
-                <label for="data_fim" class="block text-xs font-bold text-gray-600 uppercase mb-1">Data Fim</label>
-                <input type="date" id="data_fim" name="data_fim" value="{{ data_fim|date:"Y-m-d" }}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white">
-            </div>
-            <div class="flex gap-2">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition shadow-sm cursor-pointer">
-                    🔍 Filtrar
-                </button>
-                <a href="{% url 'relatorios' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-lg text-sm transition flex items-center">
-                    Limpar
-                </a>
-            </div>
-        </form>
+<section class="cartao cartao-corpo" aria-labelledby="t-resumo">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-resumo" class="titulo-cartao">Resumo financeiro</h2><p class="subtitulo">Vendas, fiado e créditos da caderneta</p></div>
+        {% include 'interfaces/_exportar.html' with tipo='resumo' nome='o resumo' %}
     </div>
-    
-    <div class="flex flex-wrap justify-between items-center bg-white p-5 rounded-xl shadow-sm border border-gray-200 gap-4">
-        <div>
-            <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Exportação Global</h3>
-            <p class="text-xs text-gray-500">Baixe todos os dados consolidados da sua loja de uma só vez (considerando o filtro de datas).</p>
-        </div>
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <a href="{% url 'exportar_pdf_modular' 'geral' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="bg-gray-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
-                📄 Baixar Tudo (PDF)
-            </a>
-            <a href="{% url 'exportar_excel_modular' 'geral' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg text-sm transition shadow-sm flex items-center gap-2 cursor-pointer">
-                📊 Baixar Tudo (Excel)
-            </a>
-        </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="rounded-controle bg-fundo p-4"><p class="text-xs font-semibold text-tinta-suave">Faturamento no período</p><p class="kpi-valor mt-1 text-marca-700"><span class="kpi-moeda">R$</span>{{ total_geral_vendas|moeda }}</p></div>
+        <div class="rounded-controle bg-fundo p-4"><p class="text-xs font-semibold text-tinta-suave">Ticket médio</p><p class="kpi-valor mt-1"><span class="kpi-moeda">R$</span>{{ ticket_medio|moeda }}</p><p class="ajuda mt-1">Valor médio de cada venda</p></div>
+        <div class="rounded-controle bg-critico-suave p-4"><p class="text-xs font-semibold text-critico-texto">A receber (fiado)</p><p class="kpi-valor mt-1 text-critico-texto"><span class="kpi-moeda text-critico-texto">R$</span>{{ total_fiado_pendente|moeda }}</p></div>
+        <div class="rounded-controle bg-bom-suave p-4"><p class="text-xs font-semibold text-bom-texto">Crédito de clientes</p><p class="kpi-valor mt-1 text-bom-texto"><span class="kpi-moeda text-bom-texto">R$</span>{{ total_credito_clientes|moeda }}</p><p class="ajuda mt-1">Pago a mais, a descontar</p></div>
     </div>
+</section>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">1. Visão Geral Financeira</h3>
-            <div class="flex gap-2">
-                <a href="{% url 'exportar_pdf_modular' 'resumo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'resumo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
-            </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <span class="text-xs font-medium text-gray-500 uppercase">Faturamento Total</span>
-                <p class="text-2xl font-bold text-indigo-600 mt-1">R$ {{ total_geral_vendas|moeda }}</p>
-            </div>
-            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <span class="text-xs font-medium text-gray-500 uppercase">Ticket Médio</span>
-                <p class="text-2xl font-bold text-gray-900 mt-1">R$ {{ ticket_medio|moeda }}</p>
-            </div>
-            <div class="p-4 bg-red-50/50 rounded-lg border border-red-100">
-                <span class="text-xs font-medium text-red-500 uppercase">Total a Receber (Fiado)</span>
-                <p class="text-2xl font-bold text-red-600 mt-1">R$ {{ total_fiado_pendente|moeda }}</p>
-            </div>
-            <div class="p-4 bg-green-50/50 rounded-lg border border-green-100">
-                <span class="text-xs font-medium text-green-600 uppercase">Créditos de Clientes</span>
-                <p class="text-2xl font-bold text-green-700 mt-1">R$ {{ total_credito_clientes|moeda }}</p>
-            </div>
-        </div>
+<section class="cartao cartao-corpo" aria-labelledby="t-tempo">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-tempo" class="titulo-cartao">Faturamento no tempo</h2><p class="subtitulo">Não depende do filtro de datas</p></div>
+        {% include 'interfaces/_exportar.html' with tipo='temporal' nome='o faturamento no tempo' %}
     </div>
+    <dl class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="rounded-controle border border-linha p-4"><dt class="text-xs font-semibold text-tinta-suave">Hoje</dt><dd class="mt-1 text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap">R$ {{ vendas_hoje_valor|moeda }}</dd></div>
+        <div class="rounded-controle border border-linha p-4"><dt class="text-xs font-semibold text-tinta-suave">Últimos 7 dias</dt><dd class="mt-1 text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap">R$ {{ vendas_semana_valor|moeda }}</dd></div>
+        <div class="rounded-controle border border-linha p-4"><dt class="text-xs font-semibold text-tinta-suave">Este mês</dt><dd class="mt-1 text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap">R$ {{ vendas_mes_valor|moeda }}</dd></div>
+        <div class="rounded-controle border border-linha p-4"><dt class="text-xs font-semibold text-tinta-suave">Este ano</dt><dd class="mt-1 text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap">R$ {{ vendas_ano_valor|moeda }}</dd></div>
+    </dl>
+</section>
 
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">2. Desempenho por Ciclo Temporal</h3>
-            <div class="flex gap-2">
-                <a href="{% url 'exportar_pdf_modular' 'temporal' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'temporal' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
-            </div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+    <section class="cartao cartao-corpo" aria-labelledby="t-devendo">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-devendo" class="titulo-cartao">Clientes devendo</h2><p class="subtitulo">Do maior para o menor valor</p></div>
+            {% include 'interfaces/_exportar.html' with tipo='devendo' nome='os clientes devendo' %}
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
-                <span class="text-xs font-medium text-gray-400 uppercase">Hoje</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_hoje_valor|moeda }}</p>
-            </div>
-            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
-                <span class="text-xs font-medium text-gray-400 uppercase">Últimos 7 dias</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_semana_valor|moeda }}</p>
-            </div>
-            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
-                <span class="text-xs font-medium text-gray-400 uppercase">Este Mês</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_mes_valor|moeda }}</p>
-            </div>
-            <div class="p-4 bg-white rounded-lg border border-gray-200 shadow-xs">
-                <span class="text-xs font-medium text-gray-400 uppercase">Este Ano</span>
-                <p class="text-xl font-bold text-gray-800 mt-1">R$ {{ vendas_ano_valor|moeda }}</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-red-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-base font-bold text-red-700 uppercase tracking-wider">3. Clientes Devendo</h3>
-                <div class="flex gap-2">
-                    <a href="{% url 'exportar_pdf_modular' 'devendo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                    <a href="{% url 'exportar_excel_modular' 'devendo' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-red-50 hover:bg-red-100 text-red-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
-                </div>
-            </div>
-            <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                <table class="w-full text-left border-collapse">
-                    <caption class="sr-only">Lista de clientes com dívidas pendentes na caderneta</caption>
-                    <thead>
-                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
-                            <th class="py-2 px-3">Cliente</th>
-                            <th class="py-2 px-3 text-right">Valor Devido</th>
-                            <th class="py-2 px-3 text-center">Caderneta</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
-                        {% for cliente in clientes_devendo %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-red-600">R$ {{ cliente.saldo_geral|moeda }}</td>
-                            <td class="py-2.5 px-3 text-center">
-                                <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhum cliente com dívida pendente 🎉</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-green-100">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-base font-bold text-green-700 uppercase tracking-wider">4. Clientes com Crédito</h3>
-                <div class="flex gap-2">
-                    <a href="{% url 'exportar_pdf_modular' 'credito' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                    <a href="{% url 'exportar_excel_modular' 'credito' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-green-50 hover:bg-green-100 text-green-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
-                </div>
-            </div>
-            <div class="overflow-x-auto max-h-80 overflow-y-auto">
-                <table class="w-full text-left border-collapse">
-                    <caption class="sr-only">Lista de clientes com saldo de crédito disponível</caption>
-                    <thead>
-                        <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
-                            <th class="py-2 px-3">Cliente</th>
-                            <th class="py-2 px-3 text-right">Crédito Disponível</th>
-                            <th class="py-2 px-3 text-center">Caderneta</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-sm">
-                        {% for cliente in clientes_credito %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="py-2.5 px-3 font-medium text-gray-900">{{ cliente.nome }}</td>
-                            <td class="py-2.5 px-3 text-right font-bold text-green-600">R$ {{ cliente.valor_credito|moeda }}</td>
-                            <td class="py-2.5 px-3 text-center">
-                                <a href="{% url 'extrato_cliente' cliente.id %}" class="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded font-semibold hover:bg-indigo-100">Ver</a>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="3" class="text-center py-6 text-gray-400 text-sm">Nenhum cliente com crédito antecipado.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-base font-bold text-gray-800 uppercase tracking-wider">5. Inventário de Estoque</h3>
-            <div class="flex gap-2">
-                <a href="{% url 'exportar_pdf_modular' 'estoque' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1 rounded font-semibold transition">📄 PDF</a>
-                <a href="{% url 'exportar_excel_modular' 'estoque' %}{% if data_inicio or data_fim %}?data_inicio={{ data_inicio|date:"Y-m-d" }}&data_fim={{ data_fim|date:"Y-m-d" }}{% endif %}" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded font-semibold transition">📊 Excel</a>
-            </div>
-        </div>
-        <div class="overflow-x-auto max-h-96 overflow-y-auto">
-            <table class="w-full text-left border-collapse">
-                <caption class="sr-only">Inventário geral de estoque e preços de produtos</caption>
-                <thead>
-                    <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
-                        <th class="py-3 px-4">Produto</th>
-                        <th class="py-3 px-4">Preço de Venda</th>
-                        <th class="py-3 px-4 text-center">Quantidade em Estoque</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 text-sm">
-                    {% for prod in estoque_ordenado %}
-                    <tr class="hover:bg-gray-50">
-                        <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
-                        <td class="py-3 px-4 text-gray-600">R$ {{ prod.preco_venda|moeda }}</td>
-                        <td class="py-3 px-4 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% elif prod.quantidade_estoque <= 5 %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
-                                {{ prod.quantidade_estoque }} un.
-                            </span>
-                        </td>
+        <div class="relative overflow-x-auto max-h-96">
+            <table class="tabela">
+                <caption class="sr-only">Clientes com saldo devedor</caption>
+                <thead><tr><th scope="col">Cliente</th><th scope="col" class="text-right">Deve</th></tr></thead>
+                <tbody>
+                    {% for cliente in clientes_devendo %}
+                    <tr>
+                        <td><a href="{% url 'extrato_cliente' cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Abrir caderneta">{{ cliente.nome }}</a></td>
+                        <td class="numero font-bold text-critico-texto">R$ {{ cliente.saldo_geral|moeda }}</td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="3" class="text-center py-6 text-gray-400">Nenhum produto cadastrado.</td>
-                    </tr>
+                    <tr><td colspan="2" class="py-8 text-center text-tinta-fraca">Nenhum cliente devendo.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 
+    <section class="cartao cartao-corpo" aria-labelledby="t-credito">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-credito" class="titulo-cartao">Clientes com crédito</h2><p class="subtitulo">Pagaram a mais e têm saldo a descontar</p></div>
+            {% include 'interfaces/_exportar.html' with tipo='credito' nome='os clientes com crédito' %}
+        </div>
+        <div class="relative overflow-x-auto max-h-96">
+            <table class="tabela">
+                <caption class="sr-only">Clientes com saldo de crédito disponível</caption>
+                <thead><tr><th scope="col">Cliente</th><th scope="col" class="text-right">Crédito</th></tr></thead>
+                <tbody>
+                    {% for cliente in clientes_credito %}
+                    <tr>
+                        <td><a href="{% url 'extrato_cliente' cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Abrir caderneta">{{ cliente.nome }}</a></td>
+                        <td class="numero font-bold text-bom-texto">R$ {{ cliente.valor_credito|moeda }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="2" class="py-8 text-center text-tinta-fraca">Nenhum cliente com crédito.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
+
+<section class="cartao cartao-corpo" aria-labelledby="t-estoque">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-estoque" class="titulo-cartao">Inventário de estoque</h2><p class="subtitulo">Todos os produtos, do menor para o maior estoque</p></div>
+        {% include 'interfaces/_exportar.html' with tipo='estoque' nome='o inventário' %}
+    </div>
+    <div class="relative overflow-x-auto max-h-[28rem]">
+        <table class="tabela">
+            <caption class="sr-only">Inventário de estoque</caption>
+            <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right">Preço</th><th scope="col" class="text-right">Estoque</th></tr></thead>
+            <tbody>
+                {% for prod in estoque_ordenado %}
+                <tr>
+                    <td class="font-medium">{{ prod.nome }}</td>
+                    <td class="numero">R$ {{ prod.preco_venda|moeda }}</td>
+                    <td class="text-right">
+                        {% if prod.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
+                        {% elif prod.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ prod.quantidade_estoque }} un.</span>
+                        {% else %}<span class="pilula-neutra">{{ prod.quantidade_estoque }} un.</span>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3" class="py-8 text-center text-tinta-fraca">Nenhum produto cadastrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
 {% endblock %}

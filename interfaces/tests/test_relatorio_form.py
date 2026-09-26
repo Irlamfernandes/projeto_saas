@@ -1,6 +1,7 @@
 from datetime import date
 from django.test import SimpleTestCase
-from interfaces.forms import LimiteEstoqueForm, PeriodoForm
+from interfaces.forms import LimiteEstoqueForm, PeriodoForm, escolher_dias
+from tests.apoio import CenarioDeLoja
 
 
 class PeriodoFormTest(SimpleTestCase):
@@ -22,3 +23,23 @@ class LimiteEstoqueFormTest(SimpleTestCase):
             with self.subTest(valor=valor):
                 self.assertEqual(LimiteEstoqueForm({'limite_estoque': valor}).limite(), esperado)
         self.assertEqual(LimiteEstoqueForm({}).limite(), 5)
+
+
+class IntervaloPadraoTest(SimpleTestCase):
+
+    def test_sem_datas_usa_os_ultimos_dias(self):
+        agora = CenarioDeLoja.quando(2026, 3, 20, 23, 30)
+        self.assertEqual(PeriodoForm({}).intervalo_ou_ultimos(30, agora), (date(2026, 2, 19), date(2026, 3, 20)))
+
+    def test_datas_informadas_prevalecem(self):
+        form = PeriodoForm({'data_inicio': '2026-01-01'})
+        self.assertEqual(form.intervalo_ou_ultimos(30), (date(2026, 1, 1), None))
+
+
+class EscolherDiasTest(SimpleTestCase):
+
+    def test_escolher_dias(self):
+        self.assertEqual(escolher_dias('90', (30, 90), 30), 90)
+        self.assertEqual(escolher_dias('45', (30, 90), 30), 30)
+        self.assertEqual(escolher_dias('abc', (30, 90), 30), 30)
+        self.assertEqual(escolher_dias(None, (30, 90), 30), 30)

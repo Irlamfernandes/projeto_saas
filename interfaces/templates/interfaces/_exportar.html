@@ -1,0 +1,4 @@
+<span class="flex gap-1.5">
+    <a href="{% url 'exportar_pdf_modular' tipo %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-secundario btn-pequeno" aria-label="Baixar {{ nome|default:tipo }} em PDF"><svg class="ico ico-sm"><use href="#i-pdf"/></svg>PDF</a>
+    <a href="{% url 'exportar_excel_modular' tipo %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn-secundario btn-pequeno" aria-label="Baixar {{ nome|default:tipo }} em Excel"><svg class="ico ico-sm"><use href="#i-planilha"/></svg>Excel</a>
+</span>

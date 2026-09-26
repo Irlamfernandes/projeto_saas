@@ -128,6 +128,7 @@ class ExtratoClienteViewTest(TestCase):
 
     def test_extrato_exibe_saldo_e_loja_do_cliente(self):
         PagamentoCliente.objects.create(loja=self.loja1, cliente=self.cliente_loja1, valor=Decimal('12.00'))
+        Cliente.objects.filter(pk=self.cliente_loja1.pk).update(telefone='(24) 99999-0000')
         self.client.force_login(self.superuser)
 
         response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))
@@ -148,3 +149,24 @@ class ExtratoClienteViewTest(TestCase):
         self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {'valor': '5', 'observacao': ''})
         novo = PagamentoCliente.objects.filter(cliente=self.cliente_loja1).exclude(pk=self.pagamento_l1.pk).get()
         self.assertEqual(novo.observacao, "Pagamento na caderneta")
+
+    def test_whatsapp_so_aparece_com_telefone(self):
+        self.client.force_login(self.user_loja1)
+        self.assertNotContains(self.client.get(self._get_url_extrato(self.cliente_loja1.pk)), 'wa.me')
+
+        Cliente.objects.filter(pk=self.cliente_loja1.pk).update(telefone='(24) 99999-0000')
+        response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))
+
+        self.assertContains(response, 'https://wa.me/5524999990000?text=')
+        self.assertContains(response, 'ficou%20R%24%20100%2C00%20em%20aberto')
+
+    def test_whatsapp_descreve_credito_como_credito(self):
+        """Antes a mensagem dizia "Situação atual: R$ -20.00" para quem tinha crédito."""
+        PagamentoCliente.objects.create(loja=self.loja1, cliente=self.cliente_loja1, valor=Decimal('120.00'))
+        Cliente.objects.filter(pk=self.cliente_loja1.pk).update(telefone='24999990000')
+        self.client.force_login(self.user_loja1)
+
+        response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))
+
+        self.assertContains(response, 'R%24%2020%2C00%20de%20cr%C3%A9dito')
+        self.assertContains(response, 'Crédito: pagou a mais')

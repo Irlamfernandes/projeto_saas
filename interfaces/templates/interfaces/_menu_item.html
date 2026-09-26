@@ -1,0 +1,4 @@
+{% load navegacao %}{% menu_ativo ativo_se as atual %}<a href="{% url rota %}" {% if atual %}aria-current="page"{% endif %}
+   class="flex items-center gap-3 rounded-lg px-2.5 py-2 font-medium transition {% if atual %}bg-marca-100 text-marca-700 font-bold{% else %}text-tinta-suave hover:bg-fundo hover:text-tinta{% endif %}">
+    <svg class="ico"><use href="#{{ icone }}"/></svg>{{ rotulo }}
+</a>

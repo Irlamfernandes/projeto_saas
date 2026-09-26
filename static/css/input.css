@@ -1,3 +1,95 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Cores lidas pelos gráficos (static/js/graficos.js); espelham o tailwind.config.js */
+  :root {
+    --cor-marca: #0d9488;
+    --cor-destaque: #c96a05;
+    --cor-neutra: #c9d3d1;
+    --cor-tinta: #16211f;
+    --cor-tinta-suave: #4b5b58;
+    --cor-tinta-fraca: #7c8a87;
+    --cor-linha: #e2e9e7;
+    --cor-grade: #edf1f0;
+    --cor-superficie: #ffffff;
+  }
+  html { -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-fundo text-tinta font-sans antialiased; }
+  h1, h2, h3 { @apply font-titulo tracking-tight; text-wrap: balance; }
+  :focus-visible { @apply outline-none ring-2 ring-marca-600 ring-offset-2 ring-offset-fundo; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+}
+
+@layer components {
+  /* Ícones do sprite interfaces/_icones.html */
+  .ico { @apply w-5 h-5 shrink-0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .ico-sm { @apply w-4 h-4; }
+
+  /* Superfícies */
+  .cartao { @apply bg-white border border-linha rounded-cartao min-w-0; }
+  .cartao-corpo { @apply p-4 sm:p-6; }
+  .cartao-cabecalho { @apply flex flex-wrap items-start justify-between gap-3 mb-4; }
+  .titulo-cartao { @apply text-base font-bold text-tinta; }
+  .subtitulo { @apply text-sm text-tinta-fraca mt-0.5; }
+  .titulo-pagina { @apply text-2xl sm:text-[1.75rem] font-bold leading-tight; }
+
+  /* Botões */
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-controle px-4 py-2.5 text-sm font-semibold transition cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-primario { @apply btn bg-marca-600 text-white hover:bg-marca-700; }
+  .btn-secundario { @apply btn bg-white text-tinta border border-linha hover:border-tinta-fraca; }
+  .btn-perigo { @apply btn bg-critico-suave text-critico-texto hover:bg-critico hover:text-white; }
+  .btn-fantasma { @apply btn px-3 text-tinta-suave hover:bg-fundo hover:text-tinta; }
+  .btn-pequeno { @apply px-3 py-1.5 text-xs rounded-lg; }
+
+  /* Formulários: rótulo + campo + ajuda */
+  .campo { @apply grid gap-1.5 content-start min-w-0; }
+  .rotulo { @apply text-sm font-semibold text-tinta; }
+  .rotulo-opcional { @apply ml-1 text-xs font-medium text-tinta-fraca; }
+  .ajuda { @apply text-xs text-tinta-fraca leading-relaxed; }
+  .entrada { @apply w-full rounded-controle border border-linha bg-white px-3 py-2.5 text-[0.95rem] text-tinta placeholder:text-tinta-fraca transition focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100; }
+  /* Seta própria: a nativa fica por cima do texto e muda de navegador para navegador */
+  select.entrada { @apply appearance-none truncate pr-10 bg-no-repeat cursor-pointer; background-position: right 0.8rem center; background-size: 1rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c8a87' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); }
+  .entrada-grupo { @apply flex w-full min-w-0 items-center rounded-controle border border-linha bg-white transition focus-within:border-marca-500 focus-within:ring-4 focus-within:ring-marca-100; }
+  .entrada-grupo > input, .entrada-grupo > select { @apply w-full min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-[0.95rem] text-tinta focus:outline-none focus:ring-0; }
+  .afixo { @apply pl-3 text-sm font-semibold text-tinta-fraca select-none; }
+  .afixo-fim { @apply pr-3 text-sm font-semibold text-tinta-fraca select-none; }
+
+  /* Pílulas de status (sempre com ícone + texto) */
+  .pilula { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold whitespace-nowrap; }
+  .pilula-bom { @apply pilula bg-bom-suave text-bom-texto; }
+  .pilula-alerta { @apply pilula bg-alerta-suave text-alerta-texto; }
+  .pilula-critico { @apply pilula bg-critico-suave text-critico-texto; }
+  .pilula-neutra { @apply pilula bg-fundo text-tinta-suave; }
+  .pilula-marca { @apply pilula bg-marca-100 text-marca-700; }
+
+  /* Tabelas */
+  .tabela { @apply w-full text-left text-sm border-collapse; }
+  .tabela thead th { @apply sticky top-0 bg-white px-2 sm:px-4 py-3 text-xs font-semibold uppercase tracking-wider text-tinta-fraca border-b border-linha whitespace-nowrap; }
+  .tabela tbody td { @apply px-2 sm:px-4 py-3 border-b border-grade align-middle; }
+  .tabela tbody tr:last-child td { @apply border-b-0; }
+  .tabela tbody tr { @apply transition-colors hover:bg-fundo/60; }
+  .numero { @apply tabular-nums text-right whitespace-nowrap; }
+
+  /* Indicadores do topo */
+  .kpi { @apply cartao p-5 grid gap-1.5 content-start; }
+  .kpi-rotulo { @apply flex items-center gap-2 text-sm font-medium text-tinta-suave; }
+  .kpi-valor { @apply font-titulo text-[1.65rem] font-bold leading-tight tracking-tight tabular-nums; }
+  .kpi-moeda { @apply mr-1 font-sans text-base font-semibold text-tinta-suave; }
+  .variacao { @apply inline-flex flex-wrap items-center gap-1 text-[0.8rem] font-semibold; }
+
+  /* Abas (links) */
+  /* No celular, 2×2 (todas as abas visíveis); a partir de sm, em linha */
+  .abas { @apply grid grid-cols-2 gap-1 rounded-controle bg-white border border-linha p-1 sm:flex sm:w-fit; }
+  .aba { @apply rounded-lg px-3.5 py-2 text-center text-sm font-semibold text-tinta-suave whitespace-nowrap transition hover:text-tinta hover:bg-fundo; }
+  .aba-ativa { @apply bg-marca-100 text-marca-700 hover:bg-marca-100 hover:text-marca-700; }
+
+  /* Gráficos */
+  .area-grafico { @apply relative w-full min-w-0 h-64 overflow-hidden; }
+  .area-grafico canvas { @apply max-w-full; }
+  .vazio { @apply flex flex-col items-center justify-center gap-2 rounded-controle border border-dashed border-linha bg-fundo/50 px-4 py-10 text-center text-sm text-tinta-fraca; }
+}

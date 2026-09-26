@@ -1,0 +1,34 @@
+{% load formatacao %}
+{% if mapa.melhor %}
+<div class="relative overflow-x-auto">
+    <table class="w-full border-separate text-xs" style="border-spacing: 3px" aria-label="Total vendido por dia da semana e hora">
+        <thead>
+            <tr><th class="w-10"></th>{% for dia in mapa.dias %}<th scope="col" class="font-semibold text-tinta-fraca pb-1">{{ dia }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            {% for hora, celulas in mapa.linhas %}
+            <tr>
+                <th scope="row" class="pr-1 text-right font-medium text-tinta-fraca tabular-nums">{{ hora }}h</th>
+                {% for c in celulas %}
+                <td class="h-6 min-w-8 rounded-md" title="{{ c.dia }}, {{ c.hora }}h: R$ {{ c.total|moeda }} em {{ c.vendas }} venda{{ c.vendas|pluralize }}"
+                    style="background: {% if c.vendas %}color-mix(in oklab, var(--cor-marca) {{ c.intensidade|intensidade }}%, white){% else %}var(--cor-grade){% endif %}">
+                    <span class="sr-only">{{ c.dia }} {{ c.hora }}h: R$ {{ c.total|moeda }}</span>
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-2 mt-3 text-xs text-tinta-fraca">
+    <p>Melhor horário: <b class="text-tinta">{{ mapa.melhor.dia }}, {{ mapa.melhor.hora }}h</b> (R$ {{ mapa.melhor.total|moeda }})</p>
+    <p class="flex items-center gap-1.5" aria-hidden="true">menos
+        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 15%, white)"></i>
+        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 45%, white)"></i>
+        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 75%, white)"></i>
+        <i class="inline-block w-4 h-2.5 rounded" style="background: var(--cor-marca)"></i> mais
+    </p>
+</div>
+{% else %}
+{% include 'interfaces/_vazio.html' with icone='i-tempo' titulo='Ainda não há vendas suficientes' texto='O mapa aparece assim que houver vendas nos últimos 90 dias.' %}
+{% endif %}

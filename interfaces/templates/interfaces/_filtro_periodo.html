@@ -1,0 +1,14 @@
+<form method="GET" class="cartao cartao-corpo flex flex-wrap items-end gap-3" aria-label="Período do relatório">
+    {% for nome, valor in manter.items %}<input type="hidden" name="{{ nome }}" value="{{ valor }}">{% endfor %}
+    <div class="campo">
+        <label for="data_inicio" class="rotulo">De</label>
+        <input type="date" id="data_inicio" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}" class="entrada">
+    </div>
+    <div class="campo">
+        <label for="data_fim" class="rotulo">Até</label>
+        <input type="date" id="data_fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}" class="entrada">
+    </div>
+    <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-filtro"/></svg>Aplicar</button>
+    {% if limpar %}<a href="{{ limpar }}" class="btn-fantasma">Limpar</a>{% endif %}
+    <p class="ajuda basis-full">{{ ajuda|default:'Sem datas, mostramos os últimos 30 dias.' }}</p>
+</form>
