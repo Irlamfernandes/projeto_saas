@@ -39,7 +39,6 @@ htmlcov/
 .nox/
 .coverage
 coverage/
-.coveragerc
 .coverage.*
 .cache
 nosetests.xml
@@ -126,3 +125,5 @@ venv.bak
 
 # Docker / Volumes
 .DS_Store
+# SonarScanner (artefatos locais)
+.sonar/

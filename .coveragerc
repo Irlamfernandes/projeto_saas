@@ -1,0 +1,12 @@
+[run]
+source = application
+         interfaces
+         infrastructure
+omit = 
+    */static/sw.js
+    tailwind.config.js
+    */migrations/*
+    */tests/*
+    manage.py
+    */wsgi.py
+    */asgi.py
