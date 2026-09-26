@@ -9,25 +9,12 @@ _MENSAGENS_DO_CAMPO = {
 
 
 class NovaSenhaForm(forms.Form):
-    """Troca de senha. Na troca voluntária (sem senha temporária pendente) exige a senha atual."""
-
-    senha_atual = forms.CharField(max_length=128, strip=False, error_messages={
-        'required': "Informe sua senha atual.",
-    })
     nova_senha = forms.CharField(max_length=128, strip=False, error_messages=_MENSAGENS_DO_CAMPO)
     confirmacao_senha = forms.CharField(max_length=128, strip=False, error_messages=_MENSAGENS_DO_CAMPO)
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
         super().__init__(*args, **kwargs)
-        if user.deve_trocar_senha:
-            del self.fields['senha_atual']
-
-    def clean_senha_atual(self):
-        senha = self.cleaned_data['senha_atual']
-        if not self.user.check_password(senha):
-            raise ValidationError("A senha atual está incorreta.")
-        return senha
 
     def clean(self):
         dados = super().clean()

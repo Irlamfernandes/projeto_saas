@@ -12,13 +12,8 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
     <div class="bg-white p-8 rounded-xl shadow-md w-96">
-        {% if troca_obrigatoria %}
         <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">Primeiro Acesso</h1>
         <p class="text-sm text-gray-600 mb-6 text-center">Por segurança, defina uma nova senha pessoal para continuar.</p>
-        {% else %}
-        <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">Alterar Senha</h1>
-        <p class="text-sm text-gray-600 mb-6 text-center">Confirme sua senha atual e escolha a nova.</p>
-        {% endif %}
         
         {% if erros %}
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm" role="alert">
@@ -30,21 +25,7 @@
 
         <form method="POST" autocomplete="off">
             {% csrf_token %}
-
-            {% if not troca_obrigatoria %}
-            <div class="mb-4">
-                <label for="senha_atual" class="block text-gray-700 text-sm font-bold mb-2">Senha Atual</label>
-                <input 
-                    type="password" 
-                    id="senha_atual" 
-                    name="senha_atual" 
-                    required 
-                    autocomplete="current-password"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-            </div>
-            {% endif %}
-
+            
             <div class="mb-4">
                 <label for="nova_senha" class="block text-gray-700 text-sm font-bold mb-2">Nova Senha</label>
                 <input 
@@ -74,11 +55,8 @@
             </div>
 
             <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                {% if troca_obrigatoria %}Salvar Nova Senha e Entrar{% else %}Salvar Nova Senha{% endif %}
+                Salvar Nova Senha e Entrar
             </button>
-            {% if not troca_obrigatoria %}
-            <a href="{% url 'dashboard' %}" class="block text-center text-sm text-gray-600 hover:text-blue-600 mt-4">Cancelar</a>
-            {% endif %}
         </form>
     </div>
 
