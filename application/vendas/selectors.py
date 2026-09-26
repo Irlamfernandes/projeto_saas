@@ -1,5 +1,5 @@
 from application.tenancy import filtrar_por_loja
-from infrastructure.models import Cliente, Produto, Venda
+from infrastructure.models import Produto, Venda
 
 
 def vendas_do_usuario(user):
@@ -7,16 +7,8 @@ def vendas_do_usuario(user):
     return filtrar_por_loja(vendas, user).order_by('-data_venda')
 
 
-def clientes_do_usuario(user):
-    return filtrar_por_loja(Cliente.objects.all(), user).order_by('nome')
-
-
 def produtos_em_estoque_do_usuario(user):
     return filtrar_por_loja(Produto.objects.filter(quantidade_estoque__gt=0), user)
-
-
-def clientes_da_loja(loja):
-    return Cliente.objects.filter(loja=loja).order_by('nome')
 
 
 def produtos_da_loja(loja):

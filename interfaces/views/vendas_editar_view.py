@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from application.vendas.selectors import clientes_da_loja, produtos_da_loja, vendas_do_usuario
+from application.clientes.selectors import clientes_da_loja
+from application.vendas.selectors import produtos_da_loja, vendas_do_usuario
 from application.vendas.services import editar_venda
 from interfaces.decorators import loja_required
 from interfaces.forms import EditarVendaForm

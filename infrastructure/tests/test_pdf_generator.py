@@ -1,3 +1,7 @@
+from infrastructure.utils.pdf_generator import COR_CREDITO, COR_DEVENDO, COR_NEUTRA, linhas_de_compras, situacao_financeira
+from django.utils import timezone
+from datetime import datetime, timezone as dt_timezone
+import io
 import os
 import tempfile
 from decimal import Decimal
@@ -88,3 +92,38 @@ class PdfGeneratorTest(TestCase):
 
         self.assertTrue(os.path.exists(self.caminho_pdf))
         self.assertGreater(os.path.getsize(self.caminho_pdf), 0)
+
+
+    def test_nome_com_marcacao_nao_quebra_o_pdf(self):
+        """Regressão: ReportLab interpretava o nome como marcação; 'Ana <b' derrubava a geração (HTTP 500)."""
+        for nome in ["Ana <b", "<font size=40>GIGANTE</font>", "Loja & Cia"]:
+            with self.subTest(nome=nome):
+                self.cliente.nome = nome
+                self.loja1.nome_loja = nome
+                buffer = io.BytesIO()
+                gerar_extrato_pdf_cliente(self.cliente, buffer)
+                self.assertTrue(buffer.getvalue().startswith(b"%PDF"))
+
+    def test_datas_das_compras_no_fuso_local(self):
+        """Regressão: o horário saía em UTC (3h adiantado em relação a Brasília)."""
+        meio_dia_utc = datetime(2026, 1, 10, 12, 0, tzinfo=dt_timezone.utc)
+        venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal('50.00'), data_venda=meio_dia_utc)
+        ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=2, preco_unitario=Decimal('25.00'))
+
+        self.assertEqual(linhas_de_compras(self.cliente), [["10/01/2026 09:00", "2x Caderno 10 Matérias", "R$ 50.00"]])
+
+    def test_extrato_lista_so_as_cinco_compras_mais_recentes(self):
+        for dia in range(1, 8):
+            Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal(dia),
+                                 data_venda=timezone.make_aware(datetime(2026, 1, dia, 12, 0)))
+
+        datas = [linha[0][:2] for linha in linhas_de_compras(self.cliente)]
+        self.assertEqual(datas, ["07", "06", "05", "04", "03"])
+
+    def test_cliente_sem_compras(self):
+        self.assertEqual(linhas_de_compras(self.cliente), [["-", "Nenhuma compra registrada", "-"]])
+
+    def test_situacao_financeira(self):
+        self.assertEqual(situacao_financeira(Decimal('10')), ("Situação: DEVENDO R$ 10.00 (Valor Pendente)", COR_DEVENDO))
+        self.assertEqual(situacao_financeira(Decimal('-5')), ("Situação: CRÉDITO DE R$ 5.00 (Valor a mais)", COR_CREDITO))
+        self.assertEqual(situacao_financeira(Decimal('0'))[1], COR_NEUTRA)

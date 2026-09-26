@@ -32,7 +32,7 @@
                     📄 Baixar Comprovante PDF
                 </a>
 
-                {% with loja_nome=request.user.loja.nome_loja|default:"Minha Loja" %}
+                {% with loja_nome=cliente.loja.nome_loja %}
                 <a href="https://wa.me/55{{ cliente.telefone|cut:' '|cut:'('|cut:')'|cut:'-'|cut:'.' }}?text=Olá%20{{ cliente.nome|urlencode }},%20aqui%20está%20o%20resumo%20oficial%20da%20sua%20conta%20na%20{{ loja_nome|urlencode }}.%20Situação%20atual:%20R$%20{{ cliente.saldo_geral|default:0|floatformat:2 }}.%20Confira%20seu%20extrato%20completo%20com%20as%20últimas%20compras." 
                    target="_blank" 
                    rel="noopener noreferrer" 
@@ -89,15 +89,15 @@
                             <span class="font-semibold {% if item.tipo == 'compra' %}text-gray-900{% else %}text-emerald-700{% endif %}">
                                 {{ item.descricao }}
                             </span>
-                            {% if item.detalhes %}
+                            {% if item.itens %}
                                 <span class="block text-xs text-gray-500 mt-0.5 space-y-0.5">
-                                    {% for det in item.detalhes %}
+                                    {% for det in item.itens %}
                                         <span class="block">{{ det.quantidade }}x {{ det.produto.nome }} (R$ {{ det.preco_unitario }})</span>
                                     {% endfor %}
                                 </span>
                             {% endif %}
-                            {% if item.obs %}
-                                <span class="block text-xs text-gray-400 italic mt-0.5">{{ item.obs }}</span>
+                            {% if item.observacao %}
+                                <span class="block text-xs text-gray-400 italic mt-0.5">{{ item.observacao }}</span>
                             {% endif %}
                         </td>
                         <td class="py-3.5 px-4 text-right font-bold whitespace-nowrap {% if item.tipo == 'compra' %}text-red-600{% else %}text-emerald-600{% endif %}">

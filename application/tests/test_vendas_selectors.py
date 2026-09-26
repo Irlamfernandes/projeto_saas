@@ -1,10 +1,8 @@
 from decimal import Decimal
 from types import SimpleNamespace
 from django.test import TestCase
-from application.vendas.selectors import (
-    buscar_produto, clientes_do_usuario, produtos_em_estoque_do_usuario, vendas_do_usuario,
-)
-from infrastructure.models import Cliente, LojaModel, Produto, Venda
+from application.vendas.selectors import buscar_produto, produtos_em_estoque_do_usuario, vendas_do_usuario
+from infrastructure.models import LojaModel, Produto, Venda
 
 
 def _criar_produto(loja, nome, codigo='', estoque=10):
@@ -69,14 +67,6 @@ class ConsultasPorUsuarioTest(TestCase):
 
         self.assertEqual(list(vendas_do_usuario(self.usuario)), [recente, antiga])
         self.assertEqual(vendas_do_usuario(self.superusuario).count(), 3)
-
-    def test_clientes_do_usuario_filtra_pela_loja_em_ordem_alfabetica(self):
-        zeca = Cliente.objects.create(loja=self.loja, nome="Zeca")
-        ana = Cliente.objects.create(loja=self.loja, nome="Ana")
-        Cliente.objects.create(loja=self.outra_loja, nome="Bia")
-
-        self.assertEqual(list(clientes_do_usuario(self.usuario)), [ana, zeca])
-        self.assertEqual(clientes_do_usuario(self.superusuario).count(), 3)
 
     def test_produtos_em_estoque_exclui_zerados_e_outras_lojas(self):
         com_estoque = _criar_produto(self.loja, "Arroz")

@@ -16,12 +16,12 @@ def _obter_dados_base_loja(user):
         return (
             Venda.objects.all().order_by('-data_venda'),
             Produto.objects.all().order_by('quantidade_estoque'),
-            Cliente.objects.all()
+            Cliente.objects.com_saldo()
         )
     return (
         Venda.objects.filter(loja=user.loja).order_by('-data_venda'),
         Produto.objects.filter(loja=user.loja).order_by('quantidade_estoque'),
-        Cliente.objects.filter(loja=user.loja)
+        Cliente.objects.com_saldo().filter(loja=user.loja)
     )
 
 

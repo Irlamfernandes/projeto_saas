@@ -236,3 +236,22 @@ class VendasViewTest(TestCase):
     def test_usuario_comum_nao_vende_para_cliente_de_outra_loja(self):
         self._vender('PA001', cliente=self.cliente2.id)
         self.assertFalse(Venda.objects.exists())
+
+    def test_quantidade_de_consultas_nao_cresce_com_o_numero_de_clientes(self):
+        """Regressão: o saldo de cada cliente no select custava 2 consultas por cliente (N+1)."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        def consultas_da_pagina():
+            with CaptureQueriesContext(connection) as ctx:
+                self.client.get(self.url)
+            return len(ctx.captured_queries)
+
+        self.client.force_login(self.user_loja1)
+        Venda.objects.create(loja=self.loja1, cliente=self.cliente1, valor_total=Decimal('10.00'))
+        antes = consultas_da_pagina()
+        for i in range(20):
+            cliente = Cliente.objects.create(loja=self.loja1, nome=f"Cliente {i}")
+            Venda.objects.create(loja=self.loja1, cliente=cliente, valor_total=Decimal('10.00'))
+
+        self.assertEqual(consultas_da_pagina(), antes)

@@ -1,3 +1,4 @@
+from django.contrib.messages import get_messages
 from unittest.mock import PropertyMock, patch
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -131,3 +132,29 @@ class ClientesViewTest(TestCase):
             'nome': 'Cliente Sem Loja'
         })
         self.assertEqual(response.status_code, 403)
+
+
+    def _mensagens(self, response):
+        return [str(m) for m in get_messages(response.wsgi_request)]
+
+    def test_cadastrar_cliente_so_com_nome(self):
+        """Regressão: cadastrar sem e-mail/telefone/endereço gerava HTTP 500 (NOT NULL)."""
+        self.client.force_login(self.user_loja1)
+
+        response = self.client.post(self.url_clientes, {'nome': 'Só Nome', 'telefone': '', 'email': '', 'endereco': ''})
+
+        self.assertRedirects(response, self.url_clientes)
+        self.assertEqual(self._mensagens(response), ["Cliente cadastrado com sucesso!"])
+        self.assertEqual(Cliente.objects.get(nome='Só Nome').email, '')
+
+    def test_cadastro_invalido_informa_o_motivo(self):
+        self.client.force_login(self.user_loja1)
+        response = self.client.post(self.url_clientes, {'nome': 'Ana', 'email': 'invalido'})
+        self.assertEqual(self._mensagens(response), ["Informe um e-mail válido."])
+
+    def test_superuser_sem_loja_nao_cadastra(self):
+        self.client.force_login(self.superuser)
+        response = self.client.post(self.url_clientes, {'nome': 'Cliente do Admin'})
+
+        self.assertEqual(self._mensagens(response), ["Superusuários devem associar o cliente a uma loja específica."])
+        self.assertFalse(Cliente.objects.filter(nome='Cliente do Admin').exists())

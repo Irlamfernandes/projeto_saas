@@ -15,12 +15,12 @@ def _obter_querysets(loja_contexto):
     if loja_contexto is None:
         return (
             Venda.objects.all(),
-            Cliente.objects.all(),
+            Cliente.objects.com_saldo(),
             Produto.objects.all().order_by('quantidade_estoque')
         )
     return (
         Venda.objects.filter(loja=loja_contexto),
-        Cliente.objects.filter(loja=loja_contexto),
+        Cliente.objects.com_saldo().filter(loja=loja_contexto),
         Produto.objects.filter(loja=loja_contexto).order_by('quantidade_estoque')
     )
 

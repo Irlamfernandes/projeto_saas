@@ -1,3 +1,4 @@
+from django.contrib.messages import get_messages
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
@@ -120,3 +121,27 @@ class ExtratoClienteViewTest(TestCase):
                 'valor': '-10.00'
             })
             self.assertRedirects(response, self._get_url_extrato(self.cliente_loja1.pk))
+
+
+    def test_extrato_exibe_saldo_e_loja_do_cliente(self):
+        PagamentoCliente.objects.create(loja=self.loja1, cliente=self.cliente_loja1, valor=Decimal('12.00'))
+        self.client.force_login(self.superuser)
+
+        response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))
+
+        self.assertEqual(response.context['cliente'].saldo_geral, Decimal('88.00'))  # 150 - 50 - 12
+        self.assertContains(response, self.loja1.nome_loja.replace(' ', '%20'))
+
+    def test_pagamento_invalido_informa_o_motivo_e_nao_registra(self):
+        self.client.force_login(self.user_loja1)
+
+        response = self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {'valor': '0'})
+
+        self.assertEqual([str(m) for m in get_messages(response.wsgi_request)], ["O valor do pagamento deve ser maior que zero."])
+        self.assertEqual(PagamentoCliente.objects.filter(cliente=self.cliente_loja1).count(), 1)
+
+    def test_pagamento_sem_observacao_usa_texto_padrao(self):
+        self.client.force_login(self.user_loja1)
+        self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {'valor': '5', 'observacao': ''})
+        novo = PagamentoCliente.objects.filter(cliente=self.cliente_loja1).exclude(pk=self.pagamento_l1.pk).get()
+        self.assertEqual(novo.observacao, "Pagamento na caderneta")
