@@ -1,0 +1,113 @@
+{% extends 'interfaces/base.html' %}
+{% load static formatacao %}
+
+{% block title %}Relatórios de clientes · Gestão da Loja{% endblock %}
+{% block header_title %}Relatórios{% endblock %}
+{% block subtitulo %}Quem compra, quem deve e quem sumiu.{% endblock %}
+
+{% block content %}
+{% include 'interfaces/_abas_relatorios.html' %}
+
+<section class="cartao cartao-corpo" aria-labelledby="t-dividas">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-dividas" class="titulo-cartao">Idade das dívidas</h2><p class="subtitulo">Há quanto tempo cada cliente não paga nada na caderneta</p></div>
+        <p class="text-right"><span class="block text-xs font-semibold text-tinta-suave">Total a receber</span><span class="text-lg sm:text-xl font-bold tabular-nums whitespace-nowrap">R$ {{ dividas.total|moeda }}</span></p>
+    </div>
+    {% if dividas.devedores %}
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-6 items-start">
+        <div>
+            {% include 'interfaces/_grafico.html' with id='dados-dividas' tipo='barras' dados=grafico_dividas descricao='Valor a receber por tempo sem pagamento' %}
+            <ul class="grid grid-cols-2 gap-2 mt-3 text-xs">
+                {% for f in dividas.faixas %}<li class="rounded-lg bg-fundo px-3 py-2"><b class="block text-tinta">{{ f.rotulo }}</b>{{ f.clientes }} cliente{{ f.clientes|pluralize }} · R$ {{ f.total|moeda }}</li>{% endfor %}
+            </ul>
+        </div>
+        <div class="relative overflow-x-auto max-h-96">
+            <table class="tabela">
+                <caption class="sr-only">Clientes devendo, do mais atrasado para o mais recente</caption>
+                <thead><tr><th scope="col">Cliente</th><th scope="col" class="text-right">Deve</th></tr></thead>
+                <tbody>
+                    {% for d in dividas.devedores %}
+                    <tr>
+                        <td><a href="{% url 'extrato_cliente' d.cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Abrir caderneta">{{ d.cliente.nome }}</a>
+                            <span class="mt-1 block">
+                            {% if d.dias_sem_pagar > 90 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ d.dias_sem_pagar }} dias</span>
+                            {% elif d.dias_sem_pagar > 60 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-tempo"/></svg>{{ d.dias_sem_pagar }} dias</span>
+                            {% else %}<span class="pilula-neutra">{{ d.dias_sem_pagar }} dia{{ d.dias_sem_pagar|pluralize }}</span>{% endif %}
+                            <span class="text-xs text-tinta-fraca">sem pagar</span>
+                            </span>
+                        </td>
+                        <td class="numero font-semibold align-top">R$ {{ d.saldo|moeda }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        {% include 'interfaces/_vazio.html' with icone='i-check' titulo='Ninguém devendo' texto='Quando houver fiado em aberto, ele aparece aqui separado por tempo de atraso.' %}
+    {% endif %}
+</section>
+
+<section class="cartao cartao-corpo" aria-labelledby="t-fluxo">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-fluxo" class="titulo-cartao">Vendido x recebido</h2><p class="subtitulo">O fiado está sendo pago no mesmo ritmo em que é vendido? Vendas de balcão ficam de fora. (últimos 12 meses)</p></div>
+        <p class="flex gap-4 text-xs text-tinta-suave" aria-hidden="true">
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-sm" style="background: var(--cor-marca)"></i>Vendido na caderneta</span>
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-sm" style="background: var(--cor-destaque)"></i>Recebido na caderneta</span>
+        </p>
+    </div>
+    {% include 'interfaces/_grafico.html' with id='dados-fluxo' tipo='barras-agrupadas' dados=grafico_fluxo descricao='Vendido e recebido por mês nos últimos 12 meses' altura='h-72' %}
+</section>
+
+{% url 'relatorios_clientes' as limpar %}
+{% include 'interfaces/_filtro_periodo.html' with limpar=limpar ajuda='O período vale para o ranking de melhores clientes. Sem datas, mostramos os últimos 30 dias.' %}
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+    <section class="cartao cartao-corpo" aria-labelledby="t-melhores">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-melhores" class="titulo-cartao">Melhores clientes</h2><p class="subtitulo">Quem mais comprou no período, em reais</p></div>
+        </div>
+        {% if melhores %}
+        <div class="relative overflow-x-auto">
+            <table class="tabela">
+                <caption class="sr-only">Clientes que mais compraram</caption>
+                <thead><tr><th scope="col">Cliente</th><th scope="col" class="text-right">Total</th></tr></thead>
+                <tbody>
+                    {% for m in melhores %}
+                    <tr><td><span class="text-tinta-fraca tabular-nums">{{ forloop.counter }}.</span> <a href="{% url 'extrato_cliente' m.cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Abrir caderneta">{{ m.cliente.nome }}</a><span class="block text-xs text-tinta-fraca">{{ m.compras }} compra{{ m.compras|pluralize }}</span></td><td class="numero font-semibold">R$ {{ m.total|moeda }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {% include 'interfaces/_vazio.html' with icone='i-clientes' titulo='Nenhuma compra identificada no período' texto='Vendas sem cliente (balcão) não entram neste ranking.' %}
+        {% endif %}
+    </section>
+
+    <section class="cartao cartao-corpo" aria-labelledby="t-sumidos">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-sumidos" class="titulo-cartao">Clientes sumidos</h2><p class="subtitulo">Já compraram, mas não voltam há mais de 60 dias. Que tal uma mensagem?</p></div>
+        </div>
+        {% if sumidos %}
+        <div class="relative overflow-x-auto">
+            <table class="tabela">
+                <caption class="sr-only">Clientes que pararam de comprar</caption>
+                <thead><tr><th scope="col">Cliente</th><th scope="col" class="text-right">Já gastou</th></tr></thead>
+                <tbody>
+                    {% for s in sumidos %}
+                    <tr><td><a href="{% url 'extrato_cliente' s.cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Abrir caderneta">{{ s.cliente.nome }}</a><span class="block text-xs text-tinta-fraca">última compra há {{ s.dias_sem_comprar }} dias{% if s.cliente.telefone %} · {{ s.cliente.telefone }}{% endif %}</span></td><td class="numero">R$ {{ s.total|moeda }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            {% include 'interfaces/_vazio.html' with icone='i-check' titulo='Nenhum cliente sumido' texto='Todos que já compraram voltaram nos últimos 60 dias.' %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/graficos.js' %}"></script>
+{% endblock %}

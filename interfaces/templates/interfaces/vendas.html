@@ -1,126 +1,97 @@
 {% extends 'interfaces/base.html' %}
 {% load formatacao %}
 
-{% block title %}Vendas - Gestão{% endblock %}
-{% block header_title %}Gerenciar Vendas{% endblock %}
+{% block title %}Vendas · Gestão da Loja{% endblock %}
+{% block header_title %}Vendas{% endblock %}
+{% block subtitulo %}Registre uma venda e acompanhe o histórico.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Nova Venda / Pedido</h3>
-        
-        <form method="POST">
+<div class="grid grid-cols-1 xl:grid-cols-[24rem_1fr] gap-5 items-start">
+
+    <section class="cartao cartao-corpo xl:sticky xl:top-6" aria-labelledby="t-nova">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-nova" class="titulo-cartao">Nova venda</h2><p class="subtitulo">Tudo que o cliente levou nesta compra</p></div>
+        </div>
+        <form method="POST" class="grid gap-4">
             {% csrf_token %}
-            
-            <div class="mb-4">
-                <label for="id_cliente_venda" class="block text-gray-700 text-sm font-semibold mb-1">Cliente</label>
-                <select id="id_cliente_venda" name="cliente" required class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="">Selecione o cliente...</option>
+            <div class="campo">
+                <label for="id_cliente_venda" class="rotulo">Cliente</label>
+                <select id="id_cliente_venda" name="cliente" required class="entrada">
+                    <option value="">Escolha quem está comprando…</option>
                     {% for cliente in clientes %}
-                        <option value="{{ cliente.id }}">
-                            {{ cliente.nome }} 
-                            {% with saldo=cliente.saldo_geral %}
-                                {% if saldo > 0 %} (Devendo R$ {{ saldo|moeda }})
-                                {% elif saldo < 0 %} (Com Crédito)
-                                {% endif %}
-                            {% endwith %}
-                        </option>
+                        <option value="{{ cliente.id }}">{{ cliente.nome }}{% with saldo=cliente.saldo_geral %}{% if saldo > 0 %} · deve R$ {{ saldo|moeda }}{% elif saldo < 0 %} · tem crédito{% endif %}{% endwith %}</option>
                     {% endfor %}
                 </select>
+                <p class="ajuda">Ao lado do nome aparece se ele já deve algo na caderneta. <a href="{% url 'clientes' %}" class="font-semibold text-marca-700 hover:underline">Cadastrar cliente</a></p>
             </div>
 
-            <div class="mb-4">
-                <label for="id_produto_venda" class="block text-gray-700 text-sm font-semibold mb-1">Produto (Nome ou Código Interno)</label>
-                <input type="text" id="id_produto_venda" name="produto" list="lista-produtos" required placeholder="Digite o nome ou código..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                
+            <div class="campo">
+                <label for="id_produto_venda" class="rotulo">Produto</label>
+                <div class="entrada-grupo">
+                    <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
+                    <input type="text" id="id_produto_venda" name="produto" list="lista-produtos" required autocomplete="off" placeholder="Digite o nome ou o código">
+                </div>
                 <datalist id="lista-produtos">
                     {% for prod in produtos %}
-                        <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">
-                            {{ prod.nome }} (Cód: {{ prod.codigo_interno|default:"N/D" }}) - R$ {{ prod.preco_venda|moeda }} [Estoque: {{ prod.quantidade_estoque }}]
-                        </option>
+                        <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">{{ prod.nome }} · R$ {{ prod.preco_venda|moeda }} · {{ prod.quantidade_estoque }} em estoque</option>
                     {% endfor %}
                 </datalist>
+                <p class="ajuda">A lista mostra só produtos com estoque.</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="id_quantidade_venda" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade</label>
-                    <input type="number" id="id_quantidade_venda" name="quantidade" value="1" min="1" required class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="campo">
+                    <label for="id_quantidade_venda" class="rotulo">Quantidade</label>
+                    <div class="entrada-grupo"><input type="number" id="id_quantidade_venda" name="quantidade" value="1" min="1" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
                 </div>
-                <div>
-                    <label for="id_valor_pago_venda" class="block text-gray-700 text-sm font-semibold mb-1">Valor Pago Hoje (R$)</label>
-                    <input type="number" step="0.01" id="id_valor_pago_venda" name="valor_pago" placeholder="0.00" class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <div class="campo">
+                    <label for="id_valor_pago_venda" class="rotulo">Pago agora <span class="rotulo-opcional">opcional</span></label>
+                    <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0" id="id_valor_pago_venda" name="valor_pago" placeholder="0,00" inputmode="decimal" class="tabular-nums"></div>
                 </div>
             </div>
+            <p class="ajuda -mt-2">O que não for pago agora vai para a caderneta do cliente.</p>
 
-            <div class="mb-6">
-                <label for="id_observacoes_venda" class="block text-gray-700 text-sm font-semibold mb-1">Observações</label>
-                <textarea id="id_observacoes_venda" name="observacoes" rows="2" placeholder="Anotações..." class="w-full px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+            <div class="campo">
+                <label for="id_observacoes_venda" class="rotulo">Observações <span class="rotulo-opcional">opcional</span></label>
+                <textarea id="id_observacoes_venda" name="observacoes" rows="2" placeholder="Ex.: entregar amanhã, pagou no Pix…" class="entrada"></textarea>
             </div>
 
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                Finalizar Venda
-            </button>
+            <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Finalizar venda</button>
         </form>
-    </div>
+    </section>
 
-    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Histórico de Vendas</h3>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <caption class="sr-only">Histórico de vendas e pedidos realizados</caption>
-                <thead>
-                    <tr class="border-b border-gray-200 text-gray-500 text-xs uppercase font-semibold">
-                        <th class="py-3 px-4 whitespace-nowrap">Cliente</th>
-                        <th class="py-3 px-4">Itens</th>
-                        <th class="py-3 px-4 whitespace-nowrap">Total</th>
-                        <th class="py-3 px-4 text-center whitespace-nowrap">Ações / Caderneta</th>
-                        <th class="py-3 px-4 text-right whitespace-nowrap">Data</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+    <section class="cartao cartao-corpo min-w-0" aria-labelledby="t-historico">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-historico" class="titulo-cartao">Histórico de vendas</h2><p class="subtitulo">Mais recentes primeiro</p></div>
+        </div>
+        <div class="relative overflow-x-auto">
+            <table class="tabela">
+                <caption class="sr-only">Histórico de vendas</caption>
+                <thead><tr><th scope="col">Venda</th><th scope="col" class="text-right">Total</th></tr></thead>
+                <tbody>
                     {% for venda in vendas %}
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="py-3 px-4 font-medium text-gray-900 whitespace-nowrap">
-                            {{ venda.cliente.nome|default:"Cliente Balcão" }}
+                    <tr>
+                        <td>
+                            {% if venda.cliente %}<a href="{% url 'extrato_cliente' venda.cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Caderneta de {{ venda.cliente.nome }}">{{ venda.cliente.nome }}</a>{% else %}<span class="font-semibold text-tinta-fraca">Balcão</span>{% endif %}
+                            <span class="block text-xs text-tinta-suave">{% for item in venda.itens.all %}{{ item.quantidade }}× {{ item.produto.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+                            {% if venda.observacoes %}<span class="block text-xs italic text-tinta-fraca">{{ venda.observacoes }}</span>{% endif %}
+                            <span class="block text-xs text-tinta-fraca tabular-nums">{{ venda.data_venda|date:"d/m/Y" }} às {{ venda.data_venda|date:"H:i" }}</span>
                         </td>
-                        <td class="py-3 px-4 text-xs text-gray-600">
-                            {% for item in venda.itens.all %}
-                                <span class="block">{{ item.quantidade }}x {{ item.produto.nome }} (R$ {{ item.preco_unitario|moeda }})</span>
-                            {% endfor %}
+                        <td class="text-right align-top">
+                            <span class="block numero font-bold">R$ {{ venda.valor_total|moeda }}</span>
+                            <span class="mt-1 inline-flex gap-1">
+                                {% if venda.cliente %}<a href="{% url 'extrato_cliente' venda.cliente.id %}" class="btn-fantasma btn-pequeno px-2" title="Caderneta de {{ venda.cliente.nome }}"><svg class="ico ico-sm"><use href="#i-caderneta"/></svg><span class="sr-only">Caderneta</span></a>{% endif %}
+                                <a href="{% url 'venda_editar' venda.id %}" class="btn-fantasma btn-pequeno px-2" title="Editar venda"><svg class="ico ico-sm"><use href="#i-editar"/></svg><span class="sr-only">Editar</span></a>
+                            </span>
                         </td>
-                        <td class="py-3 px-4 font-bold text-indigo-600 whitespace-nowrap">R$ {{ venda.valor_total|moeda }}</td>
-                        
-                        <td class="py-3 px-4 text-center whitespace-nowrap">
-                            <div class="flex items-center justify-center gap-2">
-                                {% if venda.cliente %}
-                                    <a href="{% url 'extrato_cliente' venda.cliente.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
-                                        Caderneta
-                                    </a>
-                                {% else %}
-                                    <span class="text-xs text-gray-400">À vista</span>
-                                {% endif %}
-                                
-                                <a href="{% url 'venda_editar' venda.id %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-md text-xs font-semibold transition inline-block">
-                                    Editar
-                                </a>
-                            </div>
-                        </td>
-
-                        <td class="py-3 px-4 text-right text-xs text-gray-400 whitespace-nowrap">{{ venda.data_venda|date:"d/m/Y H:i" }}</td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-8 text-gray-400">Nenhuma venda registrada ainda.</td>
-                    </tr>
+                    <tr><td colspan="2">{% include 'interfaces/_vazio.html' with icone='i-venda' titulo='Nenhuma venda registrada ainda' texto='Use o formulário ao lado para registrar a primeira.' %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% include 'interfaces/_paginacao.html' %}
-    </div>
-
+    </section>
 </div>
 {% endblock %}

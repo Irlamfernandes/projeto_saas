@@ -1,0 +1,5 @@
+{# Uso: include com id, tipo (linha|barras|barras-agrupadas|barras-horizontais), dados, formato (moeda|unidades), descricao e altura opcional #}
+{{ dados|json_script:id }}
+<div class="area-grafico {{ altura|default:'h-64' }}">
+    <canvas data-grafico="{{ tipo }}" data-dados="{{ id }}" data-formato="{{ formato|default:'moeda' }}" role="img" aria-label="{{ descricao }}"></canvas>
+</div>

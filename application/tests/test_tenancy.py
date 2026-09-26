@@ -48,3 +48,12 @@ def test_loja_desativada():
     assert loja_desativada(_usuario(loja=SimpleNamespace(ativo=False)))
     assert not loja_desativada(_usuario(loja=SimpleNamespace(ativo=True)))
     assert not loja_desativada(_usuario(is_superuser=True))
+
+
+def test_filtrar_por_loja_por_campo_relacionado():
+    loja = object()
+    queryset = Mock()
+
+    filtrar_por_loja(queryset, _usuario(loja=loja), campo='venda__loja')
+
+    queryset.filter.assert_called_once_with(venda__loja=loja)

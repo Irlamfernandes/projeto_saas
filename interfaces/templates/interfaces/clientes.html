@@ -1,157 +1,104 @@
 {% extends 'interfaces/base.html' %}
-{% load static %}
+{% load formatacao navegacao %}
 
-{% block title %}Clientes - Gestão{% endblock %}
-
-{% block header_title %}Gerenciar Clientes{% endblock %}
+{% block title %}Clientes · Gestão da Loja{% endblock %}
+{% block header_title %}Clientes{% endblock %}
+{% block subtitulo %}Cadastre clientes e acompanhe o fiado de cada um.{% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-fit">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Adicionar Novo Cliente</h3>
-        
-        <form method="POST">
+<div class="grid grid-cols-1 xl:grid-cols-[22rem_1fr] gap-5 items-start">
+
+    <section class="cartao cartao-corpo" aria-labelledby="t-novo">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-novo" class="titulo-cartao">Novo cliente</h2><p class="subtitulo">Só o nome é obrigatório</p></div>
+        </div>
+        <form method="POST" class="grid gap-4">
             {% csrf_token %}
-            <div class="mb-4">
-                <label for="id_nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Cliente</label>
-                <input type="text" id="id_nome" name="nome" required placeholder="Ex: Maria da Silva" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <div class="campo">
+                <label for="id_nome" class="rotulo">Nome</label>
+                <input type="text" id="id_nome" name="nome" required maxlength="255" placeholder="Ex.: Maria da Silva" class="entrada">
             </div>
-
-            <div class="mb-4">
-                <label for="id_telefone" class="block text-gray-700 text-sm font-semibold mb-1">Telefone / WhatsApp</label>
-                <input type="text" id="id_telefone" name="telefone" placeholder="(00) 00000-0000" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <div class="campo">
+                <label for="id_telefone" class="rotulo">Telefone / WhatsApp <span class="rotulo-opcional">opcional</span></label>
+                <input type="tel" id="id_telefone" name="telefone" maxlength="20" placeholder="(24) 99999-0000" inputmode="tel" class="entrada">
+                <p class="ajuda">Com ele, dá para mandar o resumo da caderneta pelo WhatsApp.</p>
             </div>
-
-            <div class="mb-4">
-                <label for="id_email" class="block text-gray-700 text-sm font-semibold mb-1">E-mail (Opcional)</label>
-                <input type="email" id="id_email" name="email" placeholder="cliente@email.com" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <div class="campo">
+                <label for="id_email" class="rotulo">E-mail <span class="rotulo-opcional">opcional</span></label>
+                <input type="email" id="id_email" name="email" placeholder="cliente@email.com" class="entrada">
             </div>
-
-            <div class="mb-6">
-                <label for="id_endereco" class="block text-gray-700 text-sm font-semibold mb-1">Endereço / Observações</label>
-                <textarea id="id_endereco" name="endereco" rows="2" placeholder="Rua, número, bairro..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
+            <div class="campo">
+                <label for="id_endereco" class="rotulo">Endereço ou observação <span class="rotulo-opcional">opcional</span></label>
+                <textarea id="id_endereco" name="endereco" rows="2" placeholder="Rua, número, bairro, ponto de referência…" class="entrada"></textarea>
             </div>
-
-            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                Salvar Cliente
-            </button>
+            <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Salvar cliente</button>
         </form>
-    </div>
+    </section>
 
-    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Seus Clientes Cadastrados</h3>
+    <section class="cartao cartao-corpo min-w-0" aria-labelledby="t-lista">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-lista" class="titulo-cartao">Clientes cadastrados</h2><p class="subtitulo">{{ page_obj.paginator.count }} cliente{{ page_obj.paginator.count|pluralize }}{% if filtro_busca %} encontrados para “{{ filtro_busca }}”{% endif %}</p></div>
+        </div>
 
-        <form method="GET" class="flex flex-col sm:flex-row gap-2 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-            <label for="id_busca" class="sr-only">Buscar clientes</label>
-            <input type="text" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Buscar por nome ou telefone..." class="w-full px-3 py-2 border rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <div class="flex gap-2">
-                <button type="submit" class="flex-1 sm:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm transition font-semibold whitespace-nowrap cursor-pointer text-center">
-                    Buscar
-                </button>
-                {% if filtro_busca %}
-                <a href="{% url 'clientes' %}" class="flex-1 sm:flex-none bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm transition font-semibold flex items-center justify-center">
-                    Limpar
-                </a>
-                {% endif %}
+        <form method="GET" class="flex flex-col sm:flex-row gap-2 rounded-controle bg-fundo p-3.5 mb-4" role="search">
+            <div class="entrada-grupo bg-white flex-1">
+                <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
+                <label for="id_busca" class="sr-only">Buscar cliente</label>
+                <input type="search" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Nome ou telefone">
             </div>
+            <span class="flex gap-2">
+                <button type="submit" class="btn-primario">Buscar</button>
+                {% if filtro_busca %}<a href="{% url 'clientes' %}" class="btn-fantasma">Limpar</a>{% endif %}
+            </span>
         </form>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <caption class="sr-only">Lista de Clientes Cadastrados</caption>
-                <thead>
-                    <tr class="border-b border-gray-200 text-gray-500 text-xs uppercase font-semibold">
-                        <th class="py-3 px-4">Cliente</th>
-                        <th class="py-3 px-4">Contato</th>
-                        <th class="py-3 px-4">Endereço</th>
-                        <th class="py-3 px-4 text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 text-sm text-gray-700">
+        <div class="relative overflow-x-auto">
+            <table class="tabela">
+                <caption class="sr-only">Clientes cadastrados</caption>
+                <thead><tr><th scope="col">Cliente e contato</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead>
+                <tbody>
                     {% for cliente in clientes %}
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="py-3 px-4 font-medium text-gray-900">
-                            {{ cliente.nome }}
-                            {% if cliente.email %}
-                            <span class="block text-xs text-gray-400 font-normal mt-0.5">{{ cliente.email }}</span>
-                            {% endif %}
+                    <tr>
+                        <td>
+                            <div>
+                                <span class="block min-w-0"><span class="block font-semibold">{{ cliente.nome }}</span>{% if cliente.telefone %}<span class="block text-xs text-tinta-suave whitespace-nowrap">{{ cliente.telefone }}</span>{% endif %}{% if cliente.email %}<span class="block text-xs text-tinta-fraca truncate max-w-[16rem]">{{ cliente.email }}</span>{% endif %}{% if cliente.endereco %}<span class="block text-xs text-tinta-fraca truncate max-w-[16rem]">{{ cliente.endereco }}</span>{% endif %}</span>
+                            </div>
                         </td>
-                        <td class="py-3 px-4 text-gray-600 whitespace-nowrap">
-                            {{ cliente.telefone|default:"Não informado" }}
-                        </td>
-                        <td class="py-3 px-4 text-gray-500 text-xs max-w-xs truncate">
-                            {{ cliente.endereco|default:"-" }}
-                        </td>
-                        <td class="py-3 px-4 text-center whitespace-nowrap space-y-1 sm:space-y-0 sm:space-x-1">
-                            <a href="{% url 'extrato_cliente' cliente.id %}" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1 rounded-md text-xs font-semibold transition inline-block">
-                                Caderneta
-                            </a>
-                            <button type="button" 
-                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs }}')"
-                                    class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer inline-block">
-                                Editar
+                        <td class="w-px">
+                            <span class="flex flex-col items-stretch gap-1.5">
+                            <a href="{% url 'extrato_cliente' cliente.id %}" class="btn-secundario btn-pequeno" title="Caderneta de {{ cliente.nome }}"><svg class="ico ico-sm"><use href="#i-caderneta"/></svg>Caderneta</a>
+                            <button type="button" class="btn-fantasma btn-pequeno" title="Editar {{ cliente.nome }}"
+                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs }}')">
+                                <svg class="ico ico-sm"><use href="#i-editar"/></svg>Editar
                             </button>
+                            </span>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center py-8 text-gray-400">
-                            Nenhum cliente cadastrado ainda. Use o formulário ao lado para começar!
-                        </td>
-                    </tr>
+                    <tr><td colspan="2">{% include 'interfaces/_vazio.html' with icone='i-clientes' titulo='Nenhum cliente encontrado' texto='Cadastre o primeiro cliente no formulário ao lado.' %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% include 'interfaces/_paginacao.html' %}
-    </div>
-
+    </section>
 </div>
 
-<dialog id="modal-edicao-cliente" class="rounded-xl shadow-lg border border-gray-200 max-w-lg w-full p-0 backdrop:bg-black/50" aria-labelledby="modal-titulo">
-    <div class="p-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 id="modal-titulo" class="text-lg font-bold text-gray-800">Editar Cliente</h3>
-            <button type="button" onclick="fecharModalEdicaoCliente()" class="text-gray-400 hover:text-gray-600 font-bold text-lg cursor-pointer" aria-label="Fechar">&times;</button>
+<dialog id="modal-edicao-cliente" class="w-full max-w-lg rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-tinta/40" aria-labelledby="modal-titulo">
+    <form id="form-edicao-cliente" method="POST" class="grid gap-4 p-6">
+        {% csrf_token %}
+        <div class="flex items-center justify-between">
+            <h2 id="modal-titulo" class="text-lg font-bold">Editar cliente</h2>
+            <button type="button" onclick="fecharModalEdicaoCliente()" class="btn-fantasma px-2" aria-label="Fechar"><svg class="ico"><use href="#i-fechar"/></svg></button>
         </div>
-        
-        <form id="form-edicao-cliente" method="POST">
-            {% csrf_token %}
-            
-            <div class="mb-4">
-                <label for="edit-cli-nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Cliente</label>
-                <input type="text" id="edit-cli-nome" name="nome" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-            </div>
-
-            <div class="mb-4">
-                <label for="edit-cli-telefone" class="block text-gray-700 text-sm font-semibold mb-1">Telefone / WhatsApp</label>
-                <input type="text" id="edit-cli-telefone" name="telefone" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-            </div>
-
-            <div class="mb-4">
-                <label for="edit-cli-email" class="block text-gray-700 text-sm font-semibold mb-1">E-mail (Opcional)</label>
-                <input type="email" id="edit-cli-email" name="email" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-            </div>
-
-            <div class="mb-6">
-                <label for="edit-cli-endereco" class="block text-gray-700 text-sm font-semibold mb-1">Endereço / Observações</label>
-                <textarea id="edit-cli-endereco" name="endereco" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"></textarea>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button type="button" onclick="fecharModalEdicaoCliente()" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-center text-sm cursor-pointer">
-                    Cancelar
-                </button>
-                <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                    Salvar Alterações
-                </button>
-            </div>
-        </form>
-    </div>
+        <div class="campo"><label for="edit-cli-nome" class="rotulo">Nome</label><input type="text" id="edit-cli-nome" name="nome" required maxlength="255" class="entrada"></div>
+        <div class="campo"><label for="edit-cli-telefone" class="rotulo">Telefone / WhatsApp <span class="rotulo-opcional">opcional</span></label><input type="tel" id="edit-cli-telefone" name="telefone" maxlength="20" class="entrada"></div>
+        <div class="campo"><label for="edit-cli-email" class="rotulo">E-mail <span class="rotulo-opcional">opcional</span></label><input type="email" id="edit-cli-email" name="email" class="entrada"></div>
+        <div class="campo"><label for="edit-cli-endereco" class="rotulo">Endereço ou observação <span class="rotulo-opcional">opcional</span></label><textarea id="edit-cli-endereco" name="endereco" rows="2" class="entrada"></textarea></div>
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="fecharModalEdicaoCliente()" class="btn-secundario">Cancelar</button>
+            <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar alterações</button>
+        </div>
+    </form>
 </dialog>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/main.js' %}"></script>
 {% endblock %}

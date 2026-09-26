@@ -1,92 +1,92 @@
 {% extends 'interfaces/base.html' %}
-{% load static %}
+{% load formatacao %}
 
-{% block title %}Editar Produto #{{ produto.id }}{% endblock %}
-{% block header_title %}Editar Produto{% endblock %}
+{% block title %}Editar {{ produto.nome }} · Gestão da Loja{% endblock %}
+{% block voltar %}<a href="{% url 'produtos' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Produtos</a>{% endblock %}
+{% block header_title %}{{ produto.nome }}{% endblock %}
+{% block subtitulo %}Cadastrado em {{ produto.data_criacao|date:"d/m/Y" }}{% if produto.codigo_interno %} · código {{ produto.codigo_interno }}{% endif %}{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-    <h3 class="text-lg font-bold text-gray-800 mb-4">Modificar Dados do Produto</h3>
-    
-    <form method="POST" enctype="multipart/form-data">
+<section class="cartao cartao-corpo max-w-3xl" aria-label="Dados do produto">
+    <form method="POST" enctype="multipart/form-data" class="grid gap-4">
         {% csrf_token %}
-
         <input type="hidden" id="remover_imagens" name="remover_imagens" value="">
 
-        <div class="mb-4">
-            <label for="edit-codigo-interno" class="block text-gray-700 text-sm font-semibold mb-1">Cód. Interno / SKU</label>
-            <input type="text" id="edit-codigo-interno" name="codigo_interno" value="{{ produto.codigo_interno|default:'' }}" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-        </div>
-        
-        <div class="mb-4">
-            <label for="edit-nome" class="block text-gray-700 text-sm font-semibold mb-1">Nome do Produto</label>
-            <input type="text" id="edit-nome" name="nome" value="{{ produto.nome }}" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+        <div class="campo">
+            <label for="edit-nome" class="rotulo">Nome do produto</label>
+            <input type="text" id="edit-nome" name="nome" value="{{ produto.nome }}" required maxlength="150" class="entrada">
         </div>
 
-        <div class="mb-4">
-            <label for="edit-categoria" class="block text-gray-700 text-sm font-semibold mb-1">Categoria</label>
-            <input type="text" id="edit-categoria" name="categoria" value="{{ produto.categoria|default:'' }}" placeholder="Ex: Roupas, Doces..." class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="campo">
+                <label for="edit-codigo-interno" class="rotulo">Código <span class="rotulo-opcional">opcional</span></label>
+                <input type="text" id="edit-codigo-interno" name="codigo_interno" value="{{ produto.codigo_interno|default:'' }}" maxlength="50" class="entrada">
+            </div>
+            <div class="campo">
+                <label for="edit-categoria" class="rotulo">Categoria <span class="rotulo-opcional">opcional</span></label>
+                <input type="text" id="edit-categoria" name="categoria" value="{{ produto.categoria|default:'' }}" maxlength="100" placeholder="Ex.: Doces, Bebidas…" class="entrada">
+            </div>
         </div>
 
-        <div class="mb-4">
-            <label for="edit-descricao" class="block text-gray-700 text-sm font-semibold mb-1">Descrição (Opcional)</label>
-            <textarea id="edit-descricao" name="descricao" rows="2" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">{{ produto.descricao|default:'' }}</textarea>
+        <fieldset class="grid gap-3 rounded-controle border border-linha p-3.5">
+            <legend class="px-1 text-sm font-semibold">Preço</legend>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="campo">
+                    <label for="edit-preco-custo" class="text-xs font-semibold text-tinta-suave">Quanto você paga</label>
+                    <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0" id="edit-preco-custo" name="preco_custo" value="{{ produto.preco_custo|default:0|stringformat:'.2f' }}" inputmode="decimal" class="tabular-nums"></div>
+                </div>
+                <div class="campo">
+                    <label for="edit-margem-lucro" class="text-xs font-semibold text-tinta-suave">Lucro sobre o custo</label>
+                    <div class="entrada-grupo"><input type="number" step="0.01" min="0" id="edit-margem-lucro" name="margem_lucro" value="{{ produto.margem_lucro|default:0|stringformat:'.2f' }}" inputmode="decimal" class="tabular-nums"><span class="afixo-fim">%</span></div>
+                </div>
+                <div class="campo">
+                    <label for="edit-preco-venda" class="text-xs font-semibold text-tinta-suave">Quanto você cobra</label>
+                    <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="edit-preco-venda" name="preco_venda" value="{{ produto.preco_venda|default:0|stringformat:'.2f' }}" required inputmode="decimal" class="tabular-nums font-semibold"></div>
+                </div>
+            </div>
+            <p class="ajuda">Mudou o custo ou o lucro desejado? O preço é recalculado. Mudou o preço? O lucro é recalculado.</p>
+        </fieldset>
+
+        <div class="campo max-w-xs">
+            <label for="edit-estoque" class="rotulo">Quantidade em estoque</label>
+            <div class="entrada-grupo"><input type="number" id="edit-estoque" name="quantidade_estoque" value="{{ produto.quantidade_estoque }}" min="0" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
+            <p class="ajuda">Use para acertar o estoque depois de uma contagem ou de uma compra.</p>
         </div>
 
-        <div class="mb-4">
-            <span class="block text-gray-700 text-sm font-semibold mb-1">Imagens Atuais (Clique no botão vermelho para remover)</span>
-            <div id="container-imagens-atuais" class="flex flex-wrap gap-3 mb-3">
+        <div class="campo">
+            <label for="edit-descricao" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
+            <textarea id="edit-descricao" name="descricao" rows="2" class="entrada">{{ produto.descricao|default:'' }}</textarea>
+        </div>
+
+        <div class="campo">
+            <span class="rotulo">Fotos atuais</span>
+            <div id="container-imagens-atuais" class="flex flex-wrap gap-3">
                 {% for img in produto.imagens.all %}
-                <div class="relative w-24 h-24 border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50 shadow-sm shrink-0" data-id="{{ img.id }}">
+                <div class="relative w-24 h-24 shrink-0 overflow-hidden rounded-controle border border-linha bg-fundo" data-id="{{ img.id }}">
                     <img src="{{ img.imagem_url }}" alt="{{ produto.nome }}" class="w-full h-full object-cover">
-                    
-                    <button type="button" onclick="marcarParaRemover('{{ img.id }}', this.closest('div'))" aria-label="Remover esta imagem" title="Remover imagem" class="absolute top-1.5 right-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center shadow-md cursor-pointer transition transform hover:scale-110 z-10">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                    <button type="button" onclick="marcarParaRemover('{{ img.id }}', this.closest('div'))" aria-label="Remover esta foto" title="Remover foto"
+                            class="absolute top-1.5 right-1.5 grid place-items-center w-7 h-7 rounded-full bg-white/95 text-critico-texto shadow hover:bg-critico hover:text-white transition">
+                        <svg class="ico ico-sm"><use href="#i-lixeira"/></svg>
                     </button>
                 </div>
                 {% empty %}
-                <span class="text-xs text-gray-400">Nenhuma imagem cadastrada.</span>
+                <p class="ajuda">Nenhuma foto ainda.</p>
                 {% endfor %}
             </div>
-
-            <label for="edit-imagens" class="block text-gray-700 text-sm font-semibold mb-1 mt-4">Adicionar Novas Imagens</label>
-            <input type="file" id="edit-imagens" name="imagens" multiple accept="image/jpeg,image/png,image/webp" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+            <p class="ajuda">As fotos marcadas para remover só somem de vez quando você salvar.</p>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 mb-4">
-            <div>
-                <label for="edit-preco-custo" class="block text-gray-700 text-xs font-semibold mb-1">Custo (R$)</label>
-                <input type="number" step="0.01" id="edit-preco-custo" name="preco_custo" value="{{ produto.preco_custo|default:0|stringformat:'.2f' }}" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
-            <div>
-                <label for="edit-margem-lucro" class="block text-gray-700 text-xs font-semibold mb-1">Lucro (%)</label>
-                <input type="number" step="0.01" id="edit-margem-lucro" name="margem_lucro" value="{{ produto.margem_lucro|default:0|stringformat:'.2f' }}" class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
-            <div>
-                <label for="edit-preco-venda" class="block text-gray-700 text-xs font-semibold mb-1">Venda (R$)</label>
-                <input type="number" step="0.01" id="edit-preco-venda" name="preco_venda" value="{{ produto.preco_venda|default:0|stringformat:'.2f' }}" required class="w-full px-2 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-            </div>
+        <div class="campo">
+            <label for="edit-imagens" class="rotulo">Adicionar fotos <span class="rotulo-opcional">opcional</span></label>
+            <input type="file" id="edit-imagens" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+                   class="block w-full text-sm text-tinta-suave file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200 cursor-pointer">
+            <p class="ajuda">JPG, PNG ou WEBP de até 5 MB.</p>
         </div>
 
-        <div class="mb-6">
-            <label for="edit-estoque" class="block text-gray-700 text-sm font-semibold mb-1">Quantidade em Estoque</label>
-            <input type="number" id="edit-estoque" name="quantidade_estoque" value="{{ produto.quantidade_estoque }}" min="0" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-        </div>
-
-        <div class="flex items-center gap-3">
-            <a href="{% url 'produtos' %}" class="w-1/2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition text-center text-sm flex items-center justify-center">
-                Cancelar
-            </a>
-            <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm cursor-pointer">
-                Salvar Alterações
-            </button>
+        <div class="flex flex-wrap justify-end gap-2 pt-2">
+            <a href="{% url 'produtos' %}" class="btn-secundario">Cancelar</a>
+            <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar alterações</button>
         </div>
     </form>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'js/main.js' %}"></script>
+</section>
 {% endblock %}

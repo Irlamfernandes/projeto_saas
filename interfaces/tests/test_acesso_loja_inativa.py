@@ -27,6 +27,9 @@ class AcessoLojaInativaTest(TestCase):
             reverse('extrato_cliente', args=[cliente.pk]),
             reverse('extrato_pdf', args=[cliente.pk]),
             reverse('relatorios'),
+            reverse('relatorios_vendas'),
+            reverse('relatorios_produtos'),
+            reverse('relatorios_clientes'),
             reverse('exportar_pdf_modular', args=['vendas']),
             reverse('exportar_excel_modular', args=['vendas']),
         ]

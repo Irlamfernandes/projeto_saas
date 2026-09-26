@@ -1,124 +1,167 @@
 {% extends 'interfaces/base.html' %}
-{% load formatacao %}
+{% load static formatacao %}
 
-{% block title %}Dashboard - Visão Geral{% endblock %}
-
-{% block header_title %}Visão Geral{% endblock %}
+{% block title %}Início · Gestão da Loja{% endblock %}
+{% block header_title %}Olá, {{ request.user.first_name|default:request.user.username }}!{% endblock %}
+{% block subtitulo %}{{ hoje_por_extenso }} · Veja como a loja está indo.{% endblock %}
+{% block acoes %}
+    <a href="{% url 'clientes' %}" class="btn-secundario"><svg class="ico"><use href="#i-caderneta"/></svg>Receber pagamento</a>
+    <a href="{% url 'vendas' %}" class="btn-primario"><svg class="ico"><use href="#i-mais"/></svg>Nova venda</a>
+{% endblock %}
 
 {% block content %}
-
-<section class="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200 mb-6">
-    <h3 class="text-lg font-bold text-gray-800 mb-2">Painel de Controle Financeiro</h3>
-    <p class="text-sm text-gray-600">Acompanhe em tempo real o volume de vendas da sua microempresa segmentado por ciclos temporais para tomada de decisão ágil.</p>
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Resumo">
+    <div class="kpi">
+        <p class="kpi-rotulo"><svg class="ico ico-sm text-tinta-fraca"><use href="#i-moeda"/></svg>Vendas de hoje</p>
+        <p class="kpi-valor"><span class="kpi-moeda">R$</span>{{ indicadores.hoje.atual|moeda }}</p>
+        {% include 'interfaces/_variacao.html' with comparacao=indicadores.hoje texto='que há uma semana' %}
+    </div>
+    <div class="kpi">
+        <p class="kpi-rotulo"><svg class="ico ico-sm text-tinta-fraca"><use href="#i-calendario"/></svg>Últimos 7 dias</p>
+        <p class="kpi-valor"><span class="kpi-moeda">R$</span>{{ indicadores.sete_dias.atual|moeda }}</p>
+        {% include 'interfaces/_variacao.html' with comparacao=indicadores.sete_dias texto='que a semana anterior' %}
+    </div>
+    <div class="kpi">
+        <p class="kpi-rotulo"><svg class="ico ico-sm text-tinta-fraca"><use href="#i-relatorio"/></svg>Este mês</p>
+        <p class="kpi-valor"><span class="kpi-moeda">R$</span>{{ indicadores.mes.atual|moeda }}</p>
+        {% include 'interfaces/_variacao.html' with comparacao=indicadores.mes texto='que o mês passado' %}
+    </div>
+    <a href="{% url 'relatorios_clientes' %}" class="kpi bg-destaque-50 border-transparent hover:border-destaque-100 transition">
+        <p class="kpi-rotulo"><svg class="ico ico-sm text-destaque-500"><use href="#i-caderneta"/></svg>A receber na caderneta</p>
+        <p class="kpi-valor"><span class="kpi-moeda">R$</span>{{ indicadores.a_receber|moeda }}</p>
+        <p class="text-[0.8rem] font-semibold text-tinta-suave">
+            {% if indicadores.clientes_devendo %}
+                {{ indicadores.clientes_devendo }} cliente{{ indicadores.clientes_devendo|pluralize }}
+                {% if indicadores.devendo_ha_muito_tempo %}· <span class="text-critico-texto">{{ indicadores.devendo_ha_muito_tempo }} sem pagar há mais de 60 dias</span>{% endif %}
+            {% else %}Ninguém devendo agora{% endif %}
+        </p>
+    </a>
 </section>
 
-<section aria-label="Resumo de Cadastros" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-sm font-medium text-gray-500">Produtos Cadastrados</h3>
-        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_produtos|default:"0" }}</p>
-    </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 class="text-sm font-medium text-gray-500">Clientes Ativos</h3>
-        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_clientes|default:"0" }}</p>
-    </div>
-</section>
-
-<section aria-label="Desempenho de Vendas" class="mb-8">
-    <h3 class="text-lg font-bold text-gray-800 mb-4">Desempenho de Vendas</h3>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Hoje</h4>
-            <p class="text-xl sm:text-2xl font-bold text-indigo-600 mt-1 truncate">R$ {{ vendas_hoje|moeda }}</p>
+<div class="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-5 items-start">
+    <section class="cartao cartao-corpo" aria-labelledby="t-faturamento">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-faturamento" class="titulo-cartao">Faturamento por dia</h2><p class="subtitulo">Quanto a loja vendeu em cada um dos últimos 30 dias</p></div>
+            <a href="{% url 'relatorios_vendas' %}" class="btn-fantasma btn-pequeno">Ver mais<svg class="ico ico-sm"><use href="#i-seta"/></svg></a>
         </div>
+        {% include 'interfaces/_grafico.html' with id='dados-faturamento' tipo='linha' dados=grafico_faturamento descricao='Faturamento diário dos últimos 30 dias' %}
+    </section>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Últimos 7 dias</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_semana|moeda }}</p>
+    <section class="cartao cartao-corpo" aria-labelledby="t-top">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-top" class="titulo-cartao">Mais vendidos</h2><p class="subtitulo">Unidades nos últimos 30 dias</p></div>
         </div>
+        {% if mais_vendidos %}
+            {% include 'interfaces/_grafico.html' with id='dados-mais-vendidos' tipo='barras-horizontais' formato='unidades' dados=grafico_mais_vendidos descricao='Produtos mais vendidos em unidades' %}
+        {% else %}
+            {% include 'interfaces/_vazio.html' with icone='i-estrela' titulo='Nenhuma venda nos últimos 30 dias' texto='Os produtos mais vendidos aparecem aqui.' %}
+        {% endif %}
+    </section>
+</div>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Quinzenal</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_quinzena|moeda }}</p>
+<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-5 items-start">
+    <section class="cartao cartao-corpo" aria-labelledby="t-fluxo">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-fluxo" class="titulo-cartao">Vendido x recebido</h2><p class="subtitulo">Fiado vendido e pagamentos recebidos por mês</p></div>
         </div>
+        <p class="flex gap-4 text-xs text-tinta-suave mb-2" aria-hidden="true">
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-sm" style="background: var(--cor-marca)"></i>Vendido na caderneta</span>
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-sm" style="background: var(--cor-destaque)"></i>Recebido</span>
+        </p>
+        {% include 'interfaces/_grafico.html' with id='dados-fluxo' tipo='barras-agrupadas' dados=grafico_fluxo descricao='Vendido e recebido por mês nos últimos 6 meses' altura='h-56' %}
+    </section>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Mês</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_mes|moeda }}</p>
+    <section class="cartao cartao-corpo" aria-labelledby="t-horarios">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-horarios" class="titulo-cartao">Melhores horários</h2><p class="subtitulo">Total vendido por dia e hora, últimos 90 dias</p></div>
         </div>
+        {% include 'interfaces/_mapa_horarios.html' %}
+    </section>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Bimestral</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_bimestre|moeda }}</p>
+    <section class="cartao cartao-corpo lg:col-span-2 xl:col-span-1" aria-labelledby="t-repor">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-repor" class="titulo-cartao">Repor em breve</h2><p class="subtitulo">Acabam em até 7 dias, pela média de vendas</p></div>
+            <a href="{% url 'relatorios_produtos' %}#reposicao" class="btn-fantasma btn-pequeno">Ver todos<svg class="ico ico-sm"><use href="#i-seta"/></svg></a>
         </div>
+        {% if reposicao %}
+        <ul class="divide-y divide-grade">
+            {% for item in reposicao %}
+            <li class="flex items-center gap-3 py-2.5">
+                <span class="flex-1 min-w-0">
+                    <span class="block text-sm font-medium truncate">{{ item.nome }}</span>
+                    <span class="block text-xs text-tinta-fraca">{{ item.estoque }} un. em estoque · vende {{ item.media_diaria }}/dia</span>
+                </span>
+                {% if item.estoque == 0 %}
+                    <span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
+                {% elif item.dias_restantes <= 2 %}
+                    <span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ item.dias_restantes }} dia{{ item.dias_restantes|pluralize }}</span>
+                {% else %}
+                    <span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-tempo"/></svg>{{ item.dias_restantes }} dias</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            {% include 'interfaces/_vazio.html' with icone='i-check' titulo='Estoque em dia' texto='Nenhum produto deve acabar nos próximos 7 dias.' %}
+        {% endif %}
+    </section>
+</div>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Trimestral</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_trimestre|moeda }}</p>
+<div class="grid grid-cols-1 xl:grid-cols-[1fr_1.4fr] gap-5 items-start">
+    <section class="cartao cartao-corpo" aria-labelledby="t-periodos">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-periodos" class="titulo-cartao">Faturamento por período</h2><p class="subtitulo">{{ total_produtos }} produto{{ total_produtos|pluralize }} e {{ total_clientes }} cliente{{ total_clientes|pluralize }} cadastrados</p></div>
         </div>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2 gap-x-6 text-sm">
+            <div class="flex justify-between gap-2 border-b border-grade py-2"><dt class="text-tinta-suave">Hoje</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_hoje|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-grade py-2"><dt class="text-tinta-suave">Últimos 7 dias</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_semana|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-grade py-2"><dt class="text-tinta-suave">Últimos 15 dias</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_quinzena|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-grade py-2"><dt class="text-tinta-suave">Este mês</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_mes|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-grade py-2"><dt class="text-tinta-suave">Últimos 60 dias</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_bimestre|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-grade py-2"><dt class="text-tinta-suave">Últimos 90 dias</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_trimestre|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 border-b border-grade sm:border-b-0 lg:border-b 2xl:border-b-0 py-2"><dt class="text-tinta-suave">Este ano</dt><dd class="font-semibold tabular-nums whitespace-nowrap">R$ {{ vendas_ano|moeda }}</dd></div>
+            <div class="flex justify-between gap-2 py-2"><dt class="font-semibold text-marca-700">Desde o início</dt><dd class="font-bold tabular-nums whitespace-nowrap text-marca-700">R$ {{ total_geral|moeda }}</dd></div>
+        </dl>
+    </section>
 
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400">Este Ano</h4>
-            <p class="text-xl sm:text-2xl font-bold text-gray-900 mt-1 truncate">R$ {{ vendas_ano|moeda }}</p>
+    <section class="cartao cartao-corpo" aria-labelledby="t-estoque">
+        <div class="cartao-cabecalho">
+            <div><h2 id="t-estoque" class="titulo-cartao">Estoque baixo</h2><p class="subtitulo">Produtos com poucas unidades, do menor para o maior estoque</p></div>
+            <form method="GET" class="flex items-center gap-2">
+                <label for="limite_estoque" class="text-xs font-semibold text-tinta-suave whitespace-nowrap">Com até</label>
+                <select name="limite_estoque" id="limite_estoque" onchange="this.form.submit()" class="entrada py-1.5 text-sm w-auto">
+                    {% for opcao in opcoes_de_limite %}
+                    <option value="{{ opcao }}" {% if limite_estoque == opcao %}selected{% endif %}>{{ opcao }} un.</option>
+                    {% endfor %}
+                </select>
+                <noscript><button type="submit" class="btn-secundario btn-pequeno">Filtrar</button></noscript>
+            </form>
         </div>
-
-        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-gray-200 bg-indigo-50/50">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Faturamento Total</h4>
-            <p class="text-xl sm:text-2xl font-bold text-indigo-700 mt-1 truncate">R$ {{ total_geral|moeda }}</p>
+        <div class="relative overflow-x-auto max-h-80">
+            <table class="tabela">
+                <caption class="sr-only">Produtos com estoque baixo</caption>
+                <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right">Preço</th><th scope="col" class="text-right">Estoque</th></tr></thead>
+                <tbody>
+                    {% for prod in produtos_baixo_estoque %}
+                    <tr>
+                        <td class="font-medium">{{ prod.nome }}{% if prod.codigo_interno %}<span class="block text-xs font-normal font-mono text-tinta-fraca">#{{ prod.codigo_interno }}</span>{% endif %}</td>
+                        <td class="numero">R$ {{ prod.preco_venda|moeda }}</td>
+                        <td class="text-right">
+                            {% if prod.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
+                            {% else %}<span class="pilula-alerta">{{ prod.quantidade_estoque }} un.</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="py-8 text-center text-tinta-fraca">Nenhum produto com até {{ limite_estoque }} unidade{{ limite_estoque|pluralize }}.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </section>
+</div>
+{% endblock %}
 
-    </div>
-</section>
-
-<section class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-            <h3 class="text-lg font-bold text-gray-800">Alerta de Estoque Baixo</h3>
-            <p class="text-xs text-gray-500">Monitore produtos com poucas unidades disponíveis para reposição ágil.</p>
-        </div>
-        
-        <form method="GET" class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-            <label for="limite_estoque" class="text-xs font-semibold text-gray-600 whitespace-nowrap">Mostrar unidades:</label>
-            <select name="limite_estoque" id="limite_estoque" onchange="this.form.submit()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-                <option value="1" {% if limite_estoque == 1 %}selected{% endif %}>1 ou menos</option>
-                <option value="2" {% if limite_estoque == 2 %}selected{% endif %}>2 ou menos</option>
-                <option value="3" {% if limite_estoque == 3 %}selected{% endif %}>3 ou menos</option>
-                <option value="5" {% if limite_estoque == 5 %}selected{% endif %}>5 ou menos</option>
-                <option value="10" {% if limite_estoque == 10 %}selected{% endif %}>10 ou menos</option>
-            </select>
-        </form>
-    </div>
-
-    <div class="overflow-x-auto max-h-80 overflow-y-auto">
-        <table class="w-full text-left border-collapse">
-            <caption class="sr-only">Alerta de produtos com estoque baixo</caption>
-            <thead>
-                <tr class="border-b border-gray-200 text-gray-400 text-xs uppercase font-semibold sticky top-0 bg-white">
-                    <th class="py-3 px-4">Produto</th>
-                    <th class="py-3 px-4">Código Interno</th>
-                    <th class="py-3 px-4">Preço de Venda</th>
-                    <th class="py-3 px-4 text-center">Estoque Atual</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100 text-sm">
-                {% for prod in produtos_baixo_estoque %}
-                <tr class="hover:bg-gray-50">
-                    <td class="py-3 px-4 font-medium text-gray-900">{{ prod.nome }}</td>
-                    <td class="py-3 px-4 text-gray-500 text-xs">{{ prod.codigo_interno|default:"N/D" }}</td>
-                    <td class="py-3 px-4 text-gray-600 whitespace-nowrap">R$ {{ prod.preco_venda|moeda }}</td>
-                    <td class="py-3 px-4 text-center whitespace-nowrap">
-                        <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if prod.quantidade_estoque == 0 %}bg-red-100 text-red-700{% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                            {{ prod.quantidade_estoque }} un.
-                        </span>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center py-6 text-gray-400 text-sm">Nenhum produto abaixo desse limite de estoque 🎉</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</section>
+{% block extra_js %}
+<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
+<script src="{% static 'js/graficos.js' %}"></script>
 {% endblock %}

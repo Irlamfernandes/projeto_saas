@@ -1,65 +1,59 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SaaS</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#4f46e5">
-    <meta name="mobile-web-app-capable" content="yes">
+    {% include 'interfaces/_cabeca.html' %}
+    <title>Entrar · Gestão da Loja</title>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-md w-96">
-        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">Entrar no SaaS</h1>
-        
-        <form method="POST" autocomplete="on">
-            {% csrf_token %}
-            
-            {% if form.non_field_errors %}
-                <div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
-
-            <div class="mb-4">
-                <label for="{{ form.username.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">Usuário</label>
-                <div class="[&>input]:w-full [&>input]:px-3 [&>input]:py-2 [&>input]:border [&>input]:border-gray-300 [&>input]:rounded-lg [&>input]:text-sm [&>input]:focus:outline-none [&>input]:focus:ring-2 [&>input]:focus:ring-blue-500">
-                    {{ form.username }}
-                </div>
-                {% if form.username.errors %}
-                    <div class="mt-1 text-xs text-red-600" role="alert">
-                        {{ form.username.errors }}
-                    </div>
-                {% endif %}
+<body class="min-h-screen">
+    {% include 'interfaces/_icones.html' %}
+    <div class="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+        <aside class="hidden lg:flex flex-col justify-between bg-marca-700 p-12 text-white">
+            <p class="flex items-center gap-2.5 font-titulo text-lg font-bold"><svg class="ico w-7 h-7"><use href="#i-loja"/></svg>Gestão da Loja</p>
+            <div class="max-w-md">
+                <h1 class="text-4xl font-bold leading-tight">Vendas, estoque e caderneta num lugar só.</h1>
+                <ul class="mt-8 grid gap-3 text-marca-100">
+                    <li class="flex items-center gap-3"><svg class="ico"><use href="#i-venda"/></svg>Registre vendas em segundos, até pelo celular</li>
+                    <li class="flex items-center gap-3"><svg class="ico"><use href="#i-caderneta"/></svg>Saiba quem deve e há quanto tempo</li>
+                    <li class="flex items-center gap-3"><svg class="ico"><use href="#i-relatorio"/></svg>Veja o que mais vende e quando reforçar o estoque</li>
+                </ul>
             </div>
+            <p class="text-sm text-marca-200">Acesso só para lojas cadastradas.</p>
+        </aside>
 
-            <div class="mb-6">
-                <label for="{{ form.password.id_for_label }}" class="block text-gray-700 text-sm font-bold mb-2">Senha</label>
-                <div class="[&>input]:w-full [&>input]:px-3 [&>input]:py-2 [&>input]:border [&>input]:border-gray-300 [&>input]:rounded-lg [&>input]:text-sm [&>input]:focus:outline-none [&>input]:focus:ring-2 [&>input]:focus:ring-blue-500">
-                    {{ form.password }}
-                </div>
-                {% if form.password.errors %}
-                    <div class="mt-1 text-xs text-red-600" role="alert">
-                        {{ form.password.errors }}
+        <main class="flex items-center justify-center px-4 py-12">
+            <div class="w-full max-w-sm">
+                <p class="lg:hidden mb-8 flex items-center justify-center gap-2 font-titulo text-lg font-bold text-marca-700"><svg class="ico w-7 h-7"><use href="#i-loja"/></svg>Gestão da Loja</p>
+                <h2 class="text-2xl font-bold">Entrar</h2>
+                <p class="mt-1 text-sm text-tinta-suave">Use o usuário e a senha que o administrador passou para você.</p>
+
+                <form method="POST" autocomplete="on" class="mt-6 grid gap-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                    {% if form.non_field_errors %}
+                        <div role="alert" class="flex items-start gap-2.5 rounded-controle border border-critico/20 bg-critico-suave px-4 py-3 text-sm font-medium text-critico-texto">
+                            <svg class="ico mt-px"><use href="#i-x"/></svg><span>{% for erro in form.non_field_errors %}{{ erro }}{% endfor %}</span>
+                        </div>
+                    {% endif %}
+                    <div class="campo">
+                        <label for="{{ form.username.id_for_label }}" class="rotulo">Usuário</label>
+                        {{ form.username }}
+                        {% for erro in form.username.errors %}<p class="text-xs font-semibold text-critico-texto" role="alert">{{ erro }}</p>{% endfor %}
                     </div>
-                {% endif %}
+                    <div class="campo">
+                        <label for="{{ form.password.id_for_label }}" class="rotulo">Senha</label>
+                        {{ form.password }}
+                        {% for erro in form.password.errors %}<p class="text-xs font-semibold text-critico-texto" role="alert">{{ erro }}</p>{% endfor %}
+                        <p class="ajuda">Esqueceu a senha? Peça ao administrador para gerar uma nova.</p>
+                    </div>
+                    <button type="submit" class="btn-primario w-full py-3">Entrar<svg class="ico"><use href="#i-seta"/></svg></button>
+                </form>
             </div>
-
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 cursor-pointer">
-                Entrar
-            </button>
-        </form>
+        </main>
     </div>
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register("{% static 'sw.js' %}");
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register("{% static 'sw.js' %}"));
         }
     </script>
-
-    <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>

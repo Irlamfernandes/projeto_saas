@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function inicializarFocoInputs() {
+    // Só em telas de toque: evita que o teclado virtual cubra o campo. No computador a página não pula.
+    if (!globalThis.matchMedia?.('(pointer: coarse)').matches) return;
     const inputs = document.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
         input.addEventListener('focus', () => {
@@ -32,6 +34,11 @@ function inicializarCalculadoraPrecos() {
     }
 
     vendaInput.addEventListener('input', () => atualizarMargemLucro(custoInput, margemInput, vendaInput));
+
+    // Na edição, o lucro guardado pode estar vazio/zerado: mostra o lucro real do custo e preço atuais.
+    if (margemInput && !(Number.parseFloat(margemInput.value) > 0)) {
+        atualizarMargemLucro(custoInput, margemInput, vendaInput);
+    }
 }
 
 function atualizarPrecoVenda(custoInput, margemInput, vendaInput) {
@@ -61,13 +68,17 @@ function inicializarCategoriaPadrao() {
 function tratarMudancaCategoria(select) {
     const inputNova = document.getElementById('input-nova-categoria');
     if (!inputNova) return;
+    // Só um dos dois campos pode se chamar "categoria": com os dois, o Django fica com o último
+    // (o campo de nova categoria, vazio) e a categoria escolhida na lista se perdia.
     if (select.value === '__novo__') {
         select.removeAttribute('name');
+        inputNova.setAttribute('name', 'categoria');
         inputNova.classList.remove('hidden');
         inputNova.setAttribute('required', 'true');
         inputNova.focus();
     } else {
         select.setAttribute('name', 'categoria');
+        inputNova.removeAttribute('name');
         inputNova.removeAttribute('required');
         inputNova.classList.add('hidden');
         inputNova.value = '';
@@ -197,8 +208,8 @@ function atualizarExibicaoGaleria() {
     }
 
     const exibirControles = imagensGaleria.length > 1;
-    if (btnAnt) btnAnt.style.display = exibirControles ? 'block' : 'none';
-    if (btnProx) btnProx.style.display = exibirControles ? 'block' : 'none';
+    if (btnAnt) btnAnt.style.display = exibirControles ? '' : 'none';
+    if (btnProx) btnProx.style.display = exibirControles ? '' : 'none';
 }
 
 function fecharModalDireto() {

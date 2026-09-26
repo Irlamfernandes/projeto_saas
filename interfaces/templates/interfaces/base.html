@@ -1,142 +1,97 @@
-<!DOCTYPE html>
+{% load static navegacao %}<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SaaS de Gestão{% endblock %}</title>
-    <meta name="description" content="Sistema SaaS de gestão para controle de vendas, produtos e clientes.">
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#4f46e5">
-    <meta name="mobile-web-app-capable" content="yes">
+    {% include 'interfaces/_cabeca.html' %}
+    <title>{% block title %}Gestão da Loja{% endblock %}</title>
 </head>
-<body class="bg-gray-100 font-sans antialiased">
+<body class="min-h-screen">
+    {% include 'interfaces/_icones.html' %}
 
-    <div class="flex h-screen overflow-hidden">
-        
-        <aside class="w-64 bg-gray-900 text-white flex flex-col justify-between hidden md:flex">
-            <div>
-                <div class="px-6 py-5 border-b border-gray-800">
-                    <a href="{% url 'dashboard' %}" class="text-xl font-bold tracking-wider text-indigo-400">
-                        {% if request.user.is_superuser and not request.user.loja %}
-                            Painel Global
-                        {% elif request.user.loja %}
-                            {{ request.user.loja.nome_loja }}
-                        {% else %}
-                            Minha Loja
-                        {% endif %}
-                    </a>
-                </div>
+    <div class="md:grid md:grid-cols-[15rem_1fr] min-h-screen">
 
-                <nav class="mt-6 px-4 space-y-2" aria-label="Menu Principal">
-                    <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'dashboard' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg font-medium transition">
-                        📊 Visão Geral
-                    </a>
-                    <a href="{% url 'produtos' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'produtos' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg transition font-medium">
-                        📦 Produtos
-                    </a>
-                    <a href="{% url 'clientes' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'clientes' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg transition font-medium">
-                        👥 Clientes
-                    </a>
-                    <a href="{% url 'vendas' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'vendas' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg transition font-medium">
-                        🛒 Vendas
-                    </a>
-                    <a href="{% url 'relatorios' %}" class="flex items-center px-4 py-2.5 {% if request.resolver_match.url_name == 'relatorios' %}bg-gray-800 text-white{% else %}text-gray-400 hover:bg-gray-800 hover:text-white{% endif %} rounded-lg transition font-medium">
-                        📈 Relatórios
-                    </a>
-                </nav>
-            </div>
+        <aside class="hidden md:flex flex-col gap-6 bg-white border-r border-linha px-3.5 py-5 sticky top-0 h-screen" aria-label="Menu principal">
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-1.5">
+                <span class="grid place-items-center w-10 h-10 rounded-xl bg-marca-600 text-white font-titulo font-bold" aria-hidden="true">
+                    {% if request.user.loja %}{{ request.user.loja.nome_loja|iniciais }}{% else %}<svg class="ico"><use href="#i-loja"/></svg>{% endif %}
+                </span>
+                <span class="min-w-0">
+                    <b class="block text-sm leading-tight truncate">{% if request.user.loja %}{{ request.user.loja.nome_loja }}{% else %}Painel global{% endif %}</b>
+                    <span class="block text-xs text-tinta-fraca truncate">{{ request.user.username }}</span>
+                </span>
+            </a>
 
-            <div class="p-4 border-t border-gray-800">
-                <form action="{% url 'logout' %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="w-full flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition font-medium cursor-pointer">
-                        Sair da Conta
-                    </button>
-                </form>
-            </div>
+            <nav class="grid gap-0.5 text-sm" aria-label="Seções">
+                {% include 'interfaces/_menu_item.html' with rota='dashboard' icone='i-inicio' rotulo='Início' ativo_se='dashboard' %}
+                {% include 'interfaces/_menu_item.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
+                {% include 'interfaces/_menu_item.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}
+                {% include 'interfaces/_menu_item.html' with rota='clientes' icone='i-clientes' rotulo='Clientes' ativo_se='clientes extrato_cliente' %}
+                {% include 'interfaces/_menu_item.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes' %}
+            </nav>
+
+            <form action="{% url 'logout' %}" method="POST" class="mt-auto border-t border-linha pt-3">
+                {% csrf_token %}
+                <button type="submit" class="btn-fantasma w-full justify-start px-2.5">
+                    <svg class="ico"><use href="#i-sair"/></svg>Sair
+                </button>
+            </form>
         </aside>
 
-        <div class="flex-1 flex flex-col overflow-y-auto">
-            
-            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-800">{% block header_title %}Painel{% endblock %}</h1>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm font-medium text-gray-600">Olá, <strong class="text-gray-900">{{ request.user.username }}</strong></span>
+        <div class="min-w-0 flex flex-col pb-24 md:pb-0">
+            <div class="md:hidden flex items-center justify-between gap-3 bg-white border-b border-linha px-4 py-3">
+                <span class="flex items-center gap-2.5 min-w-0">
+                    <span class="grid place-items-center w-8 h-8 rounded-lg bg-marca-600 text-white text-sm font-titulo font-bold" aria-hidden="true">{{ request.user.loja.nome_loja|default:"G"|iniciais }}</span>
+                    <b class="text-sm truncate">{% if request.user.loja %}{{ request.user.loja.nome_loja }}{% else %}Painel global{% endif %}</b>
+                </span>
+                <form action="{% url 'logout' %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-fantasma btn-pequeno" aria-label="Sair da conta"><svg class="ico"><use href="#i-sair"/></svg>Sair</button>
+                </form>
+            </div>
+
+            <header class="flex flex-wrap items-end justify-between gap-4 px-4 sm:px-8 pt-6 pb-2">
+                <div class="min-w-0">
+                    {% block voltar %}{% endblock %}
+                    <h1 class="titulo-pagina">{% block header_title %}Início{% endblock %}</h1>
+                    <p class="text-sm text-tinta-suave mt-1">{% block subtitulo %}{% endblock %}</p>
                 </div>
+                <div class="flex flex-wrap gap-2">{% block acoes %}{% endblock %}</div>
             </header>
 
-            <main class="p-8 pb-20 md:pb-8">
+            <main class="px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 gap-5 sm:gap-6 content-start">
                 {% if messages %}
-                    <section class="mb-6 space-y-2" aria-label="Notificações do Sistema">
+                    <section class="grid gap-2" aria-label="Avisos" aria-live="polite">
                         {% for message in messages %}
-                            <div class="px-4 py-3 rounded-lg text-sm border shadow-sm flex items-center justify-between
-                                {% if message.tags == 'error' or message.tags == 'danger' %}
-                                    bg-red-50 border-red-200 text-red-800
-                                {% elif message.tags == 'success' %}
-                                    bg-green-50 border-green-200 text-green-800
-                                {% elif message.tags == 'warning' %}
-                                    bg-yellow-50 border-yellow-200 text-yellow-800
-                                {% else %}
-                                    bg-blue-50 border-blue-200 text-blue-800
-                                {% endif %}"
-                                role="alert">
+                            <div role="alert" class="flex items-start gap-2.5 rounded-controle border px-4 py-3 text-sm font-medium
+                                {% if message.tags == 'error' %}bg-critico-suave border-critico/20 text-critico-texto
+                                {% elif message.tags == 'success' %}bg-bom-suave border-bom/20 text-bom-texto
+                                {% elif message.tags == 'warning' %}bg-alerta-suave border-alerta/30 text-alerta-texto
+                                {% else %}bg-marca-50 border-marca-200 text-marca-700{% endif %}">
+                                <svg class="ico mt-px"><use href="#{% if message.tags == 'error' %}i-x{% elif message.tags == 'success' %}i-check{% elif message.tags == 'warning' %}i-alerta{% else %}i-info{% endif %}"/></svg>
                                 <span>{{ message }}</span>
                             </div>
                         {% endfor %}
                     </section>
                 {% endif %}
 
-                {% block content %}
-                {% endblock %}
+                {% block content %}{% endblock %}
             </main>
-
         </div>
-
     </div>
 
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-gray-900 text-white border-t border-gray-800 flex justify-around items-center py-2 z-50 shadow-lg" aria-label="Menu de Navegação Móvel">
-        <a href="{% url 'dashboard' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'dashboard' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
-            <span class="text-lg">📊</span>
-            <span>Visão</span>
-        </a>
-        <a href="{% url 'produtos' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'produtos' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
-            <span class="text-lg">📦</span>
-            <span>Produtos</span>
-        </a>
-        <a href="{% url 'clientes' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'clientes' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
-            <span class="text-lg">👥</span>
-            <span>Clientes</span>
-        </a>
-        <a href="{% url 'vendas' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'vendas' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
-            <span class="text-lg">🛒</span>
-            <span>Vendas</span>
-        </a>
-        <a href="{% url 'relatorios' %}" class="flex flex-col items-center py-1 px-2 {% if request.resolver_match.url_name == 'relatorios' %}text-indigo-400 font-bold{% else %}text-gray-400 hover:text-white{% endif %} text-xs">
-            <span class="text-lg">📈</span>
-            <span>Relatórios</span>
-        </a>
-        
-        <form action="{% url 'logout' %}" method="POST" class="flex flex-col items-center">
-            {% csrf_token %}
-            <button type="submit" class="flex flex-col items-center py-1 px-2 text-red-400 hover:text-red-305 text-xs cursor-pointer">
-                <span class="text-lg">🚪</span>
-                <span>Sair</span>
-            </button>
-        </form>
+    <nav class="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 bg-white border-t border-linha px-1 pt-1.5" style="padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0px))" aria-label="Menu">
+        {% include 'interfaces/_menu_movel.html' with rota='dashboard' icone='i-inicio' rotulo='Início' ativo_se='dashboard' %}
+        {% include 'interfaces/_menu_movel.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
+        {% include 'interfaces/_menu_movel.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}
+        {% include 'interfaces/_menu_movel.html' with rota='clientes' icone='i-clientes' rotulo='Clientes' ativo_se='clientes extrato_cliente' %}
+        {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes' %}
     </nav>
 
     <script>
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register("{% static 'sw.js' %}");
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register("{% static 'sw.js' %}"));
         }
     </script>
-
     <script src="{% static 'js/main.js' %}"></script>
-
     {% block extra_js %}{% endblock %}
 </body>
 </html>

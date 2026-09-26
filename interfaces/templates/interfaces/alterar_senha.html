@@ -1,73 +1,38 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alterar Senha - SaaS</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <meta name="theme-color" content="#4f46e5">
-    <meta name="mobile-web-app-capable" content="yes">
+    {% include 'interfaces/_cabeca.html' %}
+    <title>Primeiro acesso · Gestão da Loja</title>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-xl shadow-md w-96">
-        <h1 class="text-2xl font-bold mb-2 text-gray-800 text-center">Primeiro Acesso</h1>
-        <p class="text-sm text-gray-600 mb-6 text-center">Por segurança, defina uma nova senha pessoal para continuar.</p>
-        
-        {% if erros %}
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm" role="alert">
-                <ul class="list-disc list-inside space-y-1">
-                    {% for erro in erros %}<li>{{ erro }}</li>{% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+<body class="min-h-screen">
+    {% include 'interfaces/_icones.html' %}
+    <main class="flex min-h-screen items-center justify-center px-4 py-12">
+        <div class="cartao w-full max-w-md p-6 sm:p-8">
+            <span class="grid place-items-center w-12 h-12 rounded-2xl bg-marca-100 text-marca-700" aria-hidden="true"><svg class="ico w-6 h-6"><use href="#i-cadeado"/></svg></span>
+            <h1 class="mt-4 text-2xl font-bold">Primeiro Acesso</h1>
+            <p class="mt-1 text-sm text-tinta-suave">Por segurança, troque a senha temporária que o administrador passou por uma senha só sua.</p>
 
-        <form method="POST" autocomplete="off">
-            {% csrf_token %}
-            
-            <div class="mb-4">
-                <label for="nova_senha" class="block text-gray-700 text-sm font-bold mb-2">Nova Senha</label>
-                <input 
-                    type="password" 
-                    id="nova_senha" 
-                    name="nova_senha" 
-                    required 
-                    minlength="8"
-                    autocomplete="new-password"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Mínimo de 8 caracteres"
-                >
-            </div>
+            {% if erros %}
+                <div role="alert" class="mt-5 flex items-start gap-2.5 rounded-controle border border-critico/20 bg-critico-suave px-4 py-3 text-sm font-medium text-critico-texto">
+                    <svg class="ico mt-px"><use href="#i-x"/></svg>
+                    <ul class="grid gap-1">{% for erro in erros %}<li>{{ erro }}</li>{% endfor %}</ul>
+                </div>
+            {% endif %}
 
-            <div class="mb-6">
-                <label for="confirmacao_senha" class="block text-gray-700 text-sm font-bold mb-2">Confirme a Nova Senha</label>
-                <input 
-                    type="password" 
-                    id="confirmacao_senha" 
-                    name="confirmacao_senha" 
-                    required 
-                    minlength="8"
-                    autocomplete="new-password"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Repita a nova senha"
-                >
-            </div>
-
-            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                Salvar Nova Senha e Entrar
-            </button>
-        </form>
-    </div>
-
-    {% load static %}
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register("{% static 'sw.js' %}");
-            });
-        }
-    </script>
-    <script src="{% static 'js/main.js' %}"></script>
+            <form method="POST" autocomplete="off" class="mt-6 grid gap-4">
+                {% csrf_token %}
+                <div class="campo">
+                    <label for="nova_senha" class="rotulo">Nova senha</label>
+                    <input type="password" id="nova_senha" name="nova_senha" required minlength="8" autocomplete="new-password" class="entrada">
+                    <p class="ajuda">Pelo menos 8 caracteres. Evite senhas óbvias, só números ou parecidas com seu usuário.</p>
+                </div>
+                <div class="campo">
+                    <label for="confirmacao_senha" class="rotulo">Repita a nova senha</label>
+                    <input type="password" id="confirmacao_senha" name="confirmacao_senha" required minlength="8" autocomplete="new-password" class="entrada">
+                </div>
+                <button type="submit" class="btn-primario w-full py-3">Salvar senha e entrar<svg class="ico"><use href="#i-seta"/></svg></button>
+            </form>
+        </div>
+    </main>
 </body>
 </html>

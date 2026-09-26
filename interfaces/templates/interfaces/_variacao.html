@@ -1,0 +1,7 @@
+{% if comparacao.variacao is None %}
+    <span class="variacao text-tinta-fraca">{{ sem_base|default:"Sem dados para comparar" }}</span>
+{% elif comparacao.subiu %}
+    <span class="variacao text-bom-texto"><svg class="ico ico-sm"><use href="#i-sobe"/></svg>{{ comparacao.variacao_absoluta }}% <span class="font-medium text-tinta-fraca">a mais {{ texto }}</span></span>
+{% else %}
+    <span class="variacao text-critico-texto"><svg class="ico ico-sm"><use href="#i-desce"/></svg>{{ comparacao.variacao_absoluta }}% <span class="font-medium text-tinta-fraca">a menos {{ texto }}</span></span>
+{% endif %}
