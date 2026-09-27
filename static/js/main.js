@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarMarcaDaLoja();
     inicializarAcoes();
     inicializarEstoqueDoProduto();
+    inicializarOpcoesDoProduto();
 });
 
 function inicializarFocoInputs() {
@@ -285,6 +286,34 @@ function inicializarEstoqueDoProduto(raiz = document) {
     });
 }
 
+/* Cadastro de produto: "Outra opção" copia o bloco do <template> (até o máximo); a lixeira tira a opção
+   (a última só é limpa, para sempre haver onde escrever). */
+function inicializarOpcoesDoProduto(raiz = document) {
+    raiz.querySelectorAll('[data-opcoes-produto]').forEach((bloco) => {
+        const lista = bloco.querySelector('[data-lista-opcoes]');
+        const modelo = bloco.querySelector('[data-modelo-opcao]');
+        const adicionar = bloco.querySelector('[data-adicionar-opcao]');
+        const atualizar = () => { adicionar.disabled = lista.children.length >= Number(bloco.dataset.maximo); };
+        adicionar.addEventListener('click', () => {
+            lista.append(modelo.content.firstElementChild.cloneNode(true));
+            lista.lastElementChild.querySelector('[name="opcao_nome"]').focus();
+            atualizar();
+        });
+        lista.addEventListener('click', (evento) => {
+            const botao = evento.target.closest('[data-remover-opcao]');
+            if (!botao) return;
+            const opcao = botao.closest('[data-opcao-produto]');
+            if (lista.children.length > 1) {
+                opcao.remove();
+            } else {
+                opcao.querySelectorAll('input, textarea').forEach((campo) => { campo.value = ''; });
+            }
+            atualizar();
+        });
+        atualizar();
+    });
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
@@ -299,6 +328,7 @@ if (typeof module !== 'undefined') {
         inicializarEnvioAoMudar,
         inicializarMarcaDaLoja,
         inicializarAcoes,
-        inicializarEstoqueDoProduto
+        inicializarEstoqueDoProduto,
+        inicializarOpcoesDoProduto
     };
 }

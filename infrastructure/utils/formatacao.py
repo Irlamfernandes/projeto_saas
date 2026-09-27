@@ -42,3 +42,9 @@ def item(valor, unidade, nome):
     if unidade in (Unidade.UNIDADE, '', None):
         return f"{numero(valor)}× {nome}"
     return f"{numero(valor)} {sigla(unidade)} {nome}"
+
+
+def com_opcoes(nome, opcoes):
+    """Nome do produto com o que foi escolhido nas opções: 'Camiseta (G, Azul)'."""
+    valores = ", ".join(opcao['valor'] for opcao in opcoes or ())
+    return f"{nome} ({valores})" if valores else nome

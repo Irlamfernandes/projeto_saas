@@ -2,9 +2,10 @@ from decimal import Decimal
 from django.template import Context, Template
 from django.test import SimpleTestCase
 from django.utils import translation
-from infrastructure.utils.formatacao import item, numero, quantidade
+from infrastructure.utils.formatacao import com_opcoes, item, numero, quantidade
 from interfaces.templatetags.formatacao import (
-    intensidade, moeda, moeda_absoluta, numero_simples, passo_da_quantidade, unidades_de_medida,
+    intensidade, maximo_de_opcoes, moeda, moeda_absoluta, numero_simples, passo_da_quantidade, unidades_de_medida,
+    valores_da_opcao,
 )
 
 
@@ -64,6 +65,16 @@ class QuantidadeTest(SimpleTestCase):
         self.assertEqual(item(2, None, 'Bolo'), '2× Bolo')
         self.assertEqual(item(Decimal('1.5'), 'l', 'Suco'), '1,5 L Suco')
 
+    def test_nome_com_as_opcoes_escolhidas(self):
+        self.assertEqual(com_opcoes('Camiseta', [{'nome': 'Tamanho', 'valor': 'G'}, {'nome': 'Cor', 'valor': 'Azul'}]),
+                         'Camiseta (G, Azul)')
+        self.assertEqual([com_opcoes('Bolo', vazio) for vazio in ([], None)], ['Bolo', 'Bolo'])
+
+    def test_opcoes_no_formulario_do_produto(self):
+        opcao = {'nome': 'Tamanho', 'valores': [{'nome': 'P', 'acrescimo': '0.00'}, {'nome': 'G', 'acrescimo': '1234.50'}]}
+        self.assertEqual(valores_da_opcao(opcao), 'P\nG + 1234,50')
+        self.assertEqual(maximo_de_opcoes(), 5)
+
     def test_filtros_do_formulario_de_estoque(self):
         self.assertEqual(numero_simples(Decimal('2.500')), '2.5')
         self.assertEqual(numero_simples(None), '0')
@@ -74,6 +85,9 @@ class QuantidadeTest(SimpleTestCase):
     def test_filtros_de_quantidade_no_template(self):
         from types import SimpleNamespace
         item_de_venda = SimpleNamespace(quantidade=Decimal('0.250'), produto=SimpleNamespace(unidade='kg', nome='Queijo'))
-        texto = Template("{% load formatacao %}{{ q|quantidade:'kg' }} | {{ item|descricao_do_item }}").render(
-            Context({'q': Decimal('1.500'), 'item': item_de_venda}))
-        self.assertEqual(texto, '1,5 kg | 0,25 kg Queijo')
+        com_opcoes_escolhidas = SimpleNamespace(quantidade=Decimal('1'), produto=SimpleNamespace(unidade='un', nome='Bolo'),
+                                                opcoes=[{'nome': 'Sabor', 'valor': 'Coco'}])
+        texto = Template(
+            "{% load formatacao %}{{ q|quantidade:'kg' }} | {{ item|descricao_do_item }} | {{ outro|descricao_do_item }}",
+        ).render(Context({'q': Decimal('1.500'), 'item': item_de_venda, 'outro': com_opcoes_escolhidas}))
+        self.assertEqual(texto, '1,5 kg | 0,25 kg Queijo | 1× Bolo (Coco)')

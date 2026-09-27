@@ -1,3 +1,4 @@
+import json
 from decimal import Decimal, InvalidOperation
 from django import forms
 from django.core.exceptions import ValidationError
@@ -9,6 +10,16 @@ QUANTIDADE_MAXIMA = Decimal('1000000')
 ERRO_ITEM = "Um dos itens da venda é inválido. Remova-o e adicione de novo."
 
 
+def _escolhas(texto):
+    """Opções escolhidas no item, em JSON: {"Tamanho": "G"}. Vazio = produto sem opções."""
+    if not texto.strip():
+        return {}
+    escolhas = json.loads(texto)
+    if not isinstance(escolhas, dict) or not all(isinstance(v, str) for v in escolhas.values()):
+        raise ValueError
+    return escolhas
+
+
 def _quantidade(texto):
     """Aceita vírgula ou ponto (2,5 ou 2.5). As casas permitidas dependem da unidade e são conferidas na venda."""
     quantidade = Decimal(texto.strip().replace(',', '.'))
@@ -18,7 +29,8 @@ def _quantidade(texto):
 
 
 class _VendaForm(forms.Form):
-    """Cliente vazio = venda de balcão. Os itens chegam em listas paralelas: item_produto[] e item_quantidade[]."""
+    """Cliente vazio = venda de balcão. Os itens chegam em listas paralelas: item_produto[], item_quantidade[]
+    e item_opcoes[] (esta pode faltar: sem opções em nenhum item)."""
 
     cliente = forms.ModelChoiceField(
         queryset=Cliente.objects.none(),
@@ -55,15 +67,19 @@ class _VendaForm(forms.Form):
     def _ler_itens(self):
         produtos = self.data.getlist('item_produto')
         quantidades = self.data.getlist('item_quantidade')
+        opcoes = self.data.getlist('item_opcoes') or [''] * len(produtos)
         if not produtos:
             raise ValidationError("Adicione pelo menos um produto à venda.")
-        if len(produtos) != len(quantidades) or len(produtos) > MAXIMO_DE_ITENS:
+        if not len(produtos) == len(quantidades) == len(opcoes) or len(produtos) > MAXIMO_DE_ITENS:
             raise ValidationError(ERRO_ITEM)
         try:
-            itens = [(int(produto), _quantidade(quantidade)) for produto, quantidade in zip(produtos, quantidades)]
+            itens = [
+                (int(produto), _quantidade(quantidade), _escolhas(escolhas))
+                for produto, quantidade, escolhas in zip(produtos, quantidades, opcoes)
+            ]
         except (ValueError, InvalidOperation):
             raise ValidationError(ERRO_ITEM) from None
-        if any(quantidade <= 0 for _, quantidade in itens):
+        if any(quantidade <= 0 for _, quantidade, _escolhas in itens):
             raise ValidationError("A quantidade de cada produto deve ser maior que zero.")
         return itens
 

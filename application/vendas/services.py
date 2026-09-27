@@ -6,12 +6,14 @@ O que ficou na caderneta pode ter data para pagar (vencimentos); sem data, fica 
 """
 from collections import Counter
 from decimal import Decimal
+from typing import NamedTuple
 from django.db import transaction
 from django.db.models import F
 from application.auditoria.services import registrar_alteracao
 from application.vendas.exceptions import (
     EstoqueInsuficiente, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
+from application.vendas.opcoes import chave, escolhas_do_item, escolher
 from application.vendas.pendencias import a_prazo
 from application.vendas.selectors import produtos_da_loja
 from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Parcela, Produto, Venda
@@ -23,7 +25,7 @@ from infrastructure.utils.formatacao import reais
 @transaction.atomic
 def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), forma_pagamento='',
                     observacoes='', vencimentos=(), usuario=None):
-    """`itens`: pares (id do produto, quantidade). A loja vem do cliente; no balcão, da loja informada."""
+    """`itens`: (id do produto, quantidade[, {opção: valor}]). A loja vem do cliente; no balcão, da loja informada."""
     loja = cliente.loja if cliente else loja
     if loja is None:
         raise VendaSemLoja()
@@ -50,9 +52,10 @@ def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), 
 
 @transaction.atomic
 def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes='', vencimentos=(), usuario=None):
-    """Troca itens, cliente e observações. Produtos que já estavam na venda mantêm o preço e o custo da época."""
+    """Troca itens, cliente e observações. Itens que já estavam na venda (mesmo produto e mesmas opções)
+    mantêm o preço e o custo da época."""
     antes = fotografar_venda(venda)
-    da_epoca = {item.produto_id: (item.preco_unitario, item.custo_unitario) for item in venda.itens.all()}
+    da_epoca = {(item.produto_id, chave(escolhas_do_item(item.opcoes))): item for item in venda.itens.all()}
     _devolver_estoque(venda)
     venda.itens.all().delete()
 
@@ -102,7 +105,7 @@ def fotografar_venda(venda):
         'observacoes': venda.observacoes,
         'itens': [
             {
-                'produto': item.produto.nome, 'quantidade': str(item.quantidade.normalize()),
+                'produto': item.nome, 'quantidade': str(item.quantidade.normalize()),
                 'unidade': item.produto.unidade, 'preco_unitario': str(item.preco_unitario),
             }
             for item in venda.itens.select_related('produto')
@@ -112,35 +115,63 @@ def fotografar_venda(venda):
     }
 
 
-def _reservar_estoque(loja, itens, da_epoca=None):
-    """Trava os produtos, confere e baixa o estoque. Retorna [(produto, quantidade, preço, custo)].
+class Linha(NamedTuple):
+    produto: Produto
+    quantidade: Decimal
+    preco: Decimal
+    custo: Decimal
+    opcoes: list
 
-    `da_epoca`: {id do produto: (preço, custo)} dos itens que já estavam na venda em edição.
+
+def _reservar_estoque(loja, itens, da_epoca=None):
+    """Trava os produtos, confere e baixa o estoque. Retorna uma Linha por produto + escolha de opções.
+
+    `itens`: (id do produto, quantidade) ou (id do produto, quantidade, {opção: valor}); iguais são somados.
+    `da_epoca`: {(id do produto, chave das escolhas): item} dos itens que já estavam na venda em edição —
+    mantêm o preço, o custo e as opções da época, mesmo que o produto tenha mudado.
 
     Produto sem controle de estoque é vendido sem conferir nem baixar a quantidade.
     """
-    quantidades = Counter()
-    for produto_id, quantidade in itens:
-        quantidades[produto_id] += quantidade
-    if not quantidades:
+    pedidos = _juntar_iguais(itens)
+    if not pedidos:
         raise VendaSemItens()
 
+    ids = {produto_id for produto_id, _ in pedidos}
     # Ordem fixa ao travar: duas vendas simultâneas não se bloqueiam mutuamente.
-    produtos = list(produtos_da_loja(loja).select_for_update().filter(pk__in=quantidades).order_by('pk'))
-    if len(produtos) != len(quantidades):
+    travados = produtos_da_loja(loja).select_for_update().filter(pk__in=ids).order_by('pk')
+    produtos = {produto.pk: produto for produto in travados}
+    if len(produtos) != len(ids):
         raise ProdutoNaoEncontrado()
 
     da_epoca = da_epoca or {}
-    linhas = []
-    for produto in produtos:
-        quantidade = quantidades[produto.pk]
-        if not quantidade_aceita(quantidade, produto.unidade):
-            raise QuantidadeFracionada(produto)
+    linhas = [
+        _linha(produtos[produto_id], quantidade, escolhas, da_epoca.get((produto_id, escolhas)))
+        for (produto_id, escolhas), quantidade in pedidos.items()
+    ]
+    quantidades = Counter()
+    for linha in linhas:
+        quantidades[linha.produto.pk] += linha.quantidade
+    for produto in produtos.values():
         if produto.controla_estoque:
-            _baixar_estoque(produto, quantidade)
-        preco, custo = da_epoca.get(produto.pk, (produto.preco_venda, produto.preco_custo))
-        linhas.append((produto, quantidade, preco, custo))
+            _baixar_estoque(produto, quantidades[produto.pk])
     return linhas
+
+
+def _juntar_iguais(itens):
+    """{(id do produto, chave das escolhas): quantidade somada}."""
+    pedidos = Counter()
+    for produto_id, quantidade, *escolhas in itens:
+        pedidos[(produto_id, chave(escolhas[0] if escolhas else {}))] += quantidade
+    return pedidos
+
+
+def _linha(produto, quantidade, escolhas, anterior):
+    if not quantidade_aceita(quantidade, produto.unidade):
+        raise QuantidadeFracionada(produto)
+    if anterior:
+        return Linha(produto, quantidade, anterior.preco_unitario, anterior.custo_unitario, anterior.opcoes)
+    opcoes, acrescimo = escolher(produto, dict(escolhas))
+    return Linha(produto, quantidade, produto.preco_venda + acrescimo, produto.preco_custo, opcoes)
 
 
 def _baixar_estoque(produto, quantidade):
@@ -158,9 +189,10 @@ def _devolver_estoque(venda):
 
 
 def _criar_itens(venda, linhas):
-    for produto, quantidade, preco, custo in linhas:
+    for linha in linhas:
         ItemVenda.objects.create(
-            venda=venda, produto=produto, quantidade=quantidade, preco_unitario=preco, custo_unitario=custo,
+            venda=venda, produto=linha.produto, quantidade=linha.quantidade, preco_unitario=linha.preco,
+            custo_unitario=linha.custo, opcoes=linha.opcoes,
         )
 
 
@@ -182,7 +214,7 @@ def _definir_vencimentos(venda, vencimentos):
 
 
 def _total(linhas):
-    return sum((subtotal(quantidade, preco) for _, quantidade, preco, _custo in linhas), Decimal('0'))
+    return sum((subtotal(linha.quantidade, linha.preco) for linha in linhas), Decimal('0'))
 
 
 def _para_quem(venda):

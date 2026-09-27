@@ -119,6 +119,13 @@ class PdfGeneratorTest(TestCase):
 
         self.assertEqual(linhas_de_compras(self.cliente)[0][1], "2× Caderno 10 Matérias · vence 15/10/2026")
 
+    def test_item_com_opcoes_mostra_a_escolha(self):
+        venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal('25.00'))
+        ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=1, preco_unitario=Decimal('25.00'),
+                                 opcoes=[{'nome': 'Capa', 'valor': 'Azul'}])
+
+        self.assertEqual(linhas_de_compras(self.cliente)[0][1], "1× Caderno 10 Matérias (Azul)")
+
     def test_compra_parcelada_mostra_todas_as_datas(self):
         venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal('50.00'))
         ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=2, preco_unitario=Decimal('25.00'))

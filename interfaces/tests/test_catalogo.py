@@ -15,6 +15,7 @@ class CatalogoTest(TestCase):
     def test_catalogo_com_estoque_reservado_devolvido(self):
         self.assertEqual(catalogo_para_venda([self.pao]), [{
             'id': self.pao.pk, 'nome': "Pão", 'codigo': "P1", 'preco': '10.00', 'estoque': 3, 'unidade': 'un.', 'casas': 0,
+            'opcoes': [],
         }])
         self.assertEqual(catalogo_para_venda([self.pao], {self.pao.pk: 2})[0]['estoque'], 5)
 
@@ -28,4 +29,12 @@ class CatalogoTest(TestCase):
         self.assertIsNone(sem_controle['estoque'])
 
     def test_itens_da_venda_com_preco_da_epoca(self):
-        self.assertEqual(itens_da_venda(self.venda), [{'id': self.pao.pk, 'quantidade': 2, 'preco': '9.00'}])
+        self.assertEqual(itens_da_venda(self.venda), [{'id': self.pao.pk, 'quantidade': 2, 'preco': '9.00', 'opcoes': {}}])
+
+    def test_opcoes_do_produto_e_escolhas_do_item(self):
+        opcoes = [{'nome': 'Tamanho', 'valores': [{'nome': 'G', 'acrescimo': '5.00'}]}]
+        self.pao.opcoes = opcoes
+        ItemVenda.objects.filter(venda=self.venda).update(opcoes=[{'nome': 'Tamanho', 'valor': 'G'}])
+
+        self.assertEqual(catalogo_para_venda([self.pao])[0]['opcoes'], opcoes)
+        self.assertEqual(itens_da_venda(self.venda)[0]['opcoes'], {'Tamanho': 'G'})

@@ -1,15 +1,20 @@
+import re
 from decimal import Decimal
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from application.produtos.selectors import ORDEM_PADRAO, ORDENACOES_PERMITIDAS
 from infrastructure.models import Produto, Unidade
-from infrastructure.models.produto import MILESIMO, quantidade_aceita
+from infrastructure.models.produto import MAXIMO_DE_OPCOES, MILESIMO, quantidade_aceita
 
 EXTENSOES_DE_IMAGEM = ['jpg', 'jpeg', 'png', 'webp']
 # Limite do arquivo enviado. O que fica guardado é bem menor: a foto é reduzida e regravada em WebP.
 TAMANHO_MAXIMO_MB = 15
 TAMANHO_MAXIMO_IMAGEM = TAMANHO_MAXIMO_MB * 1024 * 1024
+MAXIMO_DE_VALORES = 30
+TAMANHO_DO_NOME_NA_OPCAO = 40
+# "G + 5,00" ou "G +R$ 5": o valor G custa R$ 5 a mais.
+_VALOR_COM_ACRESCIMO = re.compile(r'^(?P<nome>.*?)\s*\+\s*(?:R\$\s*)?(?P<acrescimo>\d{1,7}(?:[.,]\d{1,2})?)$')
 
 
 def validar_tamanho_da_imagem(arquivo):
@@ -40,6 +45,55 @@ class ImagensField(forms.ImageField):
     def clean(self, data, initial=None):
         arquivos = data if isinstance(data, (list, tuple)) else [data]
         return [super(ImagensField, self).clean(arquivo, initial) for arquivo in arquivos if arquivo]
+
+
+def ler_opcoes(nomes, textos):
+    """Campos repetidos opcao_nome e opcao_valores (um valor por linha) -> opções do produto. Blocos vazios são ignorados."""
+    opcoes = []
+    for nome, texto in zip(nomes, textos):
+        nome = nome.strip()
+        valores = [_ler_valor(linha.strip()) for linha in texto.splitlines() if linha.strip()]
+        if not nome and not valores:
+            continue
+        if not nome:
+            raise ValidationError("Dê um nome para cada opção (ex.: Tamanho, Sabor, Cor).")
+        if not valores:
+            raise ValidationError(f"Escreva os valores da opção \"{nome}\", um por linha.")
+        opcoes.append({'nome': nome, 'valores': valores})
+    _conferir_opcoes(opcoes)
+    return opcoes
+
+
+def _ler_valor(linha):
+    achou = _VALOR_COM_ACRESCIMO.match(linha)
+    if not achou or not achou['nome']:
+        return {'nome': linha, 'acrescimo': '0.00'}
+    acrescimo = Decimal(achou['acrescimo'].replace(',', '.')).quantize(Decimal('0.01'))
+    return {'nome': achou['nome'], 'acrescimo': str(acrescimo)}
+
+
+def _conferir_opcoes(opcoes):
+    if len(opcoes) > MAXIMO_DE_OPCOES:
+        raise ValidationError(f"Cada produto pode ter até {MAXIMO_DE_OPCOES} opções.")
+    _sem_repetir([opcao['nome'] for opcao in opcoes], "Há duas opções chamadas \"{}\".")
+    for opcao in opcoes:
+        nomes = [valor['nome'] for valor in opcao['valores']]
+        if len(nomes) > MAXIMO_DE_VALORES:
+            raise ValidationError(f"A opção \"{opcao['nome']}\" pode ter até {MAXIMO_DE_VALORES} valores.")
+        _sem_repetir(nomes, f"O valor \"{{}}\" aparece duas vezes em \"{opcao['nome']}\".")
+        longo = next((texto for texto in [opcao['nome'], *nomes] if len(texto) > TAMANHO_DO_NOME_NA_OPCAO), None)
+        if longo:
+            raise ValidationError(
+                f"\"{longo[:20]}…\" é longo demais: use até {TAMANHO_DO_NOME_NA_OPCAO} letras em cada opção e valor.",
+            )
+
+
+def _sem_repetir(nomes, mensagem):
+    vistos = set()
+    for nome in nomes:
+        if nome.casefold() in vistos:
+            raise ValidationError(mensagem.format(nome))
+        vistos.add(nome.casefold())
 
 
 class ProdutoForm(forms.ModelForm):
@@ -102,6 +156,10 @@ class ProdutoForm(forms.ModelForm):
             if campo not in self.errors and dados.get(campo) in (None, ''):
                 dados[campo] = zero
         self.instance.controla_estoque = not dados.get('sem_controle_de_estoque')
+        try:
+            self.instance.opcoes = ler_opcoes(self.data.getlist('opcao_nome'), self.data.getlist('opcao_valores'))
+        except ValidationError as erro:
+            self.add_error(None, erro)
         if not self.instance.controla_estoque:
             dados['quantidade_estoque'] = Decimal('0')
         if 'quantidade_estoque' in dados:
