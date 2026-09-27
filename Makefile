@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test css
+.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test css traducoes
 
 # Sobe os containers em background fazendo build
 up:
@@ -48,3 +48,7 @@ test:
 # Recompila o Tailwind (static/css/output.css é versionado: rode após mudar classes nos templates)
 css:
 	npm run build:css
+
+# Compila as traduções (locale/pt_BR/.../django.po -> .mo, versionado). Requer requirements-dev.
+traducoes:
+	pybabel compile -D django -d locale

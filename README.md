@@ -163,6 +163,20 @@ Quem desenvolveu o sistema aparece sem atrapalhar a loja. Os contatos ficam só 
 - **Relatórios em PDF:** rodapé com data, página e "Sistema CorsariosCode". O extrato do cliente **não** leva
   a marca: é um documento da loja para o cliente dela.
 
+## Admin
+
+O admin usa o tema [django-unfold](https://unfoldadmin.com/) com as cores Petróleo (`UNFOLD` em `config/settings.py`).
+As regras e permissões são as mesmas de antes; mudou o visual.
+
+- **Painel** (`infrastructure/admin/painel.py`, só para o superusuário): lojas ativas e em teste, vencendo em
+  7 dias, vencidas, recebido no mês; gráficos de recebido e de lojas novas por mês e da situação dos planos;
+  listas de lojas que vencem logo e das últimas cobranças.
+- **Menu lateral** em grupos (Lojas, Assinaturas, Auditoria), em `infrastructure/admin/tema.py`.
+- **Listas** com pílulas coloridas (situação do plano, tipo de acesso, senha a trocar, status da cobrança).
+- **Resetar senha** do usuário fica num formulário próprio abaixo da edição (`admin/usuario_resetar_senha.html`).
+- **Tradução:** o Unfold não vem em português; as frases dele estão em `locale/pt_BR/LC_MESSAGES/django.po`.
+  Depois de editar, rode `make traducoes` (usa o Babel do `requirements-dev.txt`) e versione o `.mo`.
+
 ## CSS (Tailwind)
 
 `static/css/output.css` é **versionado** e servido direto em produção. Sempre que adicionar ou

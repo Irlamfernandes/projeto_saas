@@ -6,17 +6,39 @@ from django.core.exceptions import PermissionDenied
 from django.urls import path
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.html import format_html
+from unfold.admin import ModelAdmin
+from unfold.decorators import display
 from infrastructure.models.usuario_model import UsuarioModel
 
 @admin.register(UsuarioModel)
-class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'loja', 'deve_trocar_senha', 'is_staff', 'is_superuser')
-    list_filter = ('loja', 'deve_trocar_senha', 'is_staff', 'is_superuser')
-    search_fields = ('username', 'email')
-    
-    fields = ('username', 'loja', 'deve_trocar_senha', 'is_active', 'is_staff', 'is_superuser')
-    
-    change_form_template = "admin/usuario_change_form.html"
+class CustomUserAdmin(ModelAdmin):
+    list_display = ('username', 'loja', 'tipo_de_acesso', 'senha', 'is_active', 'last_login')
+    list_filter = ('loja', 'deve_trocar_senha', 'is_active', 'is_staff', 'is_superuser')
+    search_fields = ('username', 'email', 'loja__nome_loja')
+    list_select_related = ('loja',)
+
+    fieldsets = (
+        ("Acesso", {'fields': ('username', 'loja', 'is_active'),
+                    'description': "Ao criar o usuário, o sistema gera uma senha temporária e mostra aqui em cima."}),
+        ("Senha", {'fields': ('deve_trocar_senha',)}),
+        ("Permissões", {'fields': ('is_staff', 'is_superuser'),
+                        'description': "Equipe acessa este admin; superusuário acessa tudo, de todas as lojas."}),
+    )
+
+    # Botão de resetar senha, num formulário próprio abaixo do formulário de edição.
+    change_form_outer_after_template = "admin/usuario_resetar_senha.html"
+
+    @display(description="Acesso", label={'superusuario': 'danger', 'equipe': 'info', 'loja': 'success'})
+    def tipo_de_acesso(self, usuario):
+        if usuario.is_superuser:
+            return 'superusuario', "Superusuário"
+        if usuario.is_staff:
+            return 'equipe', "Equipe"
+        return 'loja', "Loja"
+
+    @display(description="Senha", label={'trocar': 'warning', 'ok': None})
+    def senha(self, usuario):
+        return ('trocar', "Precisa trocar") if usuario.deve_trocar_senha else ('ok', "Definida")
 
     def get_urls(self):
         urls = super().get_urls()

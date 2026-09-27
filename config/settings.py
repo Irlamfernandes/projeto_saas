@@ -33,6 +33,7 @@ for host in ALLOWED_HOSTS:
 
 # Application definition
 INSTALLED_APPS = [
+    'unfold',  # tema do admin: precisa vir antes do django.contrib.admin
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,6 +59,8 @@ MIDDLEWARE = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ROOT_URLCONF = 'config.urls'
 LOGIN_URL = 'login'
+# Só o login do admin usa este destino (quando não há ?next=). O login do sistema tem o próprio redirecionamento.
+LOGIN_REDIRECT_URL = 'admin:index'
 LOGOUT_REDIRECT_URL = '/login/'
 
 # Templates (Mantendo o caminho correto das suas interfaces)
@@ -128,6 +131,8 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Sao_Paulo'
 USE_I18N = True
+# Traduções próprias (o tema do admin não vem em português): locale/pt_BR. Compile com `make traducoes`.
+LOCALE_PATHS = [BASE_DIR / 'locale']
 USE_TZ = True
 
 # Arquivos Estáticos
@@ -143,3 +148,29 @@ SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
 
 # Pagamento do plano (Pix pelo Mercado Pago). Token TEST-... gera Pix de teste, que não pode ser pago.
 MERCADO_PAGO_ACCESS_TOKEN = os.environ.get('MERCADO_PAGO_ACCESS_TOKEN', '')
+
+# Tema do admin (django-unfold): cores Petróleo, menu organizado e painel com gráficos.
+# Menu, favicon e painel ficam em infrastructure/admin/tema.py e painel.py.
+UNFOLD = {
+    'SITE_TITLE': 'Gestão da Loja',
+    'SITE_HEADER': 'Gestão da Loja',
+    'SITE_SUBHEADER': 'Administração · CorsariosCode',
+    'SITE_URL': '/dashboard/',
+    'SITE_SYMBOL': 'storefront',
+    'SITE_FAVICONS': 'infrastructure.admin.tema.favicons',
+    'SHOW_VIEW_ON_SITE': False,
+    'SHOW_HISTORY': True,
+    'DASHBOARD_CALLBACK': 'infrastructure.admin.painel.painel_do_admin',
+    'COLORS': {
+        'primary': {
+            '50': '#f0f9f8', '100': '#e6f4f2', '200': '#c4e6e1', '300': '#8fd0c7', '400': '#2fb3a5',
+            '500': '#0d9488', '600': '#0f766e', '700': '#115e59', '800': '#134e4a', '900': '#0f3d3a',
+            '950': '#042f2e',
+        },
+    },
+    'SIDEBAR': {
+        'show_search': True,
+        'show_all_applications': False,
+        'navigation': 'infrastructure.admin.tema.menu_lateral',
+    },
+}

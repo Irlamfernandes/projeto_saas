@@ -1,0 +1,322 @@
+# Tradução para português do tema do admin (django-unfold), que não vem traduzido.
+# Depois de editar, compile com: make traducoes
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt_BR\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "%(class_name)s %(instance)s"
+msgstr "%(class_name)s %(instance)s"
+
+msgid "Add row"
+msgstr "Adicionar linha"
+
+msgid "After you've created a user, you’ll be able to edit more user options."
+msgstr "Depois de criar o usuário, você poderá editar as demais opções."
+
+msgid "All applications"
+msgstr "Todos os módulos"
+
+msgid "Apply Filters"
+msgstr "Aplicar filtros"
+
+msgid "Available shortcuts"
+msgstr "Atalhos disponíveis"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "Changelist shortcuts"
+msgstr "Atalhos da lista"
+
+msgid "Choose file to upload"
+msgstr "Escolher arquivo"
+
+msgid "Click to cancel"
+msgstr "Clique para cancelar"
+
+msgid "Click to download"
+msgstr "Clique para baixar"
+
+msgid "Command tool shortcuts"
+msgstr "Atalhos da busca rápida"
+
+msgid "Create new record"
+msgstr "Criar novo registro"
+
+msgid "Dark"
+msgstr "Escuro"
+
+msgid "Dataset not found. No action performed."
+msgstr "Conjunto de dados não encontrado. Nada foi feito."
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Date from"
+msgstr "Data inicial"
+
+msgid "Date to"
+msgstr "Data final"
+
+msgid "False"
+msgstr "Não"
+
+msgid "Filters"
+msgstr "Filtros"
+
+msgid "Forgotten your password or username?"
+msgstr "Esqueceu sua senha ou usuário?"
+
+msgid "From"
+msgstr "De"
+
+msgid "General"
+msgstr "Geral"
+
+msgid "Global shortcuts"
+msgstr "Atalhos gerais"
+
+msgid "Go back"
+msgstr "Voltar"
+
+msgid "Image preview"
+msgstr "Prévia da imagem"
+
+msgid "Light"
+msgstr "Claro"
+
+msgid "Navigate"
+msgstr "Navegar"
+
+msgid "Next"
+msgstr "Próximo"
+
+msgid "No data"
+msgstr "Sem dados"
+
+msgid "No results found"
+msgstr "Nenhum resultado encontrado"
+
+msgid "Nothing matched your search"
+msgstr "Nada corresponde à sua busca"
+
+msgid "Open command tool"
+msgstr "Abrir busca rápida"
+
+msgid "Open selection"
+msgstr "Abrir seleção"
+
+msgid "Open selection in new tab"
+msgstr "Abrir seleção em nova aba"
+
+msgid "Open shortcuts list"
+msgstr "Abrir lista de atalhos"
+
+msgid "Previous"
+msgstr "Anterior"
+
+msgid "Recent searches"
+msgstr "Buscas recentes"
+
+msgid "Record picture"
+msgstr "Imagem do registro"
+
+msgid "Reset filters"
+msgstr "Limpar filtros"
+
+msgid "Return to site"
+msgstr "Voltar ao sistema"
+
+msgid "Run"
+msgstr "Executar"
+
+msgid "Search apps and models..."
+msgstr "Buscar no menu..."
+
+msgid "Select"
+msgstr "Selecionar"
+
+msgid "Select action"
+msgstr "Escolher ação"
+
+msgid "Select action to run"
+msgstr "Escolha a ação a executar"
+
+msgid "Select currency"
+msgstr "Escolher moeda"
+
+msgid "Select format"
+msgstr "Escolher formato"
+
+msgid "Select record"
+msgstr "Escolher registro"
+
+msgid "Select value"
+msgstr "Escolher valor"
+
+msgid "Submit"
+msgstr "Enviar"
+
+msgid "System"
+msgstr "Sistema"
+
+msgid "This item will be deleted."
+msgstr "Este item será apagado."
+
+msgid "This page yielded into no results. Create a new item or reset your filters."
+msgstr "Nada encontrado. Crie um novo item ou limpe os filtros."
+
+msgid "To"
+msgstr "Até"
+
+msgid "Toggle dark/light mode"
+msgstr "Alternar modo claro/escuro"
+
+msgid "Toggle filter"
+msgstr "Mostrar/ocultar filtros"
+
+msgid "Toggle password visibility"
+msgstr "Mostrar/ocultar senha"
+
+msgid "Toggle sidebar"
+msgstr "Mostrar/ocultar menu"
+
+msgid "True"
+msgstr "Sim"
+
+msgid "Type to search"
+msgstr "Digite para buscar"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Welcome"
+msgstr "Bem-vindo"
+
+msgid "You can not create nested object without parent"
+msgstr "Não é possível criar um item interno sem o item principal"
+
+msgid "You have been successfully logged out from the administration"
+msgstr "Você saiu da administração"
+
+msgid "Select all %(total_count)s %(module_name)s"
+msgstr "Selecionar todos os %(total_count)s %(module_name)s"
+
+msgid ""
+"You are authenticated as %(username)s, but are not authorized to access this "
+"page. Would you like to login to a different account?"
+msgstr ""
+"Você está conectado como %(username)s, mas não tem permissão para acessar "
+"esta página. Quer entrar com outra conta?"
+
+msgid " By %(filter_title)s "
+msgstr " Por %(filter_title)s "
+
+msgid ""
+"Deleting the selected %(objects_name)s would result in deleting related "
+"objects, but your account doesn't have permission to delete the following "
+"types of objects:"
+msgstr ""
+"Apagar os %(objects_name)s selecionados apagaria itens relacionados, mas sua "
+"conta não tem permissão para apagar estes tipos de item:"
+
+msgid ""
+"Deleting the selected %(objects_name)s would require deleting the following "
+"protected related objects:"
+msgstr ""
+"Apagar os %(objects_name)s selecionados exigiria apagar estes itens "
+"relacionados protegidos:"
+
+msgid ""
+"Are you sure you want to delete the selected %(objects_name)s? All of the "
+"following objects and their related items will be deleted:"
+msgstr ""
+"Tem certeza de que quer apagar os %(objects_name)s selecionados? Todos estes "
+"itens e os relacionados a eles serão apagados:"
+
+msgid "Models in the %(name)s application"
+msgstr "Cadastros do módulo %(name)s"
+
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
+"related objects, but your account doesn't have permission to delete the "
+"following types of objects:"
+msgstr ""
+"Apagar %(object_name)s '%(escaped_object)s' apagaria itens relacionados, mas "
+"sua conta não tem permissão para apagar estes tipos de item:"
+
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
+msgstr ""
+"Apagar %(object_name)s '%(escaped_object)s' exigiria apagar estes itens "
+"relacionados protegidos:"
+
+msgid ""
+"Are you sure you want to delete the %(object_name)s \"%(escaped_object)s\"? "
+"All of the following related items will be deleted:"
+msgstr ""
+"Tem certeza de que quer apagar %(object_name)s \"%(escaped_object)s\"? Todos "
+"estes itens relacionados serão apagados:"
+
+msgid "entry"
+msgid_plural "entries"
+msgstr[0] "registro"
+msgstr[1] "registros"
+
+msgid "Enter a new password for the user <strong>%(username)s</strong>."
+msgstr "Digite uma nova senha para o usuário <strong>%(username)s</strong>."
+
+msgid "%(counter)s result"
+msgid_plural "%(counter)s results"
+msgstr[0] "%(counter)s resultado"
+msgstr[1] "%(counter)s resultados"
+
+msgid "%(full_result_count)s total"
+msgstr "%(full_result_count)s no total"
+
+msgid "Add %(name)s"
+msgstr "Adicionar %(name)s"
+
+msgid ""
+"\n"
+"            Found <span class=\"font-medium text-important\">%(counter)s</span> "
+"result in %(time)s seconds\n"
+"        "
+msgid_plural ""
+"\n"
+"            Found <span class=\"font-medium text-important\">%(counter)s</span> "
+"results in %(time)s seconds\n"
+"        "
+msgstr[0] ""
+"\n"
+"            <span class=\"font-medium text-important\">%(counter)s</span> "
+"resultado em %(time)s segundos\n"
+"        "
+msgstr[1] ""
+"\n"
+"            <span class=\"font-medium text-important\">%(counter)s</span> "
+"resultados em %(time)s segundos\n"
+"        "
+
+msgid "Sorting priority: %(priority_number)s"
+msgstr "Prioridade de ordenação: %(priority_number)s"
+
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Corrija o erro abaixo."
+msgstr[1] "Corrija os erros abaixo."
+
+msgid "Change selected %(model)s"
+msgstr "Alterar %(model)s selecionado"
+
+msgid "Add another %(model)s"
+msgstr "Adicionar outro %(model)s"
+
+msgid "View selected %(model)s"
+msgstr "Ver %(model)s selecionado"
+
+msgid "Delete selected %(model)s"
+msgstr "Apagar %(model)s selecionado"

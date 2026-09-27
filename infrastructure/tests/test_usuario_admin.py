@@ -51,11 +51,13 @@ class UsuarioAdminTest(TestCase):
     # ---------------------------------------------------------
     def test_admin_configuration(self):
         """Verifica se as configurações visuais do Admin estão corretas."""
-        self.assertEqual(self.user_admin.list_display, ('username', 'email', 'loja', 'deve_trocar_senha', 'is_staff', 'is_superuser'))
-        self.assertEqual(self.user_admin.list_filter, ('loja', 'deve_trocar_senha', 'is_staff', 'is_superuser'))
-        self.assertEqual(self.user_admin.search_fields, ('username', 'email'))
-        self.assertEqual(self.user_admin.fields, ('username', 'loja', 'deve_trocar_senha', 'is_active', 'is_staff', 'is_superuser'))
-        self.assertEqual(self.user_admin.change_form_template, "admin/usuario_change_form.html")
+        self.assertEqual(self.user_admin.list_display, ('username', 'loja', 'tipo_de_acesso', 'senha', 'is_active', 'last_login'))
+        self.assertEqual(self.user_admin.list_filter, ('loja', 'deve_trocar_senha', 'is_active', 'is_staff', 'is_superuser'))
+        self.assertEqual(self.user_admin.search_fields, ('username', 'email', 'loja__nome_loja'))
+        # Os mesmos campos editáveis de antes, agora separados em seções
+        campos = [campo for _, opcoes in self.user_admin.fieldsets for campo in opcoes['fields']]
+        self.assertEqual(sorted(campos), sorted(('username', 'loja', 'deve_trocar_senha', 'is_active', 'is_staff', 'is_superuser')))
+        self.assertEqual(self.user_admin.change_form_outer_after_template, "admin/usuario_resetar_senha.html")
 
     def test_get_urls_contains_reset_password(self):
         """Verifica se a URL customizada de reset de senha foi registrada."""

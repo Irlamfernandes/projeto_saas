@@ -1,0 +1,58 @@
+{% extends 'admin/base.html' %}
+{% load i18n unfold %}
+
+{% block title %}Painel | {{ site_title }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block content %}
+{% if painel %}
+<div class="flex flex-col gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {% for cartao in painel.cartoes %}
+            {% component "unfold/components/card.html" with href=cartao.link %}
+                {% component "unfold/components/text.html" %}{{ cartao.titulo }}{% endcomponent %}
+                {% component "unfold/components/title.html" with class="mt-1" %}{{ cartao.valor }}{% endcomponent %}
+                {% component "unfold/components/text.html" with class="text-xs text-subtle mt-1" %}{{ cartao.detalhe }}{% endcomponent %}
+            {% endcomponent %}
+        {% endfor %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {% component "unfold/components/card.html" with title="Recebido por mês" description="Planos pagos nos últimos 6 meses" class="lg:col-span-2" %}
+            {% component "unfold/components/chart/bar.html" with data=painel.grafico_recebido height=240 %}{% endcomponent %}
+        {% endcomponent %}
+        {% component "unfold/components/card.html" with title="Situação dos planos" description="Lojas ativas" %}
+            {% component "unfold/components/chart/bar.html" with data=painel.grafico_situacao height=240 %}{% endcomponent %}
+        {% endcomponent %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {% component "unfold/components/card.html" with title="Lojas novas por mês" description="Cadastros nos últimos 6 meses" %}
+            {% component "unfold/components/chart/bar.html" with data=painel.grafico_lojas_novas height=240 %}{% endcomponent %}
+        {% endcomponent %}
+        {% component "unfold/components/card.html" with title="Vencem nos próximos 7 dias" description="Bom momento para lembrar de renovar" %}
+            {% if painel.vencendo.rows %}
+                {% component "unfold/components/table.html" with table=painel.vencendo card_included=1 %}{% endcomponent %}
+            {% else %}
+                {% component "unfold/components/text.html" with class="text-subtle" %}Nenhuma loja vence nos próximos dias.{% endcomponent %}
+            {% endif %}
+        {% endcomponent %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-4">
+        {% component "unfold/components/card.html" with title="Últimas cobranças" description="Pix gerados para renovar planos" %}
+            {% if painel.ultimas_cobrancas.rows %}
+                {% component "unfold/components/table.html" with table=painel.ultimas_cobrancas card_included=1 %}{% endcomponent %}
+            {% else %}
+                {% component "unfold/components/text.html" with class="text-subtle" %}Nenhuma cobrança ainda.{% endcomponent %}
+            {% endif %}
+        {% endcomponent %}
+    </div>
+</div>
+{% else %}
+    {% include "unfold/helpers/dashboard_default.html" %}
+{% endif %}
+{% endblock %}

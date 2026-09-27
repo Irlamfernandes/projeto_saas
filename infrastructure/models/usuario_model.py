@@ -15,6 +15,7 @@ class UsuarioModel(AbstractUser):
     username_validator = CustomUsernameValidator()
 
     username = models.CharField(
+        'usuário',
         max_length=150,
         unique=True,
         help_text='Obrigatório. 150 caracteres ou menos. Letras, números e espaços.',
