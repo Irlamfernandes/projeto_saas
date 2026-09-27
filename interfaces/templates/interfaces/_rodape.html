@@ -1,0 +1,17 @@
+{% load static %}{% comment %}
+Rodapé discreto no fim das páginas: fica depois do conteúdo (não é fixo), então não tira espaço do trabalho.
+{% endcomment %}
+<footer class="mt-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-linha px-4 py-4 text-xs text-tinta-fraca sm:justify-between sm:px-8" aria-label="Quem desenvolveu o sistema">
+    <p class="flex items-center gap-2">
+        <img src="{% static 'images/corsarioscode-emblema.webp' %}" alt="" width="24" height="24" loading="lazy" class="w-6 h-6 rounded-md">
+        <span>Sistema feito por <b class="font-titulo text-tinta-suave">Corsarios<span class="text-corsario-azul-escuro">Code</span></b></span>
+    </p>
+    <nav class="flex items-center gap-1" aria-label="Contatos da {{ desenvolvedor.nome }}">
+        {% if desenvolvedor.link_whatsapp %}
+        <a href="{{ desenvolvedor.link_whatsapp }}" target="_blank" rel="noopener" class="grid place-items-center w-11 h-11 rounded-lg hover:bg-fundo hover:text-tinta" aria-label="WhatsApp da {{ desenvolvedor.nome }}"><svg class="ico"><use href="#i-whatsapp"/></svg></a>
+        {% endif %}
+        {% if desenvolvedor.link_instagram %}
+        <a href="{{ desenvolvedor.link_instagram }}" target="_blank" rel="noopener" class="grid place-items-center w-11 h-11 rounded-lg hover:bg-fundo hover:text-tinta" aria-label="Instagram da {{ desenvolvedor.nome }}"><svg class="ico"><use href="#i-instagram"/></svg></a>
+        {% endif %}
+    </nav>
+</footer>

@@ -110,7 +110,7 @@ class PdfGeneratorTest(TestCase):
         venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal('50.00'), data_venda=meio_dia_utc)
         ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=2, preco_unitario=Decimal('25.00'))
 
-        self.assertEqual(linhas_de_compras(self.cliente), [["10/01/2026 09:00", "2x Caderno 10 Matérias", "R$ 50.00"]])
+        self.assertEqual(linhas_de_compras(self.cliente), [["10/01/2026 09:00", "2x Caderno 10 Matérias", "R$ 50,00"]])
 
     def test_extrato_lista_so_as_cinco_compras_mais_recentes(self):
         for dia in range(1, 8):
@@ -124,6 +124,6 @@ class PdfGeneratorTest(TestCase):
         self.assertEqual(linhas_de_compras(self.cliente), [["-", "Nenhuma compra registrada", "-"]])
 
     def test_situacao_financeira(self):
-        self.assertEqual(situacao_financeira(Decimal('10')), ("Situação: DEVENDO R$ 10.00 (Valor Pendente)", COR_DEVENDO))
-        self.assertEqual(situacao_financeira(Decimal('-5')), ("Situação: CRÉDITO DE R$ 5.00 (Valor a mais)", COR_CREDITO))
+        self.assertEqual(situacao_financeira(Decimal('10')), ("Situação: DEVENDO R$ 10,00 (Valor Pendente)", COR_DEVENDO))
+        self.assertEqual(situacao_financeira(Decimal('-5')), ("Situação: CRÉDITO DE R$ 5,00 (Valor a mais)", COR_CREDITO))
         self.assertEqual(situacao_financeira(Decimal('0'))[1], COR_NEUTRA)

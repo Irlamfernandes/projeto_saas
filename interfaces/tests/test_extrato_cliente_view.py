@@ -154,7 +154,8 @@ class ExtratoClienteViewTest(TestCase):
 
     def test_whatsapp_so_aparece_com_telefone(self):
         self.client.force_login(self.user_loja1)
-        self.assertNotContains(self.client.get(self._get_url_extrato(self.cliente_loja1.pk)), 'wa.me')
+        # O rodapé tem o WhatsApp da CorsariosCode; o do cliente é o que leva a mensagem da caderneta.
+        self.assertNotContains(self.client.get(self._get_url_extrato(self.cliente_loja1.pk)), '?text=Ol%C3%A1%2C')
 
         Cliente.objects.filter(pk=self.cliente_loja1.pk).update(telefone='(24) 99999-0000')
         response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))

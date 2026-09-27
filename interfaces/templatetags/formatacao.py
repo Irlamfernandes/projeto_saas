@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from django import template
-from application.formatacao import moeda
+from infrastructure.utils.formatacao import moeda
 
 register = template.Library()
 

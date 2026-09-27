@@ -30,10 +30,17 @@ const FORMATOS = {
     unidades: { completo: formatarUnidades, eixo: (v) => v.toLocaleString('pt-BR') },
 };
 
+/* O canvas só entende px: converte rem para px usando a letra da página (acompanha a letra grande do usuário). */
+function remEmPx(rem) {
+    const base = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return rem * base;
+}
+
 function lerTokens(elemento) {
     const estilo = getComputedStyle(elemento || document.documentElement);
     const ler = (nome) => estilo.getPropertyValue(nome).trim();
     return {
+        fonte: remEmPx(0.75),
         marca: ler('--cor-marca'),
         destaque: ler('--cor-destaque'),
         neutra: ler('--cor-neutra'),
@@ -194,7 +201,7 @@ function pluginRotulosNoFim(tokens, formato) {
             const valores = grafico.data.datasets[0].data;
             ctx.save();
             ctx.fillStyle = tokens.tintaSuave;
-            ctx.font = '600 12px Figtree, system-ui, sans-serif';
+            ctx.font = `600 ${tokens.fonte}px Figtree, system-ui, sans-serif`;
             ctx.textBaseline = 'middle';
             grafico.getDatasetMeta(0).data.forEach((barra, i) => {
                 ctx.fillText(formato.eixo(valores[i]), barra.x + 6, barra.y);
@@ -208,7 +215,7 @@ function desenharGraficos(raiz = document, ChartClasse = globalThis.Chart) {
     if (!ChartClasse) return [];
     const tokens = lerTokens();
     ChartClasse.defaults.font.family = 'Figtree, system-ui, sans-serif';
-    ChartClasse.defaults.font.size = 12;
+    ChartClasse.defaults.font.size = tokens.fonte;
     if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
         ChartClasse.defaults.animation = false;
     }
@@ -223,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => desenharGraficos());
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        formatarMoeda, formatarMoedaCurta, formatarUnidades, lerTokens, montarConfiguracao, desenharGraficos,
+        formatarMoeda, formatarMoedaCurta, formatarUnidades, remEmPx, lerTokens, montarConfiguracao, desenharGraficos,
         pluginMira, pluginRotulosNoFim,
     };
 }

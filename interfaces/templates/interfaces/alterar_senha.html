@@ -4,9 +4,9 @@
     {% include 'interfaces/_cabeca.html' %}
     <title>Primeiro acesso · Gestão da Loja</title>
 </head>
-<body class="min-h-screen">
+<body class="flex min-h-dvh flex-col">
     {% include 'interfaces/_icones.html' %}
-    <main class="flex min-h-screen items-center justify-center px-4 py-12">
+    <main class="flex flex-1 items-center justify-center px-4 py-12">
         <div class="cartao w-full max-w-md p-6 sm:p-8">
             <span class="grid place-items-center w-12 h-12 rounded-2xl bg-marca-100 text-marca-700" aria-hidden="true"><svg class="ico w-6 h-6"><use href="#i-cadeado"/></svg></span>
             <h1 class="mt-4 text-2xl font-bold">Primeiro Acesso</h1>
@@ -34,5 +34,6 @@
             </form>
         </div>
     </main>
+    {% include 'interfaces/_rodape_vitrine.html' %}
 </body>
 </html>

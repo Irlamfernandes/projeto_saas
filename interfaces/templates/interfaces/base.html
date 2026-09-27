@@ -4,12 +4,12 @@
     {% include 'interfaces/_cabeca.html' %}
     <title>{% block title %}Gestão da Loja{% endblock %}</title>
 </head>
-<body class="min-h-screen">
+<body class="min-h-dvh">
     {% include 'interfaces/_icones.html' %}
 
-    <div class="md:grid md:grid-cols-[15rem_1fr] min-h-screen">
+    <div class="md:grid md:grid-cols-[15rem_1fr] min-h-dvh">
 
-        <aside class="hidden md:flex flex-col gap-6 bg-white border-r border-linha px-3.5 py-5 sticky top-0 h-screen" aria-label="Menu principal">
+        <aside class="hidden md:flex flex-col gap-6 bg-white border-r border-linha px-3.5 py-5 sticky top-0 h-dvh" aria-label="Menu principal">
             <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-1.5">
                 {% include 'interfaces/_marca_loja.html' with classes='w-10 h-10 rounded-xl' %}
                 <span class="min-w-0">
@@ -68,10 +68,11 @@
 
                 {% block content %}{% endblock %}
             </main>
+            {% include 'interfaces/_rodape.html' %}
         </div>
     </div>
 
-    <nav class="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 bg-white border-t border-linha px-1 pt-1.5" style="padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0px))" aria-label="Menu">
+    <nav class="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 bg-white border-t border-linha px-1 pt-1.5" style="padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0rem))" aria-label="Menu">
         {% include 'interfaces/_menu_movel.html' with rota='dashboard' icone='i-inicio' rotulo='Início' ativo_se='dashboard' %}
         {% include 'interfaces/_menu_movel.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
         {% include 'interfaces/_menu_movel.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}

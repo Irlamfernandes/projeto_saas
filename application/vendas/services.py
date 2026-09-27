@@ -8,12 +8,12 @@ from decimal import Decimal
 from django.db import transaction
 from django.db.models import F
 from application.auditoria.services import registrar_alteracao
-from application.formatacao import reais
 from application.vendas.exceptions import (
     EstoqueInsuficiente, ProdutoNaoEncontrado, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
 from application.vendas.selectors import produtos_da_loja
 from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Produto, Venda
+from infrastructure.utils.formatacao import reais
 
 
 @transaction.atomic

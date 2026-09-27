@@ -45,7 +45,8 @@ class ExportacaoPdfTest(SimpleTestCase):
         self.assertTrue(arquivo.getvalue().startswith(b"%PDF"))
 
     def test_formatacao_dos_valores(self):
-        self.assertEqual(_texto_pdf(Decimal('10.5')), "R$ 10.50")
+        self.assertEqual(_texto_pdf(Decimal('10.5')), "R$ 10,50")
+        self.assertEqual(_texto_pdf(Decimal('1234.5')), "R$ 1.234,50")  # regressão: saía "R$ 1234.50"
         self.assertEqual(_texto_pdf(3), "3")
         self.assertEqual(_texto_pdf("Arroz"), "Arroz")
 
@@ -93,3 +94,32 @@ class ExportacaoExcelTest(SimpleTestCase):
     def test_geral_e_a_uniao_das_secoes(self):
         secoes_individuais = [SECOES_POR_TIPO[t][0] for t in ('resumo', 'temporal', 'devendo', 'credito', 'estoque')]
         self.assertEqual(list(SECOES_POR_TIPO['geral']), secoes_individuais)
+
+
+class RodapeDoRelatorioPdfTest(SimpleTestCase):
+
+    def _documento(self):
+        from types import SimpleNamespace
+        return SimpleNamespace(leftMargin=30, rightMargin=30, pagesize=(612, 792), page=2)
+
+    def test_data_pagina_e_assinatura(self):
+        from datetime import datetime
+        from unittest.mock import MagicMock
+        from infrastructure.utils.relatorios_export import _rodape_da_pagina
+        canvas = MagicMock()
+        _rodape_da_pagina(canvas, self._documento(), gerado_em=datetime(2026, 9, 27, 14, 5), assinatura="Sistema CorsariosCode")
+        canvas.drawString.assert_called_once_with(30, 20, "Gerado em 27/09/2026 às 14:05 · Página 2")
+        canvas.drawRightString.assert_called_once_with(582, 20, "Sistema CorsariosCode")
+
+    def test_sem_assinatura_so_data_e_pagina(self):
+        from datetime import datetime
+        from unittest.mock import MagicMock
+        from infrastructure.utils.relatorios_export import _rodape_da_pagina
+        canvas = MagicMock()
+        _rodape_da_pagina(canvas, self._documento(), gerado_em=datetime(2026, 9, 27), assinatura='')
+        canvas.drawRightString.assert_not_called()
+
+    def test_pdf_sai_com_o_rodape(self):
+        arquivo = io.BytesIO()
+        gerar_relatorio_pdf('geral', _relatorio(), arquivo, assinatura="Sistema CorsariosCode")
+        self.assertTrue(arquivo.getvalue().startswith(b'%PDF'))

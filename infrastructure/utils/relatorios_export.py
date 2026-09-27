@@ -1,15 +1,19 @@
 """Exportação dos relatórios em PDF e Excel a partir das mesmas definições de seção."""
 from dataclasses import dataclass
+from functools import partial
 from decimal import Decimal
 from typing import Callable
 import openpyxl
+from django.utils import timezone
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from infrastructure.utils.formatacao import reais
 from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 FORMATO_MOEDA_EXCEL = '#,##0.00'
+COR_RODAPE = colors.HexColor('#9ca3af')
 PREFIXOS_DE_FORMULA = ('=', '+', '-', '@')
 
 
@@ -81,8 +85,9 @@ _ESTILO_TABELA = TableStyle([
 ])
 
 
-def gerar_relatorio_pdf(tipo, relatorio, destino, loja=None, storage=None):
-    """`loja`: põe o cabeçalho com nome e marca (o superusuário, sem loja, exporta sem cabeçalho)."""
+def gerar_relatorio_pdf(tipo, relatorio, destino, loja=None, storage=None, assinatura=''):
+    """`loja`: põe o cabeçalho com nome e marca (o superusuário, sem loja, exporta sem cabeçalho).
+    `assinatura`: texto pequeno no canto direito do rodapé de cada página (quem fez o sistema)."""
     titulo = ParagraphStyle(
         'TituloRelatorio', parent=getSampleStyleSheet()['Heading1'],
         fontSize=16, textColor=colors.HexColor('#1f2937'), spaceAfter=10,
@@ -91,7 +96,21 @@ def gerar_relatorio_pdf(tipo, relatorio, destino, loja=None, storage=None):
     for secao in SECOES_POR_TIPO[tipo]:
         story += _secao_pdf(secao, relatorio, titulo)
 
-    SimpleDocTemplate(destino, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30).build(story)
+    rodape = partial(_rodape_da_pagina, gerado_em=timezone.localtime(), assinatura=assinatura)
+    SimpleDocTemplate(destino, pagesize=letter, rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=40).build(
+        story, onFirstPage=rodape, onLaterPages=rodape,
+    )
+
+
+def _rodape_da_pagina(canvas, documento, *, gerado_em, assinatura):
+    """Linha discreta no pé da página: quando foi gerado, qual página e quem fez o sistema."""
+    canvas.saveState()
+    canvas.setFont('Helvetica', 7.5)
+    canvas.setFillColor(COR_RODAPE)
+    canvas.drawString(documento.leftMargin, 20, f"Gerado em {gerado_em:%d/%m/%Y} às {gerado_em:%H:%M} · Página {documento.page}")
+    if assinatura:
+        canvas.drawRightString(documento.pagesize[0] - documento.rightMargin, 20, assinatura)
+    canvas.restoreState()
 
 
 def gerar_relatorio_excel(tipo, relatorio, destino):
@@ -111,7 +130,7 @@ def _secao_pdf(secao, relatorio, estilo_titulo):
 
 def _texto_pdf(valor):
     if isinstance(valor, Decimal):
-        return f"R$ {valor:.2f}"
+        return reais(valor)
     return str(valor)
 
 
