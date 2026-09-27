@@ -99,6 +99,12 @@ class VendasViewTest(TestCase):
         self.assertContains(pagina, '0,35 kg Queijo')
         self.assertIn(bolo.pk, [p['id'] for p in pagina.context['catalogo']])
 
+    def test_venda_parcelada_aparece_resumida_no_historico(self):
+        self._vender([(self.cafe, 6)], vencimento=['2026-10-15', '2026-11-15', '2026-12-15'])
+
+        self.assertEqual(Venda.objects.get().parcelas.count(), 3)
+        self.assertContains(self.client.get(self.url), '3 parcelas a partir de 15/10/2026')
+
     def test_venda_de_balcao_na_loja_do_usuario(self):
         self._vender([(self.cafe, 1)], cliente='', forma_pagamento='dinheiro')
 

@@ -1,15 +1,34 @@
 {% comment %}
-Data combinada para o cliente pagar o que ficou na caderneta. Parâmetro: valor (data atual, na edição).
-O static/js/venda.js esconde o campo no balcão e quando a venda foi paga por completo no ato.
+Quando o cliente paga o que ficou na caderneta: uma data ou parcelas. Parâmetro: vencimentos (datas atuais, na edição).
+Cada parcela vai num campo `vencimento`. O static/js/venda.js esconde tudo no balcão e quando a venda foi paga
+no ato, e cria os campos das parcelas seguintes (sugere as datas pelo intervalo; dá para ajustar cada uma).
 {% endcomment %}
-<div class="campo" data-vencimento>
+<div class="campo" data-vencimento data-vencimentos="{% for data in vencimentos %}{{ data|date:'Y-m-d' }} {% endfor %}">
     <label for="id_vencimento_venda" class="rotulo">Vence em <span class="rotulo-opcional">opcional</span></label>
-    <input type="date" id="id_vencimento_venda" name="vencimento" value="{{ valor|date:'Y-m-d' }}" class="entrada tabular-nums">
+    <input type="date" id="id_vencimento_venda" name="vencimento" value="{{ vencimentos.0|date:'Y-m-d' }}" class="entrada tabular-nums">
     <div class="flex flex-wrap gap-1.5" role="group" aria-label="Prazos rápidos">
         <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="7">Em 7 dias</button>
         <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="15">Em 15 dias</button>
         <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="30">Em 30 dias</button>
         <button type="button" class="btn-fantasma btn-pequeno" data-prazo-dias="">Sem prazo</button>
     </div>
+    <div class="hidden grid grid-cols-2 gap-3 mt-1" data-opcoes-parcelas>
+        <div class="campo">
+            <label for="id_numero_parcelas" class="rotulo">Pagar em</label>
+            <select id="id_numero_parcelas" class="entrada" data-numero-parcelas>
+                <option value="1">1 vez</option>
+                {% for numero in '23456789'|make_list %}<option value="{{ numero }}">{{ numero }} vezes</option>{% endfor %}
+                <option value="10">10 vezes</option><option value="11">11 vezes</option><option value="12">12 vezes</option>
+            </select>
+        </div>
+        <div class="campo">
+            <label for="id_intervalo_parcelas" class="rotulo">Uma a cada</label>
+            <select id="id_intervalo_parcelas" class="entrada" data-intervalo-parcelas>
+                <option value="30">30 dias</option><option value="15">15 dias</option><option value="7">7 dias</option>
+            </select>
+        </div>
+    </div>
+    <ol class="grid gap-2" data-parcelas aria-label="Datas das outras parcelas"></ol>
+    <p class="text-sm font-semibold text-tinta-suave tabular-nums" data-resumo-parcelas aria-live="polite"></p>
     <p class="ajuda">Quando o cliente combinou de pagar o que ficou na caderneta. Em branco, fica sem prazo.</p>
 </div>

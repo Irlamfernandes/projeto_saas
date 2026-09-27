@@ -214,3 +214,21 @@ class SituacaoDasComprasTest(TestCase):
         ]:
             with self.subTest(trecho):
                 self.assertContains(response, trecho)
+
+
+class ParcelasNaCadernetaTest(TestCase):
+
+    def test_cada_parcela_aparece_numerada(self):
+        loja = LojaModel.objects.create(nome_loja="Loja", ativo=True)
+        usuario = User.objects.create_user(deve_trocar_senha=False, username="u", password="x", loja=loja)
+        cliente = Cliente.objects.create(loja=loja, nome="Ana")
+        venda = Venda.objects.create(loja=loja, cliente=cliente, valor_total=Decimal('90.00'))
+        hoje = timezone.localdate()
+        for dias in (0, 30, 60):
+            Parcela.objects.create(venda=venda, vencimento=hoje + timedelta(days=dias))
+        self.client.force_login(usuario)
+
+        response = self.client.get(reverse('extrato_cliente', args=[cliente.pk]))
+
+        self.assertContains(response, "Parcela 1/3 · Vence hoje · falta R$ 30,00")
+        self.assertContains(response, f"Parcela 3/3 · Vence {hoje + timedelta(days=60):%d/%m/%Y} · falta R$ 30,00")

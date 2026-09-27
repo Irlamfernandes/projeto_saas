@@ -81,6 +81,12 @@ class MensagemDeCobrancaTest(CobrancasTestCase):
             "Se já pagou, pode desconsiderar esta mensagem. Obrigado!",
         ]))
 
+    def test_parcelas_aparecem_numeradas(self):
+        venda = self.venda(self.maria, 3, HOJE, timezone.now())
+        Parcela.objects.create(venda=venda, vencimento=HOJE + timedelta(days=30))
+        [cobranca] = clientes_a_cobrar(self.usuario, HOJE)
+        self.assertIn("(3× Bolo) parcela 1/2: vence hoje · R$ 18,00", mensagem_de_cobranca(cobranca))
+
     def test_data_da_compra_no_fuso_local(self):
         meia_noite_utc = timezone.make_aware(datetime(2026, 1, 10, 1, 0), timezone.get_fixed_timezone(0))
         self.venda(self.maria, 1, HOJE, meia_noite_utc)

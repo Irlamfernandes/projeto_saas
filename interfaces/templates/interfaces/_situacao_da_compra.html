@@ -1,12 +1,12 @@
 {% load formatacao %}{% comment %}
-Situação de uma compra na caderneta: uma linha por parcela, com o que falta. Parâmetro: pendencias (vazio = paga no ato).
+Situação de uma compra na caderneta: uma pílula por parcela, com o que falta. Parâmetro: pendencias (vazio = paga no ato).
 {% endcomment %}
 <p class="mt-1.5 flex flex-wrap gap-1.5">
 {% for pendencia in pendencias %}{% with situacao=pendencia.situacao %}
-    {% if situacao == 'paga' %}<span class="pilula-bom"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>Paga{% if pendencia.vencimento %} · vencia {{ pendencia.vencimento|date:"d/m/Y" }}{% endif %}</span>
-    {% elif situacao == 'atrasada' %}<span class="pilula-critico"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerta"/></svg>Venceu {{ pendencia.vencimento|date:"d/m/Y" }} · falta R$ {{ pendencia.pendente|moeda }}</span>
-    {% elif situacao == 'vence_hoje' %}<span class="pilula-alerta"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-tempo"/></svg>Vence hoje · falta R$ {{ pendencia.pendente|moeda }}</span>
-    {% elif situacao == 'a_vencer' %}<span class="pilula-neutra">Vence {{ pendencia.vencimento|date:"d/m/Y" }} · falta R$ {{ pendencia.pendente|moeda }}</span>
+    {% if situacao == 'paga' %}<span class="pilula-bom"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>{% if pendencia.parcelada %}Parcela {{ pendencia.numero }}/{{ pendencia.de }} · {% endif %}Paga{% if pendencia.vencimento %} · vencia {{ pendencia.vencimento|date:"d/m/Y" }}{% endif %}</span>
+    {% elif situacao == 'atrasada' %}<span class="pilula-critico"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerta"/></svg>{% if pendencia.parcelada %}Parcela {{ pendencia.numero }}/{{ pendencia.de }} · {% endif %}Venceu {{ pendencia.vencimento|date:"d/m/Y" }} · falta R$ {{ pendencia.pendente|moeda }}</span>
+    {% elif situacao == 'vence_hoje' %}<span class="pilula-alerta"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-tempo"/></svg>{% if pendencia.parcelada %}Parcela {{ pendencia.numero }}/{{ pendencia.de }} · {% endif %}Vence hoje · falta R$ {{ pendencia.pendente|moeda }}</span>
+    {% elif situacao == 'a_vencer' %}<span class="pilula-neutra">{% if pendencia.parcelada %}Parcela {{ pendencia.numero }}/{{ pendencia.de }} · {% endif %}Vence {{ pendencia.vencimento|date:"d/m/Y" }} · falta R$ {{ pendencia.pendente|moeda }}</span>
     {% else %}<span class="pilula-neutra">Sem prazo · falta R$ {{ pendencia.pendente|moeda }}</span>{% endif %}
 {% endwith %}{% empty %}
     <span class="pilula-bom"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>Paga no ato</span>
