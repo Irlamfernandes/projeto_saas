@@ -1,0 +1,16 @@
+{% load formatacao %}{% comment %}
+Opções escolhidas na hora da venda (ex.: Tamanho, Sabor, Cor). Parâmetro: produto (na edição).
+Cada opção vai em opcao_nome + opcao_valores (um valor por linha). O static/js/main.js adiciona e tira opções.
+{% endcomment %}{% maximo_de_opcoes as maximo %}
+<details class="rounded-controle border border-linha" data-opcoes-produto data-maximo="{{ maximo }}"{% if produto.opcoes %} open{% endif %}>
+    <summary class="cursor-pointer px-3.5 py-3 text-sm font-semibold">Opções <span class="rotulo-opcional">tamanho, sabor, cor…</span></summary>
+    <div class="grid gap-3 px-3.5 pb-3.5">
+        <p class="ajuda">Na venda, você escolhe um valor de cada opção. Para cobrar a mais por um valor, escreva + e o valor: <b class="font-semibold whitespace-nowrap">G + 5,00</b>. O estoque continua sendo o do produto.</p>
+        <ol class="grid gap-3" data-lista-opcoes aria-label="Opções do produto">
+            {% for opcao in produto.opcoes %}{% include 'interfaces/_opcao_do_produto.html' %}{% empty %}{% include 'interfaces/_opcao_do_produto.html' with opcao=None %}{% endfor %}
+        </ol>
+        <button type="button" class="btn-secundario btn-pequeno justify-self-start" data-adicionar-opcao><svg class="ico ico-sm"><use href="#i-mais"/></svg>Outra opção</button>
+        <p class="ajuda">Até {{ maximo }} opções por produto.</p>
+        <template data-modelo-opcao>{% include 'interfaces/_opcao_do_produto.html' with opcao=None %}</template>
+    </div>
+</details>

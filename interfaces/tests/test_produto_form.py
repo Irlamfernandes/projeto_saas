@@ -1,11 +1,20 @@
 from decimal import Decimal
 from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import QueryDict
 from django.test import TestCase
 from infrastructure.models import LojaModel, Produto
 from interfaces.forms import EditarProdutoForm, FiltroProdutosForm, ProdutoForm
 from interfaces.views.comum import primeiro_erro
 from tests.apoio import imagem_de_teste
+
+
+def como_post(dados):
+    """Como o navegador envia: listas para os campos repetidos (opcao_nome, opcao_valores)."""
+    post = QueryDict(mutable=True)
+    for campo, valor in dados.items():
+        post.setlist(campo, valor if isinstance(valor, list) else [valor])
+    return post
 
 
 class ProdutoFormTest(TestCase):
@@ -15,7 +24,7 @@ class ProdutoFormTest(TestCase):
 
     def _form(self, arquivos=None, **dados):
         base = {'nome': 'Bolo', 'preco_venda': '30.00', 'quantidade_estoque': '1'}
-        return ProdutoForm({**base, **dados}, arquivos or {}, instance=Produto(loja=self.loja))
+        return ProdutoForm(como_post({**base, **dados}), arquivos or {}, instance=Produto(loja=self.loja))
 
     def assertErro(self, form, mensagem):
         self.assertFalse(form.is_valid())
@@ -97,6 +106,48 @@ class ProdutoFormTest(TestCase):
             self.assertErro(self._form(arquivos={'imagens': [imagem_de_teste('g.png')]}), "A imagem 'g.png' excede o limite de 15 MB.")
 
 
+class OpcoesDoProdutoTest(ProdutoFormTest):
+    """Nome da opção + valores um por linha; 'G + 5,00' cobra R$ 5 a mais."""
+
+    def opcoes(self, nomes, valores):
+        form = self._form(opcao_nome=nomes, opcao_valores=valores)
+        self.assertTrue(form.is_valid(), form.errors)
+        return form.instance.opcoes
+
+    def test_le_nomes_valores_e_acrescimos(self):
+        opcoes = self.opcoes([' Tamanho ', 'Cor'], ['P\r\n M \n\nG + 5,00\nGG +R$ 7.5', 'Azul'])
+
+        self.assertEqual(opcoes, [
+            {'nome': 'Tamanho', 'valores': [
+                {'nome': 'P', 'acrescimo': '0.00'}, {'nome': 'M', 'acrescimo': '0.00'},
+                {'nome': 'G', 'acrescimo': '5.00'}, {'nome': 'GG', 'acrescimo': '7.50'},
+            ]},
+            {'nome': 'Cor', 'valores': [{'nome': 'Azul', 'acrescimo': '0.00'}]},
+        ])
+
+    def test_blocos_vazios_sao_ignorados_e_sem_opcoes_fica_lista_vazia(self):
+        self.assertEqual(self.opcoes(['', ' '], ['', '  ']), [])
+        self.assertEqual(self._form().is_valid() and self._form().instance.opcoes, [])
+
+    def test_mais_sem_nome_antes_e_parte_do_valor(self):
+        self.assertEqual(self.opcoes(['Brinde'], ['+1'])[0]['valores'], [{'nome': '+1', 'acrescimo': '0.00'}])
+
+    def test_mensagens_de_erro_das_opcoes(self):
+        casos = {
+            'sem nome': ([''], ['P'], "Dê um nome para cada opção (ex.: Tamanho, Sabor, Cor)."),
+            'sem valores': (['Tamanho'], [''], 'Escreva os valores da opção "Tamanho", um por linha.'),
+            'opções demais': (['A', 'B', 'C', 'D', 'E', 'F'], ['1'] * 6, "Cada produto pode ter até 5 opções."),
+            'opção repetida': (['Cor', 'cor'], ['Azul', 'Preto'], 'Há duas opções chamadas "cor".'),
+            'valores demais': (['Número'], ['\n'.join(map(str, range(31)))], 'A opção "Número" pode ter até 30 valores.'),
+            'valor repetido': (['Tamanho'], ['P\nM\np + 2'], 'O valor "p" aparece duas vezes em "Tamanho".'),
+            'nome longo': (['N' * 41], ['P'], f'"{"N" * 20}…" é longo demais: use até 40 letras em cada opção e valor.'),
+            'valor longo': (['Tamanho'], ['V' * 41], f'"{"V" * 20}…" é longo demais: use até 40 letras em cada opção e valor.'),
+        }
+        for caso, (nomes, valores, mensagem) in casos.items():
+            with self.subTest(caso):
+                self.assertErro(self._form(opcao_nome=nomes, opcao_valores=valores), mensagem)
+
+
 class EditarProdutoFormTest(TestCase):
 
     def setUp(self):
@@ -105,7 +156,7 @@ class EditarProdutoFormTest(TestCase):
 
     def _form(self, remover):
         dados = {'nome': 'Bolo', 'preco_venda': '30', 'remover_imagens': remover}
-        return EditarProdutoForm(dados, {}, instance=self.produto)
+        return EditarProdutoForm(como_post(dados), {}, instance=self.produto)
 
     def test_converte_ids_para_remover(self):
         form = self._form(" 3, 7 ,,")

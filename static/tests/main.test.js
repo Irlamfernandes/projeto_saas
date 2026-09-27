@@ -653,3 +653,53 @@ describe('estoque do produto', () => {
         expect($('[name="quantidade_estoque"]').required).toBe(true);
     });
 });
+
+describe('opções do produto no cadastro', () => {
+    const BLOCO = `<li data-opcao-produto><input name="opcao_nome"><textarea name="opcao_valores"></textarea>
+        <button type="button" data-remover-opcao><svg></svg></button></li>`;
+
+    function montar(maximo = 3) {
+        document.body.innerHTML = `
+            <details data-opcoes-produto data-maximo="${maximo}">
+                <ol data-lista-opcoes>${BLOCO}</ol>
+                <button type="button" data-adicionar-opcao>Outra opção</button>
+                <template data-modelo-opcao>${BLOCO}</template>
+            </details>`;
+        require('../js/main.js').inicializarOpcoesDoProduto(document);
+        return {
+            lista: document.querySelector('[data-lista-opcoes]'),
+            adicionar: document.querySelector('[data-adicionar-opcao]'),
+        };
+    }
+
+    beforeEach(() => { jest.resetModules(); });
+
+    test('"Outra opção" copia o bloco vazio, foca o nome e para no máximo', () => {
+        const { lista, adicionar } = montar(2);
+        adicionar.click();
+
+        expect(lista.children).toHaveLength(2);
+        expect(document.activeElement).toBe(lista.lastElementChild.querySelector('[name="opcao_nome"]'));
+        expect(adicionar.disabled).toBe(true);
+    });
+
+    test('a lixeira tira a opção; a última só é limpa', () => {
+        const { lista, adicionar } = montar();
+        adicionar.click();
+        lista.querySelector('[name="opcao_nome"]').value = 'Tamanho';
+
+        lista.firstElementChild.querySelector('svg').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(lista.children).toHaveLength(1);
+
+        const unica = lista.firstElementChild;
+        unica.querySelector('[name="opcao_nome"]').value = 'Cor';
+        unica.querySelector('[name="opcao_valores"]').value = 'Azul';
+        unica.querySelector('[data-remover-opcao]').click();
+        expect(lista.children).toHaveLength(1);
+        expect([unica.querySelector('input').value, unica.querySelector('textarea').value]).toEqual(['', '']);
+        expect(adicionar.disabled).toBe(false);
+
+        lista.click(); // clique fora da lixeira não faz nada
+        expect(lista.children).toHaveLength(1);
+    });
+});

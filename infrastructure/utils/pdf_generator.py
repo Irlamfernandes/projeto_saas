@@ -69,7 +69,7 @@ def linhas_de_compras(cliente):
     linhas = [
         [
             timezone.localtime(venda.data_venda).strftime('%d/%m/%Y %H:%M'),
-            ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.produto.nome) for i in venda.itens.all())
+            ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.nome) for i in venda.itens.all())
             + _vencimentos(venda),
             reais(venda.valor_total),
         ]

@@ -59,9 +59,11 @@
 
             {% include 'interfaces/_estoque_do_produto.html' with prefixo='id' ajuda='Avisamos no início quando estiver acabando.' %}
 
+            {% include 'interfaces/_opcoes_do_produto.html' %}
+
             <div class="campo">
                 <label for="id_descricao_produto" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
-                <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Tamanho, sabor, cor…" class="entrada"></textarea>
+                <textarea id="id_descricao_produto" name="descricao" rows="2" placeholder="Ingredientes, medidas, cuidados…" class="entrada"></textarea>
             </div>
 
             <div class="campo">

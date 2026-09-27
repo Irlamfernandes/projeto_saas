@@ -687,3 +687,109 @@ describe('unidades e estoque sem controle', () => {
         expect(enviados().produtos).toEqual(['3']);
     });
 });
+
+describe('opções do produto', () => {
+    const { precoComOpcoes, precoDoItem, mesmasEscolhas, rotuloDoValor } = require('../js/venda.js');
+    const CAMISETA = {
+        id: 9, nome: 'Camiseta', codigo: 'C1', preco: '40.00', estoque: 2, unidade: 'un.', casas: 0,
+        opcoes: [
+            { nome: 'Tamanho', valores: [{ nome: 'P', acrescimo: '0.00' }, { nome: 'G', acrescimo: '5.00' }] },
+            { nome: 'Cor', valores: [{ nome: 'Azul', acrescimo: '0.00' }, { nome: 'Ouro', acrescimo: '2.50' }] },
+        ],
+    };
+    const linhas = () => [...document.querySelectorAll('[data-itens-lista] li')];
+    const seletores = (linha) => [...linha.querySelectorAll('select')];
+    const opcoesEnviadas = () => [...document.querySelectorAll('[name="item_opcoes"]')].map((campo) => JSON.parse(campo.value));
+
+    function escolher(linha, indice, valor) {
+        const campo = seletores(linha)[indice];
+        campo.value = valor;
+        campo.dispatchEvent(new Event('change'));
+    }
+
+    beforeEach(() => { Element.prototype.scrollIntoView = jest.fn(); });
+
+    test('preço com os acréscimos escolhidos, em centavos inteiros', () => {
+        expect(precoComOpcoes(CAMISETA, { Tamanho: 'G', Cor: 'Ouro' })).toBe(47.5);
+        expect(precoComOpcoes(CAMISETA, { Tamanho: 'P' })).toBe(40);
+        expect(precoComOpcoes({ preco: '0.10' }, {})).toBe(0.1);
+        expect(rotuloDoValor({ nome: 'G', acrescimo: '5.00' })).toMatch(/^G \(\+R\$\s5,00\)$/);
+        expect(rotuloDoValor({ nome: 'P', acrescimo: '0.00' })).toBe('P');
+    });
+
+    test('mesmas escolhas em qualquer ordem; o item da época mantém o preço dele', () => {
+        expect(mesmasEscolhas({ a: '1', b: '2' }, { b: '2', a: '1' })).toBe(true);
+        expect(mesmasEscolhas({ a: '1' }, { a: '1', b: '2' })).toBe(false);
+        expect(mesmasEscolhas({ a: '1' }, { a: '2' })).toBe(false);
+        const original = { preco: 30, escolhas: { Tamanho: 'G' } };
+        expect(precoDoItem({ produto: CAMISETA, escolhas: { Tamanho: 'G' }, original })).toBe(30);
+        expect(precoDoItem({ produto: CAMISETA, escolhas: { Tamanho: 'P' }, original })).toBe(40);
+        expect(precoDoItem({ produto: CAMISETA, escolhas: { Tamanho: 'G' } })).toBe(45);
+    });
+
+    test('cada vez que adiciona vira uma linha nova com um seletor obrigatório por opção', () => {
+        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
+        carrinho.adicionar(CAMISETA);
+        carrinho.adicionar(CAMISETA);
+
+        expect(linhas()).toHaveLength(2);
+        const [tamanho, cor] = seletores(linhas()[0]);
+        expect([tamanho.required, cor.required]).toEqual([true, true]);
+        expect(tamanho.getAttribute('aria-label')).toBe('Tamanho de Camiseta');
+        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', 'P', 'G']);
+        expect(tamanho.options[2].textContent).toMatch(/^G \(\+R\$\s5,00\)$/);
+        expect(opcoesEnviadas()).toEqual([{}, {}]);
+    });
+
+    test('escolher atualiza o preço, o total e o que vai para o servidor, sem perder o foco', () => {
+        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
+        carrinho.adicionar(CAMISETA);
+        carrinho.adicionar(CAMISETA);
+
+        escolher(linhas()[1], 0, 'G');
+        escolher(linhas()[1], 1, 'Ouro');
+
+        expect(opcoesEnviadas()).toEqual([{}, { Tamanho: 'G', Cor: 'Ouro' }]);
+        expect(total()).toMatch(/87,50/);
+        expect(document.activeElement).toBe(seletores(linhas()[1])[1]);
+        expect(seletores(linhas()[1]).map((campo) => campo.value)).toEqual(['G', 'Ouro']);
+
+        escolher(linhas()[1], 0, '');
+        expect(opcoesEnviadas()[1]).toEqual({ Cor: 'Ouro' });
+        expect(total()).toMatch(/82,50/);
+    });
+
+    test('o estoque é dividido entre as linhas do mesmo produto', () => {
+        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
+        carrinho.adicionar(CAMISETA);
+        carrinho.adicionar(CAMISETA);
+        carrinho.adicionar(CAMISETA); // estoque 2: a terceira não cabe
+
+        expect(linhas()).toHaveLength(2);
+        const campo = linhas()[0].querySelector('[name="item_quantidade"]');
+        expect(campo.max).toBe('1');
+        carrinho.mudarQuantidade(carrinho.itens[0], 5);
+        expect(carrinho.itens[0].quantidade).toBe(1);
+    });
+
+    test('na edição, a escolha da época vem marcada, mantém o preço e aparece mesmo se o valor sumiu', () => {
+        montarPagina({
+            catalogo: [{ ...CAMISETA, estoque: 10 }],
+            itens: [
+                { id: 9, quantidade: 1, preco: '42.00', opcoes: { Tamanho: 'GG', Cor: 'Azul' } },
+                { id: 9, quantidade: 1, preco: '40.00' },
+            ],
+        });
+
+        const [tamanho, cor] = seletores(linhas()[0]);
+        expect([tamanho.value, cor.value, tamanho.required]).toEqual(['GG', 'Azul', false]);
+        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', 'P', 'G', 'GG']);
+        expect(seletores(linhas()[1]).map((campo) => campo.value)).toEqual(['', '']);
+        expect(total()).toMatch(/82,00/);
+
+        escolher(linhas()[0], 0, 'G');
+        expect(total()).toMatch(/85,00/); // 45 (preço de hoje) + 40
+        escolher(linhas()[0], 0, 'GG');
+        expect(total()).toMatch(/82,00/);
+    });
+});

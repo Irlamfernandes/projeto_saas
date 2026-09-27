@@ -11,7 +11,7 @@ ROTULOS = {
     'nome': 'Nome', 'codigo_interno': 'Código', 'categoria': 'Categoria', 'preco_custo': 'Preço de custo',
     'preco_venda': 'Preço de venda', 'quantidade_estoque': 'Estoque', 'descricao': 'Descrição',
     'telefone': 'Telefone', 'email': 'E-mail', 'endereco': 'Endereço',
-    'unidade': 'Vendido por', 'controla_estoque': 'Controla estoque',
+    'unidade': 'Vendido por', 'controla_estoque': 'Controla estoque', 'opcoes': 'Opções',
 }
 CAMPOS_EM_REAIS = {'preco_custo', 'preco_venda'}
 VAZIO = '(vazio)'
@@ -66,7 +66,20 @@ def _valor(campo, valor):
         return numero(valor)
     if campo == 'unidade' and valor in Unidade.values:
         return Unidade(valor).label
+    if campo == 'opcoes':
+        return '; '.join(map(_opcao, valor)) or VAZIO
     return str(valor)
+
+
+def _opcao(opcao):
+    """'Tamanho: P, M, G (+R$ 5,00)'."""
+    return f"{opcao['nome']}: {', '.join(map(_valor_da_opcao, opcao['valores']))}"
+
+
+def _valor_da_opcao(valor):
+    if Decimal(valor['acrescimo']):
+        return f"{valor['nome']} (+{reais(valor['acrescimo'])})"
+    return valor['nome']
 
 
 def _reais(valor):

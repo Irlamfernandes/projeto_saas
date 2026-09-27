@@ -39,3 +39,13 @@ class VendaSemLoja(VendaError):
 class SenhaIncorreta(VendaError):
     def __init__(self):
         super().__init__("Senha incorreta. A venda não foi cancelada.")
+
+
+class OpcaoNaoEscolhida(VendaError):
+    def __init__(self, produto, opcao):
+        super().__init__(f"Escolha a opção \"{opcao}\" de '{produto.nome}'.")
+
+
+class OpcoesMudaram(VendaError):
+    def __init__(self, produto):
+        super().__init__(f"As opções de '{produto.nome}' mudaram. Tire o produto da venda e adicione de novo.")

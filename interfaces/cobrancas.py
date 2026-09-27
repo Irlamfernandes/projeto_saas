@@ -40,7 +40,7 @@ def _quando(pendencia, hoje):
 
 def _linha(pendencia, hoje):
     venda = pendencia.venda
-    itens = ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.produto.nome) for i in venda.itens.all())
+    itens = ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.nome) for i in venda.itens.all())
     parcela = f" parcela {pendencia.numero}/{pendencia.de}" if pendencia.parcelada else ''
     compra = f"• Compra de {timezone.localtime(venda.data_venda):%d/%m} ({itens}){parcela}"
     return f"{compra}: {_quando(pendencia, hoje)} · {reais(pendencia.pendente)}"

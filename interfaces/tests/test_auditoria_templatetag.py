@@ -36,6 +36,13 @@ class DetalhesLegiveisTest(SimpleTestCase):
             "Vendido por: Unidade → Quilo (kg)", "Controla estoque: sim → não", "Estoque: 2,5 → 0,125",
         ])
 
+    def test_opcoes_do_produto_legiveis(self):
+        tamanho = {'nome': 'Tamanho', 'valores': [{'nome': 'P', 'acrescimo': '0.00'}, {'nome': 'G', 'acrescimo': '5.00'}]}
+        sabor = {'nome': 'Sabor', 'valores': [{'nome': 'Coco', 'acrescimo': '0.00'}]}
+        self.assertEqual(detalhes_legiveis({'alteracoes': {'opcoes': [[], [tamanho, sabor]]}}), [
+            "Opções: (vazio) → Tamanho: P, G (+R$ 5,00); Sabor: Coco",
+        ])
+
     def test_item_vendido_por_quilo_no_resumo(self):
         venda = {**VENDA, 'itens': [{'produto': 'Queijo', 'quantidade': '0.35', 'unidade': 'kg', 'preco_unitario': '39.90'}]}
         self.assertEqual(detalhes_legiveis({'venda': venda}), ["Balcão · 0,35 kg Queijo (R$ 39,90) · total R$ 20,00 · Pix"])

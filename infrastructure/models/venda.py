@@ -6,6 +6,7 @@ from django.db import models
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.produto import Produto, campo_de_quantidade
+from infrastructure.utils.formatacao import com_opcoes
 
 def subtotal(quantidade, preco):
     """Quantidade × preço, em centavos (0,350 kg × R$ 39,90 = R$ 13,97)."""
@@ -74,6 +75,8 @@ class ItemVenda(models.Model):
     )
     # Preço de custo do produto no dia da venda: o lucro do mês não muda quando o custo muda depois.
     custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    # O que foi escolhido nas opções do produto: [{'nome': 'Tamanho', 'valor': 'G'}, ...]. O acréscimo já está no preço.
+    opcoes = models.JSONField(default=list, blank=True)
 
     class Meta:
         db_table = 'itens_venda'
@@ -93,6 +96,11 @@ class ItemVenda(models.Model):
 
     def subtotal(self):
         return subtotal(self.quantidade, self.preco_unitario)
+
+    @property
+    def nome(self):
+        """'Camiseta (G, Azul)'; sem opções, só o nome do produto."""
+        return com_opcoes(self.produto.nome, self.opcoes)
 
     def __str__(self):
         produto_nome = self.produto.nome if self.produto else 'Produto Removido'

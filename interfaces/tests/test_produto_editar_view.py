@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
+from infrastructure.models import Acao, RegistroDeAlteracao
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto, ProdutoImagem
 from tests.apoio import URL_PUBLICA, StorageFalso, imagem_de_teste
@@ -56,6 +57,29 @@ class ProdutoEditarViewTest(TestCase):
         self.assertEqual(response.context['produto'], self.produto)
         self.assertContains(response, "Cada produto pode ter até 5 fotos: dá para adicionar mais 5")
         self.assertContains(response, 'data-maximo-fotos="5"')
+
+    def test_opcoes_vem_preenchidas_e_sao_salvas_com_historico(self):
+        self.produto.opcoes = [{'nome': 'Sabor', 'valores': [{'nome': 'Coco', 'acrescimo': '0.00'}, {'nome': 'Nozes', 'acrescimo': '3.00'}]}]
+        self.produto.save()
+        self.client.force_login(self.user_loja1)
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, 'value="Sabor"')
+        self.assertContains(pagina, 'Coco\nNozes + 3,00</textarea>')
+        self.assertContains(pagina, 'data-maximo="5" open')
+
+        self._editar(opcao_nome=['Sabor', 'Tamanho'], opcao_valores=['Coco\nNozes + 3,00', 'Fatia\nInteiro + 40'])
+
+        self.produto.refresh_from_db()
+        self.assertEqual([opcao['nome'] for opcao in self.produto.opcoes], ['Sabor', 'Tamanho'])
+        historico = RegistroDeAlteracao.objects.get(acao=Acao.PRODUTO_EDITADO)
+        self.assertIn('opcoes', historico.detalhes['alteracoes'])
+
+    def test_opcao_invalida_mostra_o_erro_e_nao_salva(self):
+        response = self._editar(opcao_nome=[''], opcao_valores=['P'])
+
+        self.assertIn("Dê um nome para cada opção (ex.: Tamanho, Sabor, Cor).", self._mensagens(response))
+        self.produto.refresh_from_db()
+        self.assertEqual(self.produto.opcoes, [])
 
     def test_produto_com_5_fotos_pede_para_remover_antes(self):
         for _ in range(5):

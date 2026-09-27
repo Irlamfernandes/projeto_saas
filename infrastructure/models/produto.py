@@ -28,6 +28,7 @@ SIGLAS = {
 CASAS_DECIMAIS = {Unidade.QUILO: 3, Unidade.LITRO: 3, Unidade.METRO: 2}
 QUANTIDADE_MAXIMA_DE_CASAS = 3
 MILESIMO = Decimal('0.001')
+MAXIMO_DE_OPCOES = 5
 
 
 def sigla(unidade):
@@ -81,7 +82,10 @@ class Produto(models.Model):
         default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))]
     )
-    
+    # Escolhas feitas na venda, com nome e valores dados pela loja (ex.: Tamanho P/M/G, Sabor, Cor):
+    # [{'nome': 'Tamanho', 'valores': [{'nome': 'G', 'acrescimo': '5.00'}, ...]}, ...]. Não mexem no estoque.
+    opcoes = models.JSONField(default=list, blank=True)
+
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     @property

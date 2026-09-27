@@ -188,6 +188,7 @@
   .ajuda { @apply text-xs text-tinta-fraca leading-relaxed; }
   .entrada-arquivo { @apply block w-full text-sm text-tinta-suave cursor-pointer file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200; }
   .entrada { @apply w-full rounded-controle border border-linha bg-superficie px-3 py-2.5 text-[0.95rem] text-tinta placeholder:text-tinta-fraca transition focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100; }
+  .entrada-pequena { @apply w-auto px-2.5 py-1.5 text-sm; }
   /* Seta própria: a nativa fica por cima do texto e muda de navegador para navegador */
   select.entrada { @apply appearance-none truncate pr-10 bg-no-repeat cursor-pointer; background-position: right 0.8rem center; background-size: 1rem;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c8a87' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); }
