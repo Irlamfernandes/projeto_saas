@@ -61,7 +61,9 @@ class VendasViewTest(TestCase):
         self.assertEqual(list(response.context['vendas']), [minha])
         self.assertEqual(list(response.context['clientes']), [self.cliente1])
         self.assertEqual([p['nome'] for p in response.context['catalogo']], ["Café", "Produto A"])
-        self.assertEqual(response.context['catalogo'][0], {'id': self.cafe.pk, 'nome': "Café", 'codigo': '', 'preco': '5.00', 'estoque': 20})
+        self.assertEqual(response.context['catalogo'][0], {
+            'id': self.cafe.pk, 'nome': "Café", 'codigo': '', 'preco': '5.00', 'estoque': 20, 'unidade': 'un.', 'casas': 0,
+        })
         self.assertContains(response, 'id="catalogo-venda"')
 
     def test_venda_com_varios_produtos(self):
@@ -84,6 +86,19 @@ class VendasViewTest(TestCase):
         self.assertContains(response, 'vence 15/10/2026')
         self.assertContains(response, 'data-prazo-dias="30"')
 
+    def test_venda_por_quilo_e_de_produto_sem_controle(self):
+        queijo = Produto.objects.create(loja=self.loja1, nome="Queijo", preco_venda=Decimal('39.90'), unidade='kg',
+                                        quantidade_estoque=Decimal('2'))
+        bolo = Produto.objects.create(loja=self.loja1, nome="Bolo", preco_venda=Decimal('50.00'), controla_estoque=False)
+
+        response = self._vender([(queijo, '0,35'), (bolo, 2)])
+
+        self.assertIn("Venda realizada com sucesso!", self._mensagens(response))
+        self.assertEqual(Venda.objects.get().valor_total, Decimal('113.97'))
+        pagina = self.client.get(self.url)
+        self.assertContains(pagina, '0,35 kg Queijo')
+        self.assertIn(bolo.pk, [p['id'] for p in pagina.context['catalogo']])
+
     def test_venda_de_balcao_na_loja_do_usuario(self):
         self._vender([(self.cafe, 1)], cliente='', forma_pagamento='dinheiro')
 
@@ -102,7 +117,7 @@ class VendasViewTest(TestCase):
 
     def test_erros_de_regra_aparecem_como_mensagem(self):
         casos = {
-            'estoque insuficiente': ([(self.produto1, 11)], "Estoque insuficiente para 'Produto A'. Disponível: 10."),
+            'estoque insuficiente': ([(self.produto1, 11)], "Estoque insuficiente para 'Produto A'. Disponível: 10 un."),
             'produto de outra loja': ([(self.produto2, 1)], "Um dos produtos escolhidos não foi encontrado nesta loja."),
             'sem forma no balcão': ([(self.cafe, 1)], "Informe como foi pago."),
         }

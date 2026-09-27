@@ -3,7 +3,8 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from application.produtos.selectors import ORDEM_PADRAO, ORDENACOES_PERMITIDAS
-from infrastructure.models import Produto
+from infrastructure.models import Produto, Unidade
+from infrastructure.models.produto import MILESIMO, quantidade_aceita
 
 EXTENSOES_DE_IMAGEM = ['jpg', 'jpeg', 'png', 'webp']
 # Limite do arquivo enviado. O que fica guardado é bem menor: a foto é reduzida e regravada em WebP.
@@ -45,16 +46,19 @@ class ProdutoForm(forms.ModelForm):
     ZERO_SE_VAZIO = {
         'preco_custo': Decimal('0.00'),
         'margem_lucro': Decimal('0.00'),
-        'quantidade_estoque': 0,
+        'quantidade_estoque': Decimal('0'),
+        'unidade': Unidade.UNIDADE,
     }
 
     imagens = ImagensField()
+    # Marcado = produto sem controle de estoque. Desmarcado (ou ausente) = controla, como sempre foi.
+    sem_controle_de_estoque = forms.BooleanField(required=False)
 
     class Meta:
         model = Produto
         fields = [
             'codigo_interno', 'nome', 'categoria', 'descricao',
-            'preco_custo', 'preco_venda', 'margem_lucro', 'quantidade_estoque',
+            'preco_custo', 'preco_venda', 'margem_lucro', 'unidade', 'quantidade_estoque',
         ]
         localized_fields = ['preco_custo', 'preco_venda', 'margem_lucro']
         error_messages = {
@@ -80,7 +84,11 @@ class ProdutoForm(forms.ModelForm):
             'quantidade_estoque': {
                 'invalid': "Quantidade em estoque inválida.",
                 'min_value': "A quantidade em estoque não pode ser negativa.",
+                'max_digits': "Quantidade em estoque grande demais.",
+                'max_whole_digits': "Quantidade em estoque grande demais.",
+                'max_decimal_places': "Use no máximo 3 casas depois da vírgula na quantidade em estoque.",
             },
+            'unidade': {'invalid_choice': "Unidade de medida inválida."},
         }
 
     def __init__(self, *args, **kwargs):
@@ -91,8 +99,16 @@ class ProdutoForm(forms.ModelForm):
     def clean(self):
         dados = super().clean()
         for campo, zero in self.ZERO_SE_VAZIO.items():
-            if campo not in self.errors and dados.get(campo) is None:
+            if campo not in self.errors and dados.get(campo) in (None, ''):
                 dados[campo] = zero
+        self.instance.controla_estoque = not dados.get('sem_controle_de_estoque')
+        if not self.instance.controla_estoque:
+            dados['quantidade_estoque'] = Decimal('0')
+        if 'quantidade_estoque' in dados:
+            # Mesma forma que vem do banco (3 casas): o histórico só registra o que mudou de verdade.
+            dados['quantidade_estoque'] = dados['quantidade_estoque'].quantize(MILESIMO)
+            if not quantidade_aceita(dados['quantidade_estoque'], dados.get('unidade')):
+                self.add_error('quantidade_estoque', "Esta unidade só aceita números inteiros no estoque.")
         return dados
 
     def parametros(self):

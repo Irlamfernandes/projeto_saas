@@ -32,7 +32,7 @@ def dashboard_view(request):
         'indicadores': indicadores_do_painel(user),
         'grafico_faturamento': graficos.diario(faturamento_por_dia(user, DIAS_DO_GRAFICO)),
         'mais_vendidos': top,
-        'grafico_mais_vendidos': graficos.ranking([p.nome for p in top], [p.quantidade for p in top], 'Unidades'),
+        'grafico_mais_vendidos': graficos.ranking([p.nome for p in top], [float(p.quantidade) for p in top], 'Quantidade'),
         'grafico_fluxo': graficos.vendido_x_recebido(vendido_x_recebido(user, meses=6)),
         'mapa': mapa_de_horarios(user),
         'reposicao': previsao_de_reposicao(user, horizonte=DIAS_PARA_REPOR)[:ITENS_NO_RANKING],

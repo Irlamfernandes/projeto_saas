@@ -97,13 +97,13 @@
                 <tbody>
                     {% for r in reposicao %}
                     <tr>
-                        <td><span class="font-medium">{{ r.nome }}</span><span class="block text-xs text-tinta-fraca">vende {{ r.media_diaria }} por dia · tem {{ r.estoque }} un.</span></td>
+                        <td><span class="font-medium">{{ r.nome }}</span><span class="block text-xs text-tinta-fraca">vende {{ r.media_diaria|quantidade:r.unidade }} por dia · tem {{ r.estoque|quantidade:r.unidade }}</span></td>
                         <td class="text-right">
                             {% if r.estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
                             {% elif r.dias_restantes <= 2 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ r.dias_restantes }} dia{{ r.dias_restantes|pluralize }}</span>
                             {% else %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-tempo"/></svg>{{ r.dias_restantes }} dias</span>{% endif %}
                         </td>
-                        <td class="numero font-semibold" title="Cobre 14 dias de vendas">{{ r.sugestao_de_compra }} un.</td>
+                        <td class="numero font-semibold" title="Cobre 14 dias de vendas">{{ r.sugestao_de_compra|quantidade:r.unidade }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -131,7 +131,7 @@
                 <tbody>
                     {% for p in parados %}
                     <tr>
-                        <td class="font-medium">{{ p.nome }}<span class="block text-xs font-normal text-tinta-fraca">{{ p.estoque }} un. em estoque · {% if p.dias_parado is None %}nunca vendeu{% else %}última venda há {{ p.dias_parado }} dias{% endif %}</span></td>
+                        <td class="font-medium">{{ p.nome }}<span class="block text-xs font-normal text-tinta-fraca">{{ p.estoque|quantidade:p.unidade }} em estoque · {% if p.dias_parado is None %}nunca vendeu{% else %}última venda há {{ p.dias_parado }} dias{% endif %}</span></td>
                         <td class="numero" title="Estoque x preço de custo">R$ {{ p.valor_em_estoque|moeda }}</td>
                     </tr>
                     {% endfor %}

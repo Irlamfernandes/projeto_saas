@@ -144,10 +144,11 @@ class MontarPainelTest(TestCase):
         Venda.objects.create(loja=loja, valor_total=Decimal('40.00'), data_venda=_local(2025, 12, 31))
         escasso = Produto.objects.create(loja=loja, nome="Escasso", preco_venda=Decimal('1'), quantidade_estoque=2)
         Produto.objects.create(loja=loja, nome="Farto", preco_venda=Decimal('1'), quantidade_estoque=50)
+        Produto.objects.create(loja=loja, nome="Sob encomenda", preco_venda=Decimal('1'), controla_estoque=False)
 
         painel = montar_painel(usuario, limite_estoque=5, agora=agora)
 
-        self.assertEqual((painel.total_produtos, painel.total_clientes), (2, 1))
+        self.assertEqual((painel.total_produtos, painel.total_clientes), (3, 1))
         self.assertEqual(painel.vendas_hoje, Decimal('10.00'))
         self.assertEqual(painel.vendas_quinzena, Decimal('30.00'))
         self.assertEqual(painel.vendas_ano, Decimal('30.00'))

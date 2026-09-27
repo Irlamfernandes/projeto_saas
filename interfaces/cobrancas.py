@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from urllib.parse import quote
 from django.utils import timezone
 from application.vendas.pendencias import Situacao
-from infrastructure.utils.formatacao import reais
+from infrastructure.utils.formatacao import item as descrever_item, reais
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ def _quando(pendencia, hoje):
 
 def _linha(pendencia, hoje):
     venda = pendencia.venda
-    itens = ", ".join(f"{item.quantidade}× {item.produto.nome}" for item in venda.itens.all())
+    itens = ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.produto.nome) for i in venda.itens.all())
     return f"• Compra de {timezone.localtime(venda.data_venda):%d/%m} ({itens}): {_quando(pendencia, hoje)} · {reais(pendencia.pendente)}"
 
 

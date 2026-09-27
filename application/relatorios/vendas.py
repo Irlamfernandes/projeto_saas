@@ -25,8 +25,9 @@ class Ponto:
 @dataclass(frozen=True)
 class ProdutoVendido:
     nome: str
-    quantidade: int
+    quantidade: Decimal
     faturamento: Decimal
+    unidade: str = 'un'
 
 
 @dataclass(frozen=True)
@@ -92,11 +93,11 @@ def vendido_x_recebido(user, meses=6, agora=None):
 def mais_vendidos(user, inicio=None, fim=None, limite=10):
     itens = filtrar_por_intervalo(itens_do_usuario(user), inicio, fim, campo='venda__data_venda')
     linhas = (
-        itens.values('produto_id', 'produto__nome')
+        itens.values('produto_id', 'produto__nome', 'produto__unidade')
         .annotate(unidades=Sum('quantidade'), faturamento=Sum(RECEITA_DO_ITEM))
         .order_by('-unidades', 'produto__nome')[:limite]
     )
-    return [ProdutoVendido(l['produto__nome'], l['unidades'], l['faturamento']) for l in linhas]
+    return [ProdutoVendido(l['produto__nome'], l['unidades'], l['faturamento'], l['produto__unidade']) for l in linhas]
 
 
 def mapa_de_horarios(user, dias=90, agora=None):

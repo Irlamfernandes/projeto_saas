@@ -28,6 +28,18 @@ class DetalhesLegiveisTest(SimpleTestCase):
             "Depois: Ana · sem itens · total R$ 20,00 · pago no ato R$ 5,00 · vence 15/10/2026",
         ])
 
+    def test_campos_do_produto_legiveis(self):
+        detalhes = {'alteracoes': {
+            'unidade': ['un', 'kg'], 'controla_estoque': [True, False], 'quantidade_estoque': ['2.50', '0.125'],
+        }}
+        self.assertEqual(detalhes_legiveis(detalhes), [
+            "Vendido por: Unidade → Quilo (kg)", "Controla estoque: sim → não", "Estoque: 2,5 → 0,125",
+        ])
+
+    def test_item_vendido_por_quilo_no_resumo(self):
+        venda = {**VENDA, 'itens': [{'produto': 'Queijo', 'quantidade': '0.35', 'unidade': 'kg', 'preco_unitario': '39.90'}]}
+        self.assertEqual(detalhes_legiveis({'venda': venda}), ["Balcão · 0,35 kg Queijo (R$ 39,90) · total R$ 20,00 · Pix"])
+
     def test_fotos_e_observacao(self):
         self.assertEqual(detalhes_legiveis({'fotos': {'adicionadas': 2, 'removidas': 1}, 'observacao': 'acerto'}),
                          ["Fotos: 2 adicionada(s), 1 removida(s)", "Observação: acerto"])

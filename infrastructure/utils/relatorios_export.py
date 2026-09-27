@@ -9,7 +9,8 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from infrastructure.utils.formatacao import reais
+from infrastructure.models.produto import sigla
+from infrastructure.utils.formatacao import numero, reais
 from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 FORMATO_MOEDA_EXCEL = '#,##0.00'
@@ -63,9 +64,11 @@ CREDITO = Secao(
 ESTOQUE = Secao(
     titulo="Inventário de Estoque Completo",
     aba="Estoque",
-    cabecalho=("Produto", "Preço de Venda", "Qtd em Estoque"),
-    linhas=lambda r: [(p.nome, p.preco_venda, p.quantidade_estoque) for p in r.estoque_ordenado],
-    larguras_pdf=(250, 130, 132),
+    cabecalho=("Produto", "Preço de Venda", "Qtd em Estoque", "Unidade"),
+    linhas=lambda r: [
+        (p.nome, p.preco_venda, _quantidade_numerica(p.quantidade_estoque), sigla(p.unidade)) for p in r.estoque_ordenado
+    ],
+    larguras_pdf=(220, 110, 110, 72),
 )
 
 SECOES_POR_TIPO = {
@@ -128,9 +131,16 @@ def _secao_pdf(secao, relatorio, estilo_titulo):
     return [Paragraph(f"<b>{secao.titulo}</b>", estilo_titulo), Spacer(1, 10), tabela, Spacer(1, 15)]
 
 
+def _quantidade_numerica(valor):
+    """Quantidade como número comum (3 ou 2.5): Decimal nas planilhas e PDFs é tratado como dinheiro."""
+    return int(valor) if valor == valor.to_integral_value() else float(valor)
+
+
 def _texto_pdf(valor):
     if isinstance(valor, Decimal):
         return reais(valor)
+    if isinstance(valor, float):
+        return numero(valor)
     return str(valor)
 
 

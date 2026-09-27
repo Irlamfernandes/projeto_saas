@@ -2,7 +2,10 @@ from decimal import Decimal
 from django.template import Context, Template
 from django.test import SimpleTestCase
 from django.utils import translation
-from interfaces.templatetags.formatacao import intensidade, moeda, moeda_absoluta
+from infrastructure.utils.formatacao import item, numero, quantidade
+from interfaces.templatetags.formatacao import (
+    intensidade, moeda, moeda_absoluta, numero_simples, passo_da_quantidade, unidades_de_medida,
+)
 
 
 class MoedaTest(SimpleTestCase):
@@ -43,3 +46,34 @@ class IntensidadeTest(SimpleTestCase):
 
     def test_escala_do_mapa_de_calor(self):
         self.assertEqual([intensidade(v) for v in (0, 0.5, 1, None)], [15, 58, 100, 15])
+
+
+class QuantidadeTest(SimpleTestCase):
+
+    def test_numero_sem_zeros_sobrando(self):
+        casos = {Decimal('2.500'): '2,5', Decimal('3.000'): '3', Decimal('1234.5'): '1.234,5', 10: '10',
+                 None: '0', Decimal('0.0004'): '0', 'abc': ''}
+        for valor, esperado in casos.items():
+            with self.subTest(valor=valor):
+                self.assertEqual(numero(valor), esperado)
+
+    def test_quantidade_e_item_com_unidade(self):
+        self.assertEqual(quantidade(Decimal('0.350'), 'kg'), '0,35 kg')
+        self.assertEqual(quantidade(3, 'un'), '3 un.')
+        self.assertEqual(item(Decimal('2'), 'un', 'Bolo'), '2× Bolo')
+        self.assertEqual(item(2, None, 'Bolo'), '2× Bolo')
+        self.assertEqual(item(Decimal('1.5'), 'l', 'Suco'), '1,5 L Suco')
+
+    def test_filtros_do_formulario_de_estoque(self):
+        self.assertEqual(numero_simples(Decimal('2.500')), '2.5')
+        self.assertEqual(numero_simples(None), '0')
+        self.assertEqual([passo_da_quantidade(c) for c in (0, 3, None)], ['1', '0.001', '1'])
+        quilo = next(u for u in unidades_de_medida() if u['valor'] == 'kg')
+        self.assertEqual(quilo, {'valor': 'kg', 'rotulo': 'Quilo (kg)', 'sigla': 'kg', 'casas': 3})
+
+    def test_filtros_de_quantidade_no_template(self):
+        from types import SimpleNamespace
+        item_de_venda = SimpleNamespace(quantidade=Decimal('0.250'), produto=SimpleNamespace(unidade='kg', nome='Queijo'))
+        texto = Template("{% load formatacao %}{{ q|quantidade:'kg' }} | {{ item|descricao_do_item }}").render(
+            Context({'q': Decimal('1.500'), 'item': item_de_venda}))
+        self.assertEqual(texto, '1,5 kg | 0,25 kg Queijo')

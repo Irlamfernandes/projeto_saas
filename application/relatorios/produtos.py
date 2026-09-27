@@ -4,7 +4,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
-from django.db.models import DecimalField, ExpressionWrapper, F, IntegerField, Max, Q, Sum
+from django.db.models import DecimalField, ExpressionWrapper, F, Max, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from application.relatorios.periodos import hoje_local, inicio_do_dia
@@ -14,6 +14,7 @@ from application.tenancy import filtrar_por_loja
 from infrastructure.models import Produto
 
 SEM_CATEGORIA = 'Sem categoria'
+QUANTIDADE = DecimalField(max_digits=15, decimal_places=3)
 LIMITE_CLASSE_A = Decimal('80')
 LIMITE_CLASSE_B = Decimal('95')
 CUSTO_DO_ITEM = ExpressionWrapper(F('quantidade') * F('produto__preco_custo'), output_field=DINHEIRO)
@@ -30,7 +31,7 @@ def percentual(parte, todo):
 @dataclass(frozen=True)
 class LinhaDeLucro:
     nome: str
-    quantidade: int
+    quantidade: Decimal
     receita: Decimal
     custo: Decimal
     sem_custo: bool = False
@@ -141,10 +142,11 @@ def _resumo_da_classe(classe, linhas, total):
 @dataclass(frozen=True)
 class ProdutoParado:
     nome: str
-    estoque: int
+    estoque: Decimal
     valor_em_estoque: Decimal
     ultima_venda: datetime | None
     dias_parado: int | None  # None: nunca vendeu
+    unidade: str = 'un'
 
 
 def produtos_parados(user, dias=60, agora=None):
@@ -152,7 +154,7 @@ def produtos_parados(user, dias=60, agora=None):
     agora = timezone.localtime(agora)
     limite = inicio_do_dia(agora.date() - timedelta(days=dias))
     produtos = (
-        filtrar_por_loja(Produto.objects.filter(quantidade_estoque__gt=0), user)
+        filtrar_por_loja(Produto.objects.filter(controla_estoque=True, quantidade_estoque__gt=0), user)
         .annotate(
             ultima_venda=Max('itemvenda__venda__data_venda'),
             valor_parado=ExpressionWrapper(F('quantidade_estoque') * F('preco_custo'), output_field=DINHEIRO),
@@ -163,7 +165,7 @@ def produtos_parados(user, dias=60, agora=None):
     return [
         ProdutoParado(
             p.nome, p.quantidade_estoque, p.valor_parado, p.ultima_venda,
-            (agora - p.ultima_venda).days if p.ultima_venda else None,
+            (agora - p.ultima_venda).days if p.ultima_venda else None, p.unidade,
         )
         for p in produtos
     ]
@@ -174,23 +176,27 @@ def produtos_parados(user, dias=60, agora=None):
 @dataclass(frozen=True)
 class Reposicao:
     nome: str
-    estoque: int
+    estoque: Decimal
     media_diaria: Decimal
     dias_restantes: int
     sugestao_de_compra: int
+    unidade: str = 'un'
 
 
 def previsao_de_reposicao(user, janela=30, horizonte=14, agora=None):
     """Produtos que acabam em até `horizonte` dias, pela média de vendas dos últimos `janela` dias.
 
-    A sugestão de compra cobre `horizonte` dias de vendas.
+    A sugestão de compra cobre `horizonte` dias de vendas. Produto sem controle de estoque não entra.
     """
     inicio = hoje_local(agora) - timedelta(days=janela - 1)
     vendidos = Coalesce(
-        Sum('itemvenda__quantidade', filter=Q(itemvenda__venda__data_venda__date__gte=inicio)), 0,
-        output_field=IntegerField(),
+        Sum('itemvenda__quantidade', filter=Q(itemvenda__venda__data_venda__date__gte=inicio)), Value(Decimal('0')),
+        output_field=QUANTIDADE,
     )
-    produtos = filtrar_por_loja(Produto.objects.all(), user).annotate(vendido=vendidos).filter(vendido__gt=0)
+    produtos = (
+        filtrar_por_loja(Produto.objects.filter(controla_estoque=True), user)
+        .annotate(vendido=vendidos).filter(vendido__gt=0)
+    )
     previsoes = (_prever(p, Decimal(p.vendido) / janela, horizonte) for p in produtos)
     return sorted((p for p in previsoes if p.dias_restantes <= horizonte), key=lambda p: (p.dias_restantes, p.nome))
 
@@ -200,5 +206,5 @@ def _prever(produto, media_diaria, horizonte):
     sugestao = max(0, math.ceil(media_diaria * horizonte - produto.quantidade_estoque))
     return Reposicao(
         produto.nome, produto.quantidade_estoque, media_diaria.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP),
-        dias_restantes, sugestao,
+        dias_restantes, sugestao, produto.unidade,
     )

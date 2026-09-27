@@ -1,0 +1,25 @@
+{% load formatacao %}{% comment %}
+Como o produto é vendido e o estoque dele. Parâmetros: produto (na edição), prefixo (ids únicos), ajuda.
+O static/js/main.js troca o passo e a sigla da quantidade conforme a unidade e esconde a quantidade sem controle.
+{% endcomment %}{% unidades_de_medida as unidades %}
+<div class="grid gap-4" data-estoque-produto>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="campo">
+            <label for="{{ prefixo }}-unidade" class="rotulo">Vendido por</label>
+            <select id="{{ prefixo }}-unidade" name="unidade" class="entrada">
+                {% for unidade in unidades %}
+                <option value="{{ unidade.valor }}" data-sigla="{{ unidade.sigla }}" data-casas="{{ unidade.casas }}"{% if produto.unidade == unidade.valor %} selected{% endif %}>{{ unidade.rotulo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="campo{% if produto and not produto.controla_estoque %} hidden{% endif %}" data-bloco-quantidade>
+            <label for="{{ prefixo }}-estoque" class="rotulo">Quantidade em estoque <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <div class="entrada-grupo"><input type="number" id="{{ prefixo }}-estoque" name="quantidade_estoque" value="{% if produto %}{{ produto.quantidade_estoque|numero_simples }}{% else %}1{% endif %}" min="0" step="{{ produto.casas_decimais|passo_da_quantidade }}" required inputmode="decimal" class="tabular-nums"><span class="afixo-fim" data-sigla-do-estoque>{{ produto.sigla|default:'un.' }}</span></div>
+        </div>
+    </div>
+    <label class="flex items-start gap-2.5 text-sm">
+        <input type="checkbox" name="sem_controle_de_estoque" value="1"{% if produto and not produto.controla_estoque %} checked{% endif %} class="mt-0.5 w-4 h-4 rounded border-linha text-marca-600 focus:ring-marca-500">
+        <span><b class="font-semibold">Não controlar o estoque</b><span class="block text-xs text-tinta-suave">Para o que é feito na hora, por encomenda ou serviço: vende sem conferir nem baixar a quantidade.</span></span>
+    </label>
+    <p class="ajuda -mt-2">{{ ajuda }}</p>
+</div>

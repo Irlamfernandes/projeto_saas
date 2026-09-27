@@ -2,7 +2,8 @@
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from django import template
-from infrastructure.utils.formatacao import reais
+from infrastructure.models import Unidade
+from infrastructure.utils.formatacao import item as descrever_item, numero, reais
 
 register = template.Library()
 
@@ -10,6 +11,7 @@ ROTULOS = {
     'nome': 'Nome', 'codigo_interno': 'Código', 'categoria': 'Categoria', 'preco_custo': 'Preço de custo',
     'preco_venda': 'Preço de venda', 'quantidade_estoque': 'Estoque', 'descricao': 'Descrição',
     'telefone': 'Telefone', 'email': 'E-mail', 'endereco': 'Endereço',
+    'unidade': 'Vendido por', 'controla_estoque': 'Controla estoque',
 }
 CAMPOS_EM_REAIS = {'preco_custo', 'preco_venda'}
 VAZIO = '(vazio)'
@@ -53,8 +55,14 @@ def _mudanca(campo, antes, depois):
 def _valor(campo, valor):
     if valor in (None, ''):
         return VAZIO
+    if isinstance(valor, bool):
+        return 'sim' if valor else 'não'
     if campo in CAMPOS_EM_REAIS:
         return _reais(valor)
+    if campo == 'quantidade_estoque' and _e_numero(valor):
+        return numero(valor)
+    if campo == 'unidade' and valor in Unidade.values:
+        return Unidade(valor).label
     return str(valor)
 
 
@@ -72,7 +80,8 @@ def _e_numero(valor):
 
 def _resumo_da_venda(venda):
     itens = ', '.join(
-        f"{item['quantidade']}× {item['produto']} ({_reais(item['preco_unitario'])})" for item in venda.get('itens', [])
+        f"{descrever_item(item['quantidade'], item.get('unidade'), item['produto'])} ({_reais(item['preco_unitario'])})"
+        for item in venda.get('itens', [])
     )
     partes = [venda.get('cliente') or 'Balcão', itens or 'sem itens', f"total {_reais(venda.get('total'))}"]
     if venda.get('forma_pagamento'):

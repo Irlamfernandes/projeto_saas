@@ -72,6 +72,7 @@ class ProdutosParadosTest(TestCase):
         parado = c.produto("Forma de bolo", preco_custo='40', estoque=3)
         nunca = c.produto("Vela", preco_custo='2', estoque=5)
         c.produto("Sem estoque", estoque=0)
+        c.produto("Sob encomenda", estoque=5, controla_estoque=False)
         c.venda(CenarioDeLoja.quando(2026, 3, 19), [(vende_sempre, 1)])
         c.venda(CenarioDeLoja.quando(2026, 1, 5), [(parado, 1)])
 
@@ -92,6 +93,8 @@ class PrevisaoDeReposicaoTest(TestCase):
         farinha = c.produto("Farinha", estoque=100)
         c.venda(CenarioDeLoja.quando(2026, 3, 10), [(leite, 30), (fermento, 30), (farinha, 30)])
         c.venda(CenarioDeLoja.quando(2026, 1, 1), [(farinha, 999)])  # fora da janela de 30 dias
+        encomenda = c.produto("Bolo sob encomenda", estoque=0, controla_estoque=False)
+        c.venda(CenarioDeLoja.quando(2026, 3, 10), [(encomenda, 30)])  # sem controle: nunca "acaba"
 
         previsao = previsao_de_reposicao(c.usuario(), janela=30, horizonte=14, agora=AGORA)
 
@@ -99,3 +102,13 @@ class PrevisaoDeReposicaoTest(TestCase):
             ("Leite", Decimal('1.0'), 0, 14),
             ("Fermento", Decimal('1.0'), 2, 12),
         ])
+
+    def test_por_quilo_usa_fracoes_e_leva_a_unidade(self):
+        c = CenarioDeLoja()
+        queijo = c.produto("Queijo", estoque=Decimal('1.5'), unidade='kg')
+        c.venda(CenarioDeLoja.quando(2026, 3, 10), [(queijo, Decimal('15'))])
+
+        [previsao] = previsao_de_reposicao(c.usuario(), janela=30, horizonte=14, agora=AGORA)
+
+        self.assertEqual((previsao.estoque, previsao.media_diaria, previsao.dias_restantes, previsao.sugestao_de_compra,
+                          previsao.unidade), (Decimal('1.5'), Decimal('0.5'), 3, 6, 'kg'))

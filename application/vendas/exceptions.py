@@ -1,4 +1,5 @@
 from application.exceptions import RegraDeNegocioError
+from infrastructure.utils.formatacao import quantidade
 
 
 class VendaError(RegraDeNegocioError):
@@ -12,9 +13,17 @@ class ProdutoNaoEncontrado(VendaError):
 
 class EstoqueInsuficiente(VendaError):
     def __init__(self, produto):
-        super().__init__(
-            f"Estoque insuficiente para '{produto.nome}'. Disponível: {produto.quantidade_estoque}."
-        )
+        disponivel = quantidade(produto.quantidade_estoque, produto.unidade)
+        super().__init__(f"Estoque insuficiente para '{produto.nome}'. Disponível: {disponivel}")
+
+
+class QuantidadeFracionada(VendaError):
+    def __init__(self, produto):
+        if produto.casas_decimais:
+            detalhe = f"use no máximo {produto.casas_decimais} casas depois da vírgula"
+        else:
+            detalhe = "use só números inteiros"
+        super().__init__(f"'{produto.nome}' é vendido por {produto.get_unidade_display().lower()}: {detalhe}.")
 
 
 class VendaSemItens(VendaError):

@@ -57,11 +57,7 @@
                 </div>
             </fieldset>
 
-            <div class="campo">
-                <label for="id_quantidade_estoque" class="rotulo">Quantidade em estoque <span class="obrigatorio" aria-hidden="true">*</span></label>
-                <div class="entrada-grupo"><input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
-                <p class="ajuda">Avisamos no início quando estiver acabando.</p>
-            </div>
+            {% include 'interfaces/_estoque_do_produto.html' with prefixo='id' ajuda='Avisamos no início quando estiver acabando.' %}
 
             <div class="campo">
                 <label for="id_descricao_produto" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
@@ -110,7 +106,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <label class="flex items-center gap-2 text-sm text-tinta-suave cursor-pointer">
                     <input type="checkbox" name="baixo_estoque" value="1" {% if filtro_baixo_estoque %}checked{% endif %} class="w-4 h-4 rounded border-linha text-marca-600 focus:ring-marca-500">
-                    Só estoque baixo (até 5 un.)
+                    Só estoque baixo (até 5)
                 </label>
                 <span class="flex gap-2">
                     {% if filtro_busca or filtro_categoria or filtro_baixo_estoque or filtro_ordem != '-data_criacao' %}<a href="{% url 'produtos' %}" class="btn-fantasma btn-pequeno">Limpar</a>{% endif %}
@@ -145,9 +141,10 @@
                                         {% if produto.categoria %}<span class="pilula-marca py-0">{{ produto.categoria }}</span>{% endif %}
                                     </span>
                                     <span class="mt-1.5 block">
-                                        {% if produto.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
-                                        {% elif produto.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ produto.quantidade_estoque }} un.</span>
-                                        {% else %}<span class="pilula-neutra">{{ produto.quantidade_estoque }} un.</span>{% endif %}
+                                        {% if not produto.controla_estoque %}<span class="pilula-neutra">Sem controle de estoque</span>
+                                        {% elif produto.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
+                                        {% elif produto.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ produto.quantidade_estoque|quantidade:produto.unidade }}</span>
+                                        {% else %}<span class="pilula-neutra">{{ produto.quantidade_estoque|quantidade:produto.unidade }}</span>{% endif %}
                                     </span>
                                 </span>
                             </div>

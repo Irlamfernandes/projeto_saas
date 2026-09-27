@@ -37,7 +37,8 @@ class ProdutosSelectorsTest(TestCase):
     def test_filtra_categoria_exata(self):
         self.assertEqual(list(filtrar_produtos(self.produtos, categoria="Roupas")), [self.camiseta])
 
-    def test_estoque_baixo_inclui_o_limite(self):
+    def test_estoque_baixo_inclui_o_limite_e_ignora_quem_nao_controla(self):
+        Produto.objects.create(loja=self.loja, nome="Bolo", preco_venda=Decimal('5'), controla_estoque=False)
         resultado = filtrar_produtos(self.produtos, baixo_estoque=True, ordem='nome')
         self.assertEqual(list(resultado), [self.camiseta, self.caneca])
 

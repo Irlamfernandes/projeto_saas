@@ -104,8 +104,8 @@
                     <td class="numero">R$ {{ prod.preco_venda|moeda }}</td>
                     <td class="text-right">
                         {% if prod.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
-                        {% elif prod.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ prod.quantidade_estoque }} un.</span>
-                        {% else %}<span class="pilula-neutra">{{ prod.quantidade_estoque }} un.</span>{% endif %}
+                        {% elif prod.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ prod.quantidade_estoque|quantidade:prod.unidade }}</span>
+                        {% else %}<span class="pilula-neutra">{{ prod.quantidade_estoque|quantidade:prod.unidade }}</span>{% endif %}
                     </td>
                 </tr>
                 {% empty %}

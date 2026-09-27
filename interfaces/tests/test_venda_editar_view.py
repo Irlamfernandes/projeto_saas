@@ -98,7 +98,7 @@ class VendaEditarViewTest(VendaEditarViewTestCase):
         response = self._editar([(self.cafe, 1)])
 
         self.assertRedirects(response, self.url)
-        self.assertIn("Estoque insuficiente para 'Café'. Disponível: 0.", self._mensagens(response))
+        self.assertIn("Estoque insuficiente para 'Café'. Disponível: 0 un.", self._mensagens(response))
         self.assertEqual(self.venda.itens.get().produto, self.arroz)
 
     def test_superuser_nao_move_venda_para_cliente_de_outra_loja(self):
