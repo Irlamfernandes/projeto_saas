@@ -1,0 +1,5 @@
+# Senha inventada nos testes do formulário de login (não é segredo real).
+365638da2621b02acf42fbb8053772fc3f6835c2:interfaces/tests/test_login_form.py:generic-api-key:11
+365638da2621b02acf42fbb8053772fc3f6835c2:interfaces/tests/test_login_form.py:generic-api-key:20
+5a1207d54dda2cd03488beb02cc58faf699e38af:interfaces/tests/test_login_form.py:generic-api-key:11
+5a1207d54dda2cd03488beb02cc58faf699e38af:interfaces/tests/test_login_form.py:generic-api-key:20

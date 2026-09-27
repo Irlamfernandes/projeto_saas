@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test sonar css traducoes
+.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test sonar seguranca css traducoes
 
 # Sobe os containers em background fazendo build
 up:
@@ -45,6 +45,14 @@ collectstatic:
 test:
 	python -m pytest --cov --cov-report=term-missing --cov-report=xml
 	npm test -- --coverage
+
+# O que o SonarQube não vê: falhas conhecidas nas bibliotecas e senhas/chaves no histórico do git.
+# Gitleaks: https://github.com/gitleaks/gitleaks (binário único; valores sempre ocultos no relatório)
+seguranca:
+	pip-audit -r requirements.txt -r requirements-dev.txt
+	npm audit
+	@command -v gitleaks >/dev/null || (echo "Instale o gitleaks: https://github.com/gitleaks/gitleaks/releases"; exit 1)
+	gitleaks git . --redact --no-banner
 
 # Roda os testes (gerando a cobertura) e envia a análise ao SonarQube local.
 # O token não fica em arquivo: SONAR_TOKEN=seu_token make sonar

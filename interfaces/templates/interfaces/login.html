@@ -58,10 +58,6 @@
         </main>
     </div>
     {% include 'interfaces/_rodape_vitrine.html' %}
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register("{% static 'sw.js' %}"));
-        }
-    </script>
+    <script src="{% static 'js/registrar-sw.js' %}" data-sw="{% static 'sw.js' %}"></script>
 </body>
 </html>

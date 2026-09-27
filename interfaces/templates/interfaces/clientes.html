@@ -68,7 +68,7 @@
                             <span class="flex flex-col items-stretch gap-1.5">
                             <a href="{% url 'extrato_cliente' cliente.id %}" class="btn-secundario btn-pequeno" title="Caderneta de {{ cliente.nome }}"><svg class="ico ico-sm"><use href="#i-caderneta"/></svg>Caderneta</a>
                             <button type="button" class="btn-fantasma btn-pequeno" title="Editar {{ cliente.nome }}"
-                                    onclick="abrirModalEdicaoCliente('{{ cliente.id }}', '{{ cliente.nome|escapejs }}', '{{ cliente.telefone|default:''|escapejs }}', '{{ cliente.email|default:''|escapejs }}', '{{ cliente.endereco|default:''|escapejs }}')">
+                                    data-editar-cliente="{% url 'editar_cliente' cliente.id %}" data-nome="{{ cliente.nome }}" data-telefone="{{ cliente.telefone|default:'' }}" data-email="{{ cliente.email|default:'' }}" data-endereco="{{ cliente.endereco|default:'' }}">
                                 <svg class="ico ico-sm"><use href="#i-editar"/></svg>Editar
                             </button>
                             </span>
@@ -84,19 +84,19 @@
     </section>
 </div>
 
-<dialog id="modal-edicao-cliente" class="w-full max-w-lg rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-veu/50" aria-labelledby="modal-titulo">
+<dialog id="modal-edicao-cliente" class="w-full max-w-lg rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-veu/50" aria-labelledby="modal-titulo" data-fechar-fora>
     <form id="form-edicao-cliente" method="POST" class="grid gap-4 p-6">
         {% csrf_token %}
         <div class="flex items-center justify-between">
             <h2 id="modal-titulo" class="text-lg font-bold">Editar cliente</h2>
-            <button type="button" onclick="fecharModalEdicaoCliente()" class="btn-fantasma px-2" aria-label="Fechar"><svg class="ico"><use href="#i-fechar"/></svg></button>
+            <button type="button" data-fechar-dialogo class="btn-fantasma px-2" aria-label="Fechar"><svg class="ico"><use href="#i-fechar"/></svg></button>
         </div>
         <div class="campo"><label for="edit-cli-nome" class="rotulo">Nome <span class="obrigatorio" aria-hidden="true">*</span></label><input type="text" id="edit-cli-nome" name="nome" required maxlength="255" class="entrada"></div>
         <div class="campo"><label for="edit-cli-telefone" class="rotulo">Telefone / WhatsApp <span class="rotulo-opcional">opcional</span></label><input type="tel" id="edit-cli-telefone" name="telefone" maxlength="20" class="entrada"></div>
         <div class="campo"><label for="edit-cli-email" class="rotulo">E-mail <span class="rotulo-opcional">opcional</span></label><input type="email" id="edit-cli-email" name="email" class="entrada"></div>
         <div class="campo"><label for="edit-cli-endereco" class="rotulo">Endereço ou observação <span class="rotulo-opcional">opcional</span></label><textarea id="edit-cli-endereco" name="endereco" rows="2" class="entrada"></textarea></div>
         <div class="flex justify-end gap-2">
-            <button type="button" onclick="fecharModalEdicaoCliente()" class="btn-secundario">Cancelar</button>
+            <button type="button" data-fechar-dialogo class="btn-secundario">Cancelar</button>
             <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar alterações</button>
         </div>
     </form>

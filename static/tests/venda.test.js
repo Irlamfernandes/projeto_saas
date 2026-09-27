@@ -336,3 +336,124 @@ describe('forma de pagamento obrigatória', () => {
         expect(() => iniciarFormaObrigatoria(document.querySelector('form'))).not.toThrow();
     });
 });
+
+describe('regras finas do carrinho (achadas pelo teste de mutação)', () => {
+    beforeEach(() => { Element.prototype.scrollIntoView = jest.fn(); });
+
+    test('ordem da busca: código igual, depois começa com (nome ou código), depois só contém', () => {
+        const catalogo = [
+            { id: 1, nome: 'Pão de queijo', codigo: 'X1' },
+            { id: 2, nome: 'Queijo minas', codigo: 'Q2' },
+            { id: 3, nome: 'Abacaxi', codigo: 'QUEIJO' },
+            { id: 4, nome: 'Zeta', codigo: 'QUEIJO9' },
+        ];
+        expect(buscarProdutos(catalogo, 'queijo').map((p) => p.id)).toEqual([3, 2, 4, 1]);
+    });
+
+    test('subtotal da linha é preço × quantidade', () => {
+        const { busca } = montarPagina();
+        digitar(busca, 'p01');
+        tecla(busca, 'Enter');
+        document.querySelector('[aria-label="Aumentar Pão francês"]').click();
+        document.querySelector('[aria-label="Aumentar Pão francês"]').click();
+        expect(document.querySelector('.item-carrinho .w-24').textContent).toBe(formatarReais(2.4));
+        expect(document.querySelector('[data-carrinho-vazio]').classList.contains('hidden')).toBe(true);
+    });
+
+    test('resultado mostra código e estoque; 1 unidade ainda vende, 0 é "sem estoque"', () => {
+        const { busca, resultados } = montarPagina();
+        digitar(busca, 'p01');
+        expect(resultados.textContent).toContain('#P01 · 100 em estoque');
+        digitar(busca, 'coado');
+        expect(resultados.textContent).toContain('10 em estoque');
+        expect(resultados.textContent).not.toContain('#');
+        digitar(busca, 'bolo');
+        expect(resultados.textContent).toContain('#B1 · sem estoque');
+        expect(resultados.querySelector('[role=option]').getAttribute('aria-disabled')).toBe('true');
+    });
+
+    test('produto com 1 unidade não aparece como sem estoque', () => {
+        document.body.innerHTML = `
+            <div data-carrinho data-catalogo="ultimo">
+                <input id="busca-produto"><ul id="resultados-produto" class="hidden"></ul>
+                <ul data-itens-lista></ul><p data-carrinho-vazio></p><strong data-total></strong>
+            </div>
+            <script type="application/json" id="ultimo">[{"id": 9, "nome": "Último", "codigo": "", "preco": "1.00", "estoque": 1}]</script>`;
+        iniciarCarrinho(document.querySelector('[data-carrinho]'));
+        const busca = document.getElementById('busca-produto');
+        digitar(busca, 'ultimo');
+        const opcao = document.querySelector('[role=option]');
+        expect(opcao.textContent).toContain('1 em estoque');
+        expect(opcao.getAttribute('aria-disabled')).toBe('false');
+    });
+
+    test('clique em produto esgotado não adiciona; em produto com estoque adiciona', () => {
+        const { busca, resultados } = montarPagina();
+        digitar(busca, 'bolo');
+        resultados.querySelector('[role=option]').dispatchEvent(new MouseEvent('mousedown', { cancelable: true }));
+        expect(enviados().produtos).toEqual([]);
+        digitar(busca, 'coado');
+        resultados.querySelector('[role=option]').dispatchEvent(new MouseEvent('mousedown', { cancelable: true }));
+        expect(enviados().produtos).toEqual(['3']);
+    });
+
+    test('Enter no produto esgotado não adiciona', () => {
+        const { busca } = montarPagina();
+        digitar(busca, 'bolo');
+        tecla(busca, 'Enter');
+        expect(enviados().produtos).toEqual([]);
+    });
+
+    test('setas andam uma posição e dão a volta; a opção ativa fica marcada', () => {
+        const { busca, resultados } = montarPagina();
+        digitar(busca, 'o'); // pão de queijo, pão francês, café coado, bolo...
+        const marcadas = () => [...resultados.children].map((o) => o.getAttribute('aria-selected'));
+        expect(marcadas()[0]).toBe('true');
+        expect(marcadas().filter((m) => m === 'true')).toHaveLength(1);
+        tecla(busca, 'ArrowDown');
+        expect(marcadas()[1]).toBe('true');
+        tecla(busca, 'ArrowUp');
+        tecla(busca, 'ArrowUp');
+        expect(marcadas()[marcadas().length - 1]).toBe('true');
+        expect(busca.getAttribute('aria-activedescendant')).toBe(resultados.lastElementChild.id);
+    });
+
+    test('passar o mouse marca a opção; Escape fecha a lista e outras teclas não', () => {
+        const { busca, resultados } = montarPagina();
+        digitar(busca, 'o');
+        resultados.children[2].dispatchEvent(new MouseEvent('mousemove'));
+        expect(resultados.children[2].getAttribute('aria-selected')).toBe('true');
+        tecla(busca, 'a');
+        expect(resultados.classList.contains('hidden')).toBe(false);
+        tecla(busca, 'Escape');
+        expect(resultados.classList.contains('hidden')).toBe(true);
+    });
+
+    test('setas sem resultado não marcam nada', () => {
+        const { busca } = montarPagina();
+        digitar(busca, 'xyz');
+        tecla(busca, 'ArrowDown');
+        expect(busca.hasAttribute('aria-activedescendant')).toBe(false);
+    });
+
+    test('formulário com cliente mas sem o resumo não quebra', () => {
+        document.body.innerHTML = '<form><select name="cliente"><option value="">Balcão</option></select></form>';
+        expect(() => iniciarResumoDePagamento(document.querySelector('form'))).not.toThrow();
+    });
+
+    test('ao carregar a página, o carrinho dentro de um formulário liga também o resumo', () => {
+        document.body.innerHTML = `
+            <form>
+                <select name="cliente"><option value="">Balcão</option></select>
+                <div data-pago-agora><input name="valor_pago"></div><p data-resumo-pagamento></p>
+                <div data-carrinho data-catalogo="catalogo">
+                    <input id="busca-produto"><ul id="resultados-produto" class="hidden"></ul>
+                    <ul data-itens-lista></ul><p data-carrinho-vazio></p><strong data-total></strong>
+                </div>
+            </form>
+            <script type="application/json" id="catalogo">${JSON.stringify(CATALOGO)}</script>`;
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        expect(document.querySelector('[data-resumo-pagamento]').textContent).toBe('Venda de balcão: paga na hora.');
+    });
+});
+

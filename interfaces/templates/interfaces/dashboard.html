@@ -128,9 +128,9 @@
     <section class="cartao cartao-corpo" aria-labelledby="t-estoque">
         <div class="cartao-cabecalho">
             <div><h2 id="t-estoque" class="titulo-cartao">Estoque baixo</h2><p class="subtitulo">Produtos com poucas unidades, do menor para o maior estoque</p></div>
-            <form method="GET" class="flex items-center gap-2">
+            <form method="GET" class="flex items-center gap-2" data-enviar-ao-mudar>
                 <label for="limite_estoque" class="text-xs font-semibold text-tinta-suave whitespace-nowrap">Com até</label>
-                <select name="limite_estoque" id="limite_estoque" onchange="this.form.submit()" class="entrada py-1.5 text-sm w-auto">
+                <select name="limite_estoque" id="limite_estoque" class="entrada py-1.5 text-sm w-auto">
                     {% for opcao in opcoes_de_limite %}
                     <option value="{{ opcao }}" {% if limite_estoque == opcao %}selected{% endif %}>{{ opcao }} un.</option>
                     {% endfor %}

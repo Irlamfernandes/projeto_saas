@@ -1,0 +1,8 @@
+Fontes usadas no sistema, hospedadas aqui para não depender do Google Fonts.
+Ambas são livres sob a SIL Open Font License 1.1 (https://openfontlicense.org), que permite
+usar, hospedar e distribuir junto com software, inclusive comercial.
+
+- Figtree — Erik Kennedy — https://github.com/erikdkennedy/figtree
+- Bricolage Grotesque — Mathieu Triay — https://github.com/ateliertriay/bricolage
+
+Arquivos: subconjunto latino em woff2, baixados de fonts.gstatic.com (versão v9 de ambas).

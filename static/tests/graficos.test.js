@@ -96,6 +96,7 @@ describe('plugins', () => {
         mira.afterDatasetsDraw(grafico);
         expect(ctx.moveTo).toHaveBeenCalledWith(50, 10);
         expect(ctx.lineTo).toHaveBeenCalledWith(50, 200);
+        expect(ctx.setLineDash).toHaveBeenCalledWith([3, 3]); // tracejada, para não parecer dado
 
         mira.afterDatasetsDraw({ ctx, chartArea: {} }); // sem tooltip
         expect(ctx.stroke).toHaveBeenCalledTimes(1);
@@ -203,3 +204,25 @@ describe('desenharGraficos', () => {
         expect(g.remEmPx(0.75)).toBe(12); // padrão de 16px sem letra configurada
     });
 });
+
+describe('regras finas dos gráficos (achadas pelo teste de mutação)', () => {
+    test('"mil" começa exatamente em R$ 1.000', () => {
+        expect(g.formatarMoedaCurta(1000)).toBe('R$ 1 mil');
+        expect(g.formatarMoedaCurta(999)).toBe('R$ 999');
+    });
+
+    test('cor lida do CSS vem sem espaços em volta', () => {
+        document.documentElement.style.setProperty('--cor-destaque', '   #c96a05  ');
+        expect(g.lerTokens().destaque).toBe('#c96a05');
+    });
+
+    test('sem preferência por menos movimento, a animação continua ligada', () => {
+        window.matchMedia = jest.fn(() => ({ matches: false }));
+        const ChartFalso = jest.fn();
+        ChartFalso.defaults = { font: {} };
+        g.desenharGraficos(document, ChartFalso);
+        expect(ChartFalso.defaults.animation).toBeUndefined();
+        delete window.matchMedia;
+    });
+});
+

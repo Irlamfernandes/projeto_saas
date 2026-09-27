@@ -100,11 +100,7 @@
         {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes' %}
     </nav>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => navigator.serviceWorker.register("{% static 'sw.js' %}"));
-        }
-    </script>
+    <script src="{% static 'js/registrar-sw.js' %}" data-sw="{% static 'sw.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -120,6 +120,42 @@ describe('acompanhar a cobrança', () => {
         erroDoJsdom.mockRestore();
     });
 
+    test('resposta com erro do servidor não recarrega, mesmo sem "pendente"', async () => {
+        const { area } = montar();
+        global.fetch = jest.fn(() => respostaJson({ status: 'paga' }, false));
+        const recarregar = jest.fn();
+        const parar = acompanharCobranca(area, { recarregar });
+
+        await esperarVolta();
+
+        expect(recarregar).not.toHaveBeenCalled();
+        parar();
+    });
+
+    test('parar interrompe as consultas', async () => {
+        const { area } = montar();
+        global.fetch = jest.fn(() => respostaJson({ status: 'pendente' }));
+        const parar = acompanharCobranca(area, { recarregar: jest.fn() });
+
+        parar();
+        await esperarVolta();
+
+        expect(global.fetch).not.toHaveBeenCalled();
+    });
+
+    test('o botão de copiar é ligado ao carregar a página', async () => {
+        const { botao } = montar();
+        global.fetch = jest.fn(() => respostaJson({ status: 'pendente' }));
+        const writeText = jest.fn(() => Promise.resolve());
+        Object.assign(navigator, { clipboard: { writeText } });
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
+        botao.click();
+        await Promise.resolve();
+
+        expect(writeText).toHaveBeenCalledWith('000201PIX');
+    });
+
     test('liga sozinho ao carregar a página', async () => {
         montar();
         global.fetch = jest.fn(() => respostaJson({ status: 'pendente' }));

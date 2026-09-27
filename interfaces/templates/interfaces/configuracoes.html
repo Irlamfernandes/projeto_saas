@@ -47,7 +47,7 @@
         </form>
     </div>
     {% if request.user.loja.logo_url %}
-    <form id="form-remover-marca" method="POST" action="{% url 'marca_remover' %}" onsubmit="return confirm('Remover a marca da loja?')">{% csrf_token %}</form>
+    <form id="form-remover-marca" method="POST" action="{% url 'marca_remover' %}" data-confirmar="Remover a marca da loja?">{% csrf_token %}</form>
     {% endif %}
 </section>
 {% endif %}
