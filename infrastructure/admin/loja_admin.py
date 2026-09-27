@@ -4,9 +4,13 @@ from infrastructure.models.loja_model import LojaModel
 
 @admin.register(LojaModel)
 class LojaAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nome_loja', 'ativo', 'criado_em')
+    list_display = ('id', 'nome_loja', 'ativo', 'vencimento', 'criado_em')
     search_fields = ('nome_loja',)
-    list_filter = ('ativo', 'criado_em')
+    list_filter = ('ativo', 'vencimento', 'criado_em')
+
+    def get_readonly_fields(self, request, obj=None):
+        # O vencimento só muda por pagamento confirmado; à mão, só o superusuário (casos especiais).
+        return () if request.user.is_superuser else ('vencimento',)
     
     def get_queryset(self, request):
         qs = super().get_queryset(request)

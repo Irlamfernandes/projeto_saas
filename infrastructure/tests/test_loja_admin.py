@@ -48,9 +48,13 @@ class LojaAdminTest(TestCase):
     # ---------------------------------------------------------
     def test_admin_configuration(self):
         """Verifica se as configurações básicas do Django Admin estão corretas."""
-        self.assertEqual(self.loja_admin.list_display, ('id', 'nome_loja', 'ativo', 'criado_em'))
+        self.assertEqual(self.loja_admin.list_display, ('id', 'nome_loja', 'ativo', 'vencimento', 'criado_em'))
         self.assertEqual(self.loja_admin.search_fields, ('nome_loja',))
-        self.assertEqual(self.loja_admin.list_filter, ('ativo', 'criado_em'))
+        self.assertEqual(self.loja_admin.list_filter, ('ativo', 'vencimento', 'criado_em'))
+
+    def test_so_o_superusuario_muda_o_vencimento_a_mao(self):
+        self.assertEqual(self.loja_admin.get_readonly_fields(DummyRequest(user=self.superuser)), ())
+        self.assertEqual(self.loja_admin.get_readonly_fields(DummyRequest(user=self.user_com_loja)), ('vencimento',))
 
     # ---------------------------------------------------------
     # Testes do método get_queryset

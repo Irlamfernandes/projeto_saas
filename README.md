@@ -130,6 +130,16 @@ make test        # pytest com cobertura + jest
   512px em WebP e aparece no topo do sistema e no cabeçalho dos PDFs (extrato e relatórios, `pdf_marca.py`).
   O PDF baixa a marca só do bucket do Supabase; se não conseguir, sai sem ela.
 
+## Plano e vencimento
+
+- `LojaModel.vencimento`: loja nova ganha 30 dias grátis. Só muda com pagamento confirmado (ou pelo
+  superusuário no admin). O vencimento vale até o fim do dia.
+- Avisos no Início a partir de 7 dias antes (`application/assinatura/situacao.py`); vencido, uma faixa
+  aparece em todas as telas.
+- **Modo só consulta:** com o plano vencido, `@loja_required` recusa qualquer envio de formulário (POST) e
+  volta para a tela anterior com aviso. Consultar e exportar continuam. Telas que precisam funcionar mesmo
+  assim usam `@loja_required(trava_plano_vencido=False)` (Configurações e a renovação).
+
 ## CSS (Tailwind)
 
 `static/css/output.css` é **versionado** e servido direto em produção. Sempre que adicionar ou

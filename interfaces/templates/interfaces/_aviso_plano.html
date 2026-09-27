@@ -1,0 +1,9 @@
+{% comment %}Aviso do vencimento do plano, com o tom de acordo com os dias que faltam. Parâmetro: plano (SituacaoDoPlano).{% endcomment %}
+<div role="status" class="flex flex-wrap items-center gap-3 rounded-controle border px-4 py-3 text-sm font-medium
+    {% if plano.nivel == 'critico' %}bg-critico-suave border-critico/20 text-critico-texto
+    {% elif plano.nivel == 'alerta' %}bg-alerta-suave border-alerta/30 text-alerta-texto
+    {% else %}bg-marca-50 border-marca-200 text-marca-700{% endif %}" data-aviso-plano>
+    <svg class="ico shrink-0"><use href="#{% if plano.nivel == 'info' %}i-calendario{% else %}i-alerta{% endif %}"/></svg>
+    <span class="flex-1 basis-64">{{ plano.aviso }}</span>
+    <a href="{% url 'configuracoes' %}#plano" class="btn-primario btn-pequeno shrink-0">Renovar plano</a>
+</div>

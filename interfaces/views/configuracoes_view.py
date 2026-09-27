@@ -11,13 +11,13 @@ from interfaces.views.comum import executar_formulario
 TEMPLATE_CONFIGURACOES = 'interfaces/configuracoes.html'
 
 
-@loja_required
+@loja_required(trava_plano_vencido=False)
 def configuracoes_view(request):
     return render(request, TEMPLATE_CONFIGURACOES, {'tamanho_maximo_mb': TAMANHO_MAXIMO_MB})
 
 
 @require_POST
-@loja_required
+@loja_required(trava_plano_vencido=False)
 def marca_enviar_view(request):
     form = MarcaForm(request.POST, request.FILES)
     executar_formulario(
@@ -29,7 +29,7 @@ def marca_enviar_view(request):
 
 
 @require_POST
-@loja_required
+@loja_required(trava_plano_vencido=False)
 def marca_remover_view(request):
     try:
         remover_marca(request.user.loja, usuario=request.user)

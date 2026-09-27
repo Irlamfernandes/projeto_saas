@@ -2,7 +2,7 @@
 
 {% block title %}Configurações · Gestão da Loja{% endblock %}
 {% block header_title %}Configurações{% endblock %}
-{% block subtitulo %}Sua conta e a marca da loja.{% endblock %}
+{% block subtitulo %}Sua conta, a marca da loja e o plano.{% endblock %}
 
 {% block content %}
 <div class="grid gap-5 max-w-2xl">
@@ -48,6 +48,32 @@
     {% if request.user.loja.logo_url %}
     <form id="form-remover-marca" method="POST" action="{% url 'marca_remover' %}" onsubmit="return confirm('Remover a marca da loja?')">{% csrf_token %}</form>
     {% endif %}
+</section>
+{% endif %}
+
+{% if plano %}
+<section id="plano" class="cartao cartao-corpo scroll-mt-6" aria-labelledby="t-plano">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-plano" class="titulo-cartao">Plano</h2><p class="subtitulo">A data de vencimento só muda quando o pagamento é confirmado.</p></div>
+        {% if plano.vencido %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Vencido</span>
+        {% elif plano.nivel %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>Vence em breve</span>
+        {% else %}<span class="pilula-bom"><svg class="ico ico-sm"><use href="#i-check"/></svg>Em dia</span>{% endif %}
+    </div>
+    <dl class="grid gap-3 sm:grid-cols-2">
+        <div class="campo">
+            <dt class="rotulo">Vencimento</dt>
+            <dd class="text-lg font-bold tabular-nums">{{ plano.vencimento|date:"d/m/Y" }}</dd>
+        </div>
+        <div class="campo">
+            <dt class="rotulo">Situação</dt>
+            <dd class="text-sm text-tinta-suave">
+                {% if plano.vencido %}Uso limitado: dá para consultar tudo, mas não registrar nem alterar.
+                {% elif plano.dias_restantes == 0 %}Vence hoje.
+                {% elif plano.dias_restantes == 1 %}Vence amanhã.
+                {% else %}Faltam {{ plano.dias_restantes }} dias.{% endif %}
+            </dd>
+        </div>
+    </dl>
 </section>
 {% endif %}
 
