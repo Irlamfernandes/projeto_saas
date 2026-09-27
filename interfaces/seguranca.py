@@ -9,6 +9,10 @@ from django.conf import settings
 
 CABECALHO = 'Content-Security-Policy'
 PREFIXO_DO_ADMIN = '/admin/'
+PROPRIO = "'self'"
+NENHUM = "'none'"
+INLINE = "'unsafe-inline'"
+DADOS = 'data:'
 
 
 def origem_do_storage():
@@ -21,37 +25,37 @@ def _montar(diretivas):
     return '; '.join(f"{nome} {' '.join(filter(None, fontes))}" for nome, fontes in diretivas.items())
 
 
+def _comum():
+    """Regras iguais para o site e o admin: tudo do próprio site, nada de plugins nem de ser aberto dentro de outro site."""
+    return {
+        'default-src': [PROPRIO],
+        'style-src': [PROPRIO, INLINE],
+        'img-src': [PROPRIO, DADOS, origem_do_storage()],
+        'connect-src': [PROPRIO],
+        'object-src': [NENHUM],
+        'base-uri': [PROPRIO],
+        'form-action': [PROPRIO],
+        'frame-ancestors': [NENHUM],
+    }
+
+
 def politica_do_site():
+    # style-src com inline: atributos style="" (mapa de horários, barra do celular) e estilos que o Chart.js aplica.
+    # img-src com data: = QR code do Pix e ícones embutidos no CSS.
     return _montar({
-        'default-src': ["'self'"],
-        'script-src': ["'self'"],
-        # Atributos style="" (mapa de horários, barra do celular) e estilos que o Chart.js aplica
-        'style-src': ["'self'", "'unsafe-inline'"],
-        # data: = QR code do Pix e ícones embutidos no CSS
-        'img-src': ["'self'", 'data:', origem_do_storage()],
-        'font-src': ["'self'"],
-        'connect-src': ["'self'"],
-        'manifest-src': ["'self'"],
-        'worker-src': ["'self'"],
-        'object-src': ["'none'"],
-        'base-uri': ["'self'"],
-        'form-action': ["'self'"],
-        'frame-ancestors': ["'none'"],
+        **_comum(),
+        'script-src': [PROPRIO],
+        'font-src': [PROPRIO],
+        'manifest-src': [PROPRIO],
+        'worker-src': [PROPRIO],
     })
 
 
 def politica_do_admin():
     return _montar({
-        'default-src': ["'self'"],
-        'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        'style-src': ["'self'", "'unsafe-inline'"],
-        'img-src': ["'self'", 'data:', origem_do_storage()],
-        'font-src': ["'self'", 'data:'],
-        'connect-src': ["'self'"],
-        'object-src': ["'none'"],
-        'base-uri': ["'self'"],
-        'form-action': ["'self'"],
-        'frame-ancestors': ["'none'"],
+        **_comum(),
+        'script-src': [PROPRIO, INLINE, "'unsafe-eval'"],
+        'font-src': [PROPRIO, DADOS],
     })
 
 
