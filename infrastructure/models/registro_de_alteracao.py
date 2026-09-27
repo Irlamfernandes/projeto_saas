@@ -14,6 +14,7 @@ class Acao(models.TextChoices):
     CLIENTE_EDITADO = 'cliente_editado', 'Cliente editado'
     MARCA_ALTERADA = 'marca_alterada', 'Marca da loja alterada'
     PLANO_RENOVADO = 'plano_renovado', 'Plano renovado'
+    LEMBRETE_ENVIADO = 'lembrete_enviado', 'Lembrete de pagamento enviado'
 
 
 class RegistroDeAlteracao(models.Model):

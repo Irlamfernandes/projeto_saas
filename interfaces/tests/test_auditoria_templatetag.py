@@ -46,6 +46,7 @@ class IconeDaAcaoTest(SimpleTestCase):
         casos = {
             'venda_cancelada': 'i-x', 'venda_editada': 'i-venda', 'pagamento_registrado': 'i-carteira',
             'produto_cadastrado': 'i-produto', 'cliente_editado': 'i-clientes', 'marca_alterada': 'i-foto',
+            'lembrete_enviado': 'i-mensagem',
             'algo_novo': 'i-historico',
         }
         for acao, icone in casos.items():

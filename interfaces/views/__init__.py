@@ -16,3 +16,4 @@ from .relatorios_analises_views import (
 )
 from .configuracoes_view import configuracoes_view, marca_enviar_view, marca_remover_view, tema_view
 from .planos_view import planos_view, cobranca_view, cobranca_situacao_view
+from .lembrete_view import lembrete_view

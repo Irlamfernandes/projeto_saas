@@ -1,11 +1,13 @@
 from datetime import timedelta
 from django.shortcuts import render
+from application.a_receber.selectors import clientes_a_cobrar
 from application.relatorios.indicadores import indicadores_do_painel
 from application.relatorios.periodos import hoje_local
 from application.relatorios.produtos import previsao_de_reposicao
 from application.relatorios.selectors import montar_painel
 from application.relatorios.vendas import faturamento_por_dia, mais_vendidos, mapa_de_horarios, vendido_x_recebido
 from interfaces import graficos
+from interfaces.cobrancas import cobrancas_na_tela
 from interfaces.decorators import loja_required
 from interfaces.forms import LimiteEstoqueForm
 from interfaces.views.planos_view import conferir_pix_abertos
@@ -34,5 +36,6 @@ def dashboard_view(request):
         'grafico_fluxo': graficos.vendido_x_recebido(vendido_x_recebido(user, meses=6)),
         'mapa': mapa_de_horarios(user),
         'reposicao': previsao_de_reposicao(user, horizonte=DIAS_PARA_REPOR)[:ITENS_NO_RANKING],
+        'cobrancas': cobrancas_na_tela(clientes_a_cobrar(user, hoje_local())),
     }
     return render(request, 'interfaces/dashboard.html', context)

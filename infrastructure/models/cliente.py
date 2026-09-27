@@ -1,8 +1,10 @@
 from decimal import Decimal
 from django.apps import apps
+from django.conf import settings
 from django.db import models
 from django.db.models import DecimalField, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
+from django.utils import timezone
 from infrastructure.models.loja_model import LojaModel
 
 _DINHEIRO = DecimalField(max_digits=12, decimal_places=2)
@@ -56,3 +58,24 @@ class Cliente(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class LembreteDePagamento(models.Model):
+    """Registro de que a loja mandou ao cliente o lembrete do que está vencendo (pelo WhatsApp, tocado pelo dono).
+
+    Serve para mostrar "lembrado hoje" e não cobrar a mesma pessoa duas vezes no mesmo dia.
+    """
+    loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='lembretes_de_pagamento')
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='lembretes_de_pagamento')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    enviado_em = models.DateTimeField(default=timezone.now)
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
+
+    class Meta:
+        db_table = 'lembretes_de_pagamento'
+        verbose_name = 'Lembrete de pagamento'
+        verbose_name_plural = 'Lembretes de pagamento'
+        indexes = [models.Index(fields=['loja', '-enviado_em'], name='lembrete_loja_data_idx')]
+
+    def __str__(self):
+        return f"{self.cliente.nome} · {self.enviado_em:%d/%m/%Y}"
