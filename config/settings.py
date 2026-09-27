@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'interfaces.seguranca.PoliticaDeSegurancaMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -58,7 +59,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Arquivos estáticos com a versão no nome (output.3f2a1b.css) e comprimidos: o navegador guarda por 1 ano
+# e só baixa de novo quando o arquivo muda. (STATICFILES_STORAGE saiu no Django 5.1 e era ignorado.)
+STORAGES = {
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage'},
+}
 ROOT_URLCONF = 'config.urls'
 LOGIN_URL = 'login'
 # Só o login do admin usa este destino (quando não há ?next=). O login do sistema tem o próprio redirecionamento.
@@ -120,7 +126,11 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     # Comece baixo e aumente (ex.: 31536000) depois de confirmar que tudo funciona só em HTTPS.
-    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '3600'))
+    # 1 ano: o navegador passa a só abrir o site por HTTPS (o recomendado é no mínimo 6 meses).
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # Preload exige domínio próprio (ex.: meusistema.com.br); um endereço *.onrender.com não entra na lista.
+    SILENCED_SYSTEM_CHECKS = ['security.W021']
 
 # Validação de senhas
 AUTH_PASSWORD_VALIDATORS = [

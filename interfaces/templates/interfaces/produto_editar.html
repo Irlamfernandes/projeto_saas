@@ -64,7 +64,7 @@
                 {% for img in produto.imagens.all %}
                 <div class="relative w-24 h-24 shrink-0 overflow-hidden rounded-controle border border-linha bg-fundo" data-id="{{ img.id }}">
                     <img src="{{ img.imagem_url }}" alt="{{ produto.nome }}" class="w-full h-full object-cover">
-                    <button type="button" onclick="marcarParaRemover('{{ img.id }}', this.closest('div'))" aria-label="Remover esta foto" title="Remover foto"
+                    <button type="button" data-remover-foto="{{ img.id }}" aria-label="Remover esta foto" title="Remover foto"
                             class="absolute top-1.5 right-1.5 grid place-items-center w-7 h-7 rounded-full bg-superficie/95 text-critico-texto shadow hover:bg-critico hover:text-white transition">
                         <svg class="ico ico-sm"><use href="#i-lixeira"/></svg>
                     </button>
@@ -79,7 +79,7 @@
         <div class="campo">
             <label for="edit-imagens" class="rotulo">Adicionar fotos <span class="rotulo-opcional">opcional</span></label>
             <input type="file" id="edit-imagens" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
-                   data-maximo-fotos="{{ maximo_de_fotos }}" onchange="limitarFotos(this)"
+                   data-maximo-fotos="{{ maximo_de_fotos }}"
                    class="entrada-arquivo">
             <p class="ajuda">Cada produto pode ter até {{ maximo_de_fotos }} fotos: {% if fotos_disponiveis %}dá para adicionar mais {{ fotos_disponiveis }}{% else %}remova alguma para adicionar outra{% endif %}. JPG, PNG ou WEBP (máx. 15 MB cada); reduzimos cada foto para ocupar pouco espaço.</p>
         </div>

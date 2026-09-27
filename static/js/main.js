@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarFocoInputs();
     inicializarCalculadoraPrecos();
     inicializarCategoriaPadrao();
-    inicializarFecharModalAoClicarFora();
     inicializarModalGaleria();
     inicializarDialogos();
     inicializarEnvioAoMudar();
     inicializarMarcaDaLoja();
+    inicializarAcoes();
 });
 
 function inicializarFocoInputs() {
@@ -127,47 +127,18 @@ function marcarParaRemover(id, wrapper) {
     }, 300);
 }
 
-function abrirModalEdicaoCliente(id, nome, telefone, email, endereco) {
+/* Botão "Editar" da lista de clientes: os dados vêm nos data-* do botão (data-editar-cliente é o endereço do envio). */
+function abrirModalEdicaoCliente(botao) {
     const modal = document.getElementById('modal-edicao-cliente');
     const form = document.getElementById('form-edicao-cliente');
     if (!modal || !form) return;
-    
-    form.action = `/clientes/editar/${id}/`;
-    document.getElementById('edit-cli-nome').value = nome;
-    document.getElementById('edit-cli-telefone').value = telefone;
-    document.getElementById('edit-cli-email').value = email;
-    document.getElementById('edit-cli-endereco').value = endereco;
 
-    if (typeof modal.showModal === 'function') {
-        modal.showModal();
-    }
-}
-
-function fecharModalEdicaoCliente() {
-    const modal = document.getElementById('modal-edicao-cliente');
-    if (!modal) return;
-    
-    if (typeof modal.close === 'function') {
-        modal.close();
-    }
-}
-
-function inicializarFecharModalAoClicarFora() {
-    const modal = document.getElementById('modal-edicao-cliente');
-    if (!modal) return;
-
-    modal.addEventListener('click', (event) => {
-        const rect = modal.getBoundingClientRect();
-        const isInDialog = (
-            rect.top <= event.clientY &&
-            event.clientY <= rect.top + rect.height &&
-            rect.left <= event.clientX &&
-            event.clientX <= rect.left + rect.width
-        );
-        if (!isInDialog) {
-            fecharModalEdicaoCliente();
-        }
-    });
+    form.action = botao.dataset.editarCliente;
+    document.getElementById('edit-cli-nome').value = botao.dataset.nome;
+    document.getElementById('edit-cli-telefone').value = botao.dataset.telefone;
+    document.getElementById('edit-cli-email').value = botao.dataset.email;
+    document.getElementById('edit-cli-endereco').value = botao.dataset.endereco;
+    modal.showModal();
 }
 
 /* Galeria de fotos (<dialog>): o Esc e o foco já vêm do navegador; aqui, setas trocam a foto e o toque fora fecha. */
@@ -277,19 +248,35 @@ function inicializarMarcaDaLoja(raiz = document) {
     });
 }
 
+/* Ações dos botões e campos descritas em data-* (o HTML não tem onclick: a política de segurança bloqueia código inline). */
+function inicializarAcoes(raiz = document) {
+    const ligar = (seletor, evento, acao) => raiz.querySelectorAll(seletor).forEach((el) => el.addEventListener(evento, () => acao(el)));
+    ligar('#select-categoria', 'change', (select) => tratarMudancaCategoria(select));
+    ligar('input[data-maximo-fotos]', 'change', limitarFotos);
+    ligar('[data-remover-foto]', 'click', (botao) => marcarParaRemover(botao.dataset.removerFoto, botao.closest('div')));
+    ligar('[data-editar-cliente]', 'click', abrirModalEdicaoCliente);
+    ligar('[data-galeria]', 'click', (botao) => abrirModalGaleria(botao.dataset.galeria.split(' ').filter(Boolean), 0));
+    ligar('[data-mudar-foto]', 'click', (botao) => mudarImagem(Number(botao.dataset.mudarFoto)));
+    raiz.querySelectorAll('form[data-confirmar]').forEach((form) => {
+        form.addEventListener('submit', (evento) => {
+            if (!globalThis.confirm(form.dataset.confirmar)) evento.preventDefault();
+        });
+    });
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
         tratarMudancaCategoria, 
         marcarParaRemover, 
         limitarFotos,
-        abrirModalEdicaoCliente, 
-        fecharModalEdicaoCliente,
+        abrirModalEdicaoCliente,
         fecharModalDireto,
         abrirModalGaleria,
         mudarImagem,
         inicializarDialogos,
         inicializarEnvioAoMudar,
-        inicializarMarcaDaLoja
+        inicializarMarcaDaLoja,
+        inicializarAcoes
     };
 }

@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fontes hospedadas no próprio sistema (static/fonts): sem esperar o Google e sem enviar o IP de quem acessa.
+   Arquivos variáveis (todos os pesos num arquivo só), subconjunto latino: cobre todos os acentos do português. */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('../fonts/figtree-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../fonts/bricolage-grotesque-latin.woff2') format('woff2');
+}
+
 @layer base {
   /* Cores do tema em canais RGB (o tailwind.config.js lê daqui). Mesmos nomes nos dois temas. */
   :root {

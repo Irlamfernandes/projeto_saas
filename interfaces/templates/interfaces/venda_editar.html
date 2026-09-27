@@ -48,7 +48,7 @@
             <h2 id="t-cancelar" class="titulo-cartao">Cancelar esta venda</h2>
             <p class="subtitulo">Devolve os produtos ao estoque e desfaz o pagamento feito no ato. Fica registrado quem cancelou e por quê.</p>
         </div>
-        <button type="button" class="btn-perigo" onclick="document.getElementById('modal-cancelar-venda').showModal()">
+        <button type="button" class="btn-perigo" data-abrir-dialogo="modal-cancelar-venda" aria-haspopup="dialog">
             <svg class="ico"><use href="#i-x"/></svg>Cancelar venda
         </button>
     </div>
@@ -72,7 +72,7 @@
             <p class="ajuda">A mesma senha que você usa para entrar no sistema.</p>
         </div>
         <div class="flex flex-wrap justify-end gap-2">
-            <button type="button" class="btn-secundario" onclick="this.closest('dialog').close()">Voltar</button>
+            <button type="button" class="btn-secundario" data-fechar-dialogo>Voltar</button>
             <button type="submit" class="btn-perigo bg-critico text-white hover:bg-critico/85"><svg class="ico"><use href="#i-x"/></svg>Confirmar cancelamento</button>
         </div>
     </form>

@@ -87,14 +87,17 @@ class ProdutosViewTest(TestCase):
         self.assertEqual(self._mensagens(response), ["O termo de busca é muito longo."])
 
     def test_url_de_imagem_e_escapada_no_javascript_da_galeria(self):
-        """Regressão: aspas na URL da imagem permitiam injetar JavaScript no onclick (XSS)."""
+        """Regressão: aspas na URL da imagem permitiam injetar JavaScript no onclick (XSS).
+
+        Hoje a lista vai num atributo data-* (escapado pelo Django) e não há onclick; a CSP também barraria.
+        """
         ProdutoImagem.objects.create(produto=self.produto_l1, imagem_url="https://x.co/a.png');alert(1);//")
         self.client.force_login(self.user_loja1)
 
         response = self.client.get(self.url)
 
-        self.assertNotContains(response, "abrirModalGaleria(['https://x.co/a.png&#x27;")
-        self.assertContains(response, "abrirModalGaleria(['https://x.co/a.png\\u0027)\\u003Balert(1)")
+        self.assertNotContains(response, 'onclick')
+        self.assertContains(response, 'data-galeria="https://x.co/a.png&#x27;);alert(1);//')
 
     # --- cadastro ---------------------------------------------------------
 

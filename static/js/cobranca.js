@@ -41,6 +41,7 @@ function acompanharCobranca(elemento, { intervalo = INTERVALO_DE_CONFERENCIA_MS,
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-acompanhar-cobranca]').forEach((elemento) => acompanharCobranca(elemento));
+    document.querySelectorAll('button[data-copiar]').forEach((botao) => botao.addEventListener('click', () => copiarPix(botao)));
 });
 
 /* istanbul ignore else */

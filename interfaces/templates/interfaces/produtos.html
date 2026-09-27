@@ -27,7 +27,7 @@
                 </div>
                 <div class="campo">
                     <label for="select-categoria" class="rotulo">Categoria <span class="rotulo-opcional">opcional</span></label>
-                    <select id="select-categoria" class="entrada" onchange="tratarMudancaCategoria(this)">
+                    <select id="select-categoria" class="entrada">
                         <option value="">Sem categoria</option>
                         {% for cat in categorias_existentes %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
                         <option value="__novo__">+ Nova categoria…</option>
@@ -71,7 +71,7 @@
             <div class="campo">
                 <label for="id_imagens_produto" class="rotulo">Fotos <span class="rotulo-opcional">opcional</span></label>
                 <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
-                       data-maximo-fotos="{{ maximo_de_fotos }}" onchange="limitarFotos(this)"
+                       data-maximo-fotos="{{ maximo_de_fotos }}"
                        class="entrada-arquivo">
                 <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG ou WEBP (máx. 15 MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
             </div>
@@ -131,7 +131,7 @@
                                 {% with imagens=produto.imagens.all %}
                                     {% if imagens %}
                                         <button type="button"
-                                                onclick="abrirModalGaleria([{% for img in imagens %}'{{ img.imagem_url|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)"
+                                                data-galeria="{% for img in imagens %}{{ img.imagem_url }} {% endfor %}"
                                                 class="relative shrink-0 rounded-lg focus-visible:ring-2 cursor-zoom-in" title="Ver fotos">
                                             <img src="{{ imagens.0.imagem_url }}" alt="{{ produto.nome }}" loading="lazy" class="w-10 h-10 rounded-lg object-cover border border-linha">
                                             {% if imagens|length > 1 %}<span class="absolute -right-1.5 -bottom-1.5 rounded-full bg-tinta text-superficie px-1.5 text-[0.65rem] font-bold">+{{ imagens|length|add:"-1" }}</span>{% endif %}
@@ -166,12 +166,12 @@
 </div>
 
 <dialog id="modal-imagem" class="galeria" aria-label="Fotos do produto">
-    <button type="button" class="btn-secundario btn-pequeno absolute top-4 right-4" onclick="fecharModalDireto()"><svg class="ico ico-sm"><use href="#i-fechar"/></svg>Fechar</button>
+    <button type="button" class="btn-secundario btn-pequeno absolute top-4 right-4" data-fechar-dialogo><svg class="ico ico-sm"><use href="#i-fechar"/></svg>Fechar</button>
     <img id="modal-imagem-src" src="" alt="Foto ampliada do produto" class="min-h-0 max-h-full max-w-full rounded-cartao object-contain">
     <div class="flex shrink-0 items-center gap-3">
-        <button id="btn-anterior" type="button" class="btn-secundario px-3" onclick="mudarImagem(-1)" aria-label="Foto anterior"><svg class="ico rotate-180"><use href="#i-seta"/></svg></button>
+        <button id="btn-anterior" type="button" class="btn-secundario px-3" data-mudar-foto="-1" aria-label="Foto anterior"><svg class="ico rotate-180"><use href="#i-seta"/></svg></button>
         <p id="modal-indicador" class="rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium text-white tabular-nums"></p>
-        <button id="btn-proximo" type="button" class="btn-secundario px-3" onclick="mudarImagem(1)" aria-label="Próxima foto"><svg class="ico"><use href="#i-seta"/></svg></button>
+        <button id="btn-proximo" type="button" class="btn-secundario px-3" data-mudar-foto="1" aria-label="Próxima foto"><svg class="ico"><use href="#i-seta"/></svg></button>
     </div>
 </dialog>
 {% endblock %}

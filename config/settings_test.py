@@ -7,5 +7,7 @@ from config.settings import *  # noqa: E402,F401,F403
 
 # PBKDF2 é propositalmente lento; nos testes basta um hasher barato.
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+# Sem collectstatic nos testes: o armazenamento com versão no nome exige o manifesto gerado por ele.
+STORAGES = {**STORAGES, 'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}}  # noqa: F405
 # O cliente de testes fala HTTP; o redirecionamento para HTTPS é testado à parte.
 SECURE_SSL_REDIRECT = False

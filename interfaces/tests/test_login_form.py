@@ -8,7 +8,7 @@ class LoginFormTest(TestCase):
         """O formulário deve ser válido quando fornecidos username e password válidos."""
         form_data = {
             'username': 'admin_loja',
-            'password': 'minhasenhasegura123'
+            'password': 'minhasenhasegura123'  # gitleaks:allow (senha inventada de teste)
         }
         form = LoginForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -17,7 +17,7 @@ class LoginFormTest(TestCase):
         """O formulário deve ser inválido se o username estiver ausente."""
         form_data = {
             'username': '',
-            'password': 'minhasenhasegura123'
+            'password': 'minhasenhasegura123'  # gitleaks:allow (senha inventada de teste)
         }
         form = LoginForm(data=form_data)
         self.assertFalse(form.is_valid())

@@ -158,12 +158,7 @@ describe('Testes de Cobertura Total - main.js', () => {
     });
 
     test('5. Deve testar funções unitárias (tratarMudancaCategoria, marcarParaRemover, modais)', () => {
-        const { 
-            tratarMudancaCategoria, 
-            marcarParaRemover, 
-            abrirModalEdicaoCliente, 
-            fecharModalEdicaoCliente 
-        } = require('../js/main.js');
+        const { tratarMudancaCategoria, marcarParaRemover, abrirModalEdicaoCliente } = require('../js/main.js');
 
         const select = document.createElement('select');
         select.innerHTML = '<option value="geral">Geral</option><option value="__novo__">Novo</option>';
@@ -198,8 +193,9 @@ describe('Testes de Cobertura Total - main.js', () => {
         jest.advanceTimersByTime(300);
         jest.useRealTimers();
 
-        expect(() => abrirModalEdicaoCliente('1', 'a', 'b', 'c', 'd')).not.toThrow();
-        expect(() => fecharModalEdicaoCliente()).not.toThrow();
+        const botao = document.createElement('button');
+        Object.assign(botao.dataset, { editarCliente: '/clientes/editar/7/', nome: 'Ana', telefone: 'Tel', email: 'Email', endereco: 'End' });
+        expect(() => abrirModalEdicaoCliente(botao)).not.toThrow(); // página sem a janela
 
         document.body.innerHTML = `
             <dialog id="modal-edicao-cliente"></dialog>
@@ -211,51 +207,86 @@ describe('Testes de Cobertura Total - main.js', () => {
         `;
         const modal = document.getElementById('modal-edicao-cliente');
         modal.showModal = jest.fn();
-        modal.close = jest.fn();
 
-        abrirModalEdicaoCliente('1', 'Nome', 'Tel', 'Email', 'End');
+        abrirModalEdicaoCliente(botao);
         expect(modal.showModal).toHaveBeenCalled();
+        expect(document.getElementById('form-edicao-cliente').getAttribute('action')).toBe('/clientes/editar/7/');
+        expect(document.getElementById('edit-cli-nome').value).toBe('Ana');
+        expect(document.getElementById('edit-cli-telefone').value).toBe('Tel');
+        expect(document.getElementById('edit-cli-email').value).toBe('Email');
+        expect(document.getElementById('edit-cli-endereco').value).toBe('End');
 
-        fecharModalEdicaoCliente();
-        expect(modal.close).toHaveBeenCalled();
-
-        delete modal.showModal;
-        expect(() => abrirModalEdicaoCliente('1', 'Nome', 'Tel', 'Email', 'End')).not.toThrow();
-
-        document.body.innerHTML = '<div id="modal-edicao-cliente"></div>';
-        expect(() => abrirModalEdicaoCliente('1', 'a', 'b', 'c', 'd')).not.toThrow();
-
-        document.body.innerHTML = '<form id="form-edicao-cliente"></form>';
-        expect(() => abrirModalEdicaoCliente('1', 'a', 'b', 'c', 'd')).not.toThrow();
-        
-        document.body.innerHTML = '';
-        expect(() => abrirModalEdicaoCliente('1', 'a', 'b', 'c', 'd')).not.toThrow();
-        expect(() => fecharModalEdicaoCliente()).not.toThrow();
+        document.body.innerHTML = '<dialog id="modal-edicao-cliente"></dialog>';
+        expect(() => abrirModalEdicaoCliente(botao)).not.toThrow(); // sem o formulário
         expect(() => tratarMudancaCategoria({ value: '__novo__' })).not.toThrow();
     });
 
-    test('6. Deve testar fechar modal ao clicar fora (inicializarFecharModalAoClicarFora)', () => {
-        document.body.innerHTML = `<dialog id="modal-edicao-cliente"></dialog>`;
-        const modal = document.getElementById('modal-edicao-cliente');
-        modal.close = jest.fn();
-        modal.getBoundingClientRect = jest.fn(() => ({
-            top: 100,
-            left: 100,
-            width: 200,
-            height: 200
-        }));
+    describe('ações descritas em data-* (sem onclick no HTML)', () => {
+        const ligar = (html) => {
+            document.body.innerHTML = html;
+            require('../js/main.js').inicializarAcoes();
+        };
 
-        require('../js/main.js');
-        document.dispatchEvent(new Event('DOMContentLoaded'));
+        test('categoria, limite de fotos e remover foto', () => {
+            ligar(`
+                <select id="select-categoria"><option value="a">A</option><option value="__novo__">Nova</option></select>
+                <input id="input-nova-categoria" class="hidden">
+                <input type="file" data-maximo-fotos="5">
+                <input id="remover_imagens" value="">
+                <div id="container-imagens-atuais"><div data-id="9"><button data-remover-foto="9"></button></div></div>`);
+            const select = document.getElementById('select-categoria');
+            select.value = '__novo__';
+            select.dispatchEvent(new Event('change'));
+            expect(document.getElementById('input-nova-categoria').getAttribute('name')).toBe('categoria');
 
-        modal.dispatchEvent(new MouseEvent('click', { clientX: 150, clientY: 150 }));
-        expect(modal.close).not.toHaveBeenCalled();
+            const fotos = document.querySelector('input[type=file]');
+            fotos.setCustomValidity = jest.fn();
+            fotos.dispatchEvent(new Event('change'));
+            expect(fotos.setCustomValidity).toHaveBeenCalledWith('');
 
-        modal.dispatchEvent(new MouseEvent('click', { clientX: 50, clientY: 50 }));
-        expect(modal.close).toHaveBeenCalled();
+            document.querySelector('[data-remover-foto]').click();
+            expect(document.getElementById('remover_imagens').value).toBe('9');
+        });
 
-        delete modal.close;
-        modal.dispatchEvent(new MouseEvent('click', { clientX: 50, clientY: 50 }));
+        test('editar cliente abre a janela com os dados do botão', () => {
+            ligar(`
+                <button data-editar-cliente="/clientes/editar/3/" data-nome="Bia" data-telefone="" data-email="" data-endereco=""></button>
+                <dialog id="modal-edicao-cliente"></dialog><form id="form-edicao-cliente"></form>
+                <input id="edit-cli-nome"><input id="edit-cli-telefone"><input id="edit-cli-email"><input id="edit-cli-endereco">`);
+            document.getElementById('modal-edicao-cliente').showModal = jest.fn();
+            document.querySelector('[data-editar-cliente]').click();
+            expect(document.getElementById('edit-cli-nome').value).toBe('Bia');
+        });
+
+        test('galeria abre com as fotos do botão e as setas trocam', () => {
+            ligar(`
+                <button data-galeria="a.webp b.webp "></button>
+                <dialog id="modal-imagem"><img id="modal-imagem-src"><span id="modal-indicador"></span>
+                <button data-mudar-foto="1"></button><button data-mudar-foto="-1"></button></dialog>`);
+            simularDialogo(document.getElementById('modal-imagem'));
+            document.querySelector('[data-galeria]').click();
+            expect(document.getElementById('modal-indicador').textContent).toBe('1 de 2');
+            document.querySelector('[data-mudar-foto="1"]').click();
+            expect(document.getElementById('modal-imagem-src').src).toContain('b.webp');
+            document.querySelector('[data-mudar-foto="-1"]').click();
+            expect(document.getElementById('modal-imagem-src').src).toContain('a.webp');
+        });
+
+        test('formulário com data-confirmar só envia se a pessoa confirmar', () => {
+            ligar('<form data-confirmar="Remover a marca da loja?"></form>');
+            const form = document.querySelector('form');
+            const enviar = () => {
+                const evento = new Event('submit', { cancelable: true });
+                form.dispatchEvent(evento);
+                return evento.defaultPrevented;
+            };
+            window.confirm = jest.fn(() => false);
+            expect(enviar()).toBe(true);
+            expect(window.confirm).toHaveBeenCalledWith('Remover a marca da loja?');
+            window.confirm = jest.fn(() => true);
+            expect(enviar()).toBe(false);
+            delete window.confirm;
+        });
     });
 
     /* O jsdom não abre <dialog> de verdade: showModal/close só ligam e desligam o atributo "open". */
@@ -514,4 +545,71 @@ describe('Testes de Cobertura Total - main.js', () => {
             expect(imagem.classList.contains('hidden')).toBe(false);
         });
     });
+
+    describe('regras finas (achadas pelo teste de mutação)', () => {
+        const calculadora = (custo, margem, venda) => {
+            document.body.innerHTML = `
+                <input id="id_preco_custo" value="${custo}">
+                <input id="id_margem_lucro" value="${margem}">
+                <input id="id_preco_venda" value="${venda}">`;
+            require('../js/main.js');
+            document.dispatchEvent(new Event('DOMContentLoaded'));
+            const campo = (id) => document.getElementById(id);
+            const digitar = (id, valor) => { campo(id).value = valor; campo(id).dispatchEvent(new Event('input')); };
+            return { campo, digitar };
+        };
+
+        test('lucro já preenchido não é recalculado ao abrir', () => {
+            const { campo } = calculadora('100', '30', '150');
+            expect(campo('id_margem_lucro').value).toBe('30');
+        });
+
+        test('preço igual ao custo dá lucro zero', () => {
+            const { campo, digitar } = calculadora('100', '30', '130');
+            digitar('id_preco_venda', '100');
+            expect(campo('id_margem_lucro').value).toBe('0.00');
+        });
+
+        test('sem custo, não calcula preço nem lucro', () => {
+            const { campo, digitar } = calculadora('0', '10', '50');
+            digitar('id_margem_lucro', '40');
+            expect(campo('id_preco_venda').value).toBe('50');
+            digitar('id_preco_venda', '80');
+            expect(campo('id_margem_lucro').value).toBe('40');
+        });
+
+        test('página só com o campo de custo não quebra', () => {
+            document.body.innerHTML = '<input id="id_preco_custo" value="10">';
+            require('../js/main.js');
+            expect(() => document.dispatchEvent(new Event('DOMContentLoaded'))).not.toThrow();
+        });
+
+        test('categoria nova só abre sozinha quando a loja não tem categorias', () => {
+            const montar = (opcoes) => {
+                jest.resetModules();
+                document.body.innerHTML = `<select id="select-categoria">${opcoes}</select><input id="input-nova-categoria" class="hidden">`;
+                require('../js/main.js');
+                document.dispatchEvent(new Event('DOMContentLoaded'));
+                return document.getElementById('select-categoria').value;
+            };
+            expect(montar('<option value="">Sem</option><option value="__novo__">Nova</option>')).toBe('__novo__');
+            expect(montar('<option value="">Sem</option><option value="doces">Doces</option><option value="__novo__">Nova</option>')).toBe('');
+        });
+
+        test('galeria com uma foto não troca; voltar da segunda vai para a primeira', () => {
+            document.body.innerHTML = '<dialog id="modal-imagem"><img id="modal-imagem-src"></dialog>';
+            simularDialogo(document.getElementById('modal-imagem'));
+            const { abrirModalGaleria, mudarImagem } = require('../js/main.js');
+            const foto = () => document.getElementById('modal-imagem-src').src;
+
+            abrirModalGaleria(['so.webp']);
+            mudarImagem(1);
+            expect(foto()).toContain('so.webp');
+
+            abrirModalGaleria(['a.webp', 'b.webp', 'c.webp'], 1);
+            mudarImagem(-1);
+            expect(foto()).toContain('a.webp');
+        });
+    });
 });
+

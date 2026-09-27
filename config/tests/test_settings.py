@@ -48,7 +48,8 @@ def test_producao_liga_https_cookies_seguros_e_hsts(recarregar):
     assert settings.SECURE_SSL_REDIRECT is True
     assert settings.SESSION_COOKIE_SECURE is True
     assert settings.CSRF_COOKIE_SECURE is True
-    assert settings.SECURE_HSTS_SECONDS == 3600
+    assert settings.SECURE_HSTS_SECONDS == 31536000
+    assert settings.SECURE_HSTS_INCLUDE_SUBDOMAINS is True
     assert settings.SECURE_PROXY_SSL_HEADER == ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
@@ -96,3 +97,10 @@ def test_sqlite_local_nao_recebe_opcoes_de_postgres(recarregar):
     banco = recarregar(DJANGO_DEBUG='True').DATABASES['default']
     assert banco['ENGINE'] == 'django.db.backends.sqlite3'
     assert 'options' not in banco.get('OPTIONS', {})
+
+
+def test_producao_serve_estaticos_com_versao_no_nome_e_comprimidos(recarregar):
+    """Com o nome versionado, o navegador guarda CSS e JS por 1 ano e só baixa de novo quando mudam."""
+    storages = recarregar(DJANGO_SECRET_KEY='x').STORAGES
+    assert storages['staticfiles']['BACKEND'] == 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    assert not hasattr(recarregar(DJANGO_SECRET_KEY='x'), 'STATICFILES_STORAGE')  # removido no Django 5.1
