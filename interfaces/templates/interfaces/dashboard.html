@@ -10,6 +10,7 @@
 {% endblock %}
 
 {% block content %}
+{% if plano.aviso and not plano.vencido %}{% include 'interfaces/_aviso_plano.html' %}{% endif %}
 <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4" aria-label="Resumo">
     <div class="kpi">
         <p class="kpi-rotulo"><svg class="ico ico-sm text-tinta-fraca"><use href="#i-moeda"/></svg>Vendas de hoje</p>

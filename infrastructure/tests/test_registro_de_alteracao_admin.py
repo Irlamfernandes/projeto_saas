@@ -15,3 +15,15 @@ class RegistroDeAlteracaoAdminTest(SimpleTestCase):
         self.assertFalse(self.admin.has_add_permission(self.request))
         self.assertFalse(self.admin.has_change_permission(self.request))
         self.assertFalse(self.admin.has_delete_permission(self.request))
+
+
+class CobrancaAdminTest(SimpleTestCase):
+
+    def test_cobranca_e_somente_leitura(self):
+        from infrastructure.admin.assinatura_admin import CobrancaAdmin
+        from infrastructure.models import Cobranca
+        admin = CobrancaAdmin(Cobranca, AdminSite())
+        request = RequestFactory().get('/admin/')
+        self.assertFalse(admin.has_add_permission(request))
+        self.assertFalse(admin.has_change_permission(request))
+        self.assertFalse(admin.has_delete_permission(request))

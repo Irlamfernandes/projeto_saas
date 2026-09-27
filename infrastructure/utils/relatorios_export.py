@@ -7,6 +7,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 FORMATO_MOEDA_EXCEL = '#,##0.00'
 PREFIXOS_DE_FORMULA = ('=', '+', '-', '@')
@@ -80,12 +81,13 @@ _ESTILO_TABELA = TableStyle([
 ])
 
 
-def gerar_relatorio_pdf(tipo, relatorio, destino):
+def gerar_relatorio_pdf(tipo, relatorio, destino, loja=None, storage=None):
+    """`loja`: põe o cabeçalho com nome e marca (o superusuário, sem loja, exporta sem cabeçalho)."""
     titulo = ParagraphStyle(
         'TituloRelatorio', parent=getSampleStyleSheet()['Heading1'],
         fontSize=16, textColor=colors.HexColor('#1f2937'), spaceAfter=10,
     )
-    story = []
+    story = cabecalho_da_loja(loja, "Relatório", storage) if loja else []
     for secao in SECOES_POR_TIPO[tipo]:
         story += _secao_pdf(secao, relatorio, titulo)
 

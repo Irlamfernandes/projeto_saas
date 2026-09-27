@@ -1,4 +1,5 @@
 """Transforma os detalhes guardados no registro de alterações em frases legíveis."""
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from django import template
 from application.formatacao import reais
@@ -12,6 +13,16 @@ ROTULOS = {
 }
 CAMPOS_EM_REAIS = {'preco_custo', 'preco_venda'}
 VAZIO = '(vazio)'
+ICONES_POR_ACAO = {'venda_cancelada': 'i-x', 'marca_alterada': 'i-foto', 'plano_renovado': 'i-calendario'}
+ICONES_POR_ASSUNTO = {'venda': 'i-venda', 'pagamento': 'i-carteira', 'produto': 'i-produto', 'cliente': 'i-clientes'}
+
+
+@register.filter
+def icone_da_acao(acao):
+    """Ícone do registro: primeiro a ação exata, depois o assunto ('venda_editada' -> venda)."""
+    if acao in ICONES_POR_ACAO:
+        return ICONES_POR_ACAO[acao]
+    return ICONES_POR_ASSUNTO.get(acao.split('_')[0], 'i-historico')
 
 
 @register.filter
@@ -28,6 +39,8 @@ def detalhes_legiveis(detalhes):
         linhas.append(_fotos(detalhes['fotos']))
     if detalhes.get('observacao'):
         linhas.append(f"Observação: {detalhes['observacao']}")
+    if 'vencimento' in detalhes:
+        linhas.append(_vencimento(*detalhes['vencimento']))
     return linhas
 
 
@@ -66,6 +79,17 @@ def _resumo_da_venda(venda):
     if pago:
         partes.append(f"pago no ato {', '.join(_reais(v) for v in pago)}")
     return ' · '.join(partes)
+
+
+def _vencimento(anterior, novo):
+    return f"Vencimento: {_data(anterior)} → {_data(novo)}"
+
+
+def _data(iso):
+    try:
+        return date.fromisoformat(iso).strftime('%d/%m/%Y')
+    except (TypeError, ValueError):
+        return str(iso)
 
 
 def _fotos(fotos):

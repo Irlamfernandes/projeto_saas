@@ -1,0 +1,4 @@
+{% load navegacao %}{% comment %}
+Marca da loja do usuário ou, sem ela, as iniciais. Se a imagem não carregar (arquivo apagado, storage fora do ar),
+as iniciais aparecem no lugar. Parâmetro: classes (tamanho e cantos).
+{% endcomment %}{% with loja=request.user.loja %}{% if loja.logo_url %}<img src="{{ loja.logo_url }}" alt="" class="{{ classes }} shrink-0 object-contain bg-white border border-linha" onerror="this.classList.add('hidden');this.nextElementSibling.classList.remove('hidden')">{% endif %}<span class="{% if loja.logo_url %}hidden {% endif %}grid place-items-center shrink-0 {{ classes }} bg-marca-600 text-white font-titulo font-bold" aria-hidden="true">{% if loja %}{{ loja.nome_loja|iniciais }}{% else %}<svg class="ico"><use href="#i-loja"/></svg>{% endif %}</span>{% endwith %}

@@ -72,7 +72,7 @@
                 <label for="id_imagens_produto" class="rotulo">Fotos <span class="rotulo-opcional">opcional</span></label>
                 <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
                        data-maximo-fotos="{{ maximo_de_fotos }}" onchange="limitarFotos(this)"
-                       class="block w-full text-sm text-tinta-suave file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200 cursor-pointer">
+                       class="entrada-arquivo">
                 <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG ou WEBP (máx. 15 MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
             </div>
 

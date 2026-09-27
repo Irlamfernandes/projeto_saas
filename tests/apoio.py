@@ -83,3 +83,36 @@ class CenarioDeLoja:
     def usuario(self):
         from types import SimpleNamespace
         return SimpleNamespace(is_superuser=False, loja=self.loja)
+
+
+class MercadoPagoFalso:
+    """Dublê do cliente do Mercado Pago: gera Pix de mentira e responde consultas com o que o teste mandar."""
+
+    def __init__(self, erro_ao_criar=None):
+        self.pix_criados = []
+        self.consultas = []
+        self.pagamentos = {}
+        self._erro_ao_criar = erro_ao_criar
+
+    def criar_pix(self, *, valor, descricao, email, referencia, expira_em):
+        from infrastructure.pagamentos.mercado_pago import PixGerado
+        if self._erro_ao_criar:
+            raise self._erro_ao_criar
+        self.pix_criados.append({'valor': valor, 'descricao': descricao, 'email': email, 'referencia': referencia, 'expira_em': expira_em})
+        pagamento_id = str(1000 + len(self.pix_criados))
+        return PixGerado(pagamento_id, f"000201PIX{pagamento_id}", "iVBORw0KGgo=")
+
+    def aprovar(self, cobranca, **diferencas):
+        """Faz o pagamento da cobrança aparecer como aprovado (com diferenças, para simular fraude/erro)."""
+        self.responder(cobranca, status='approved', **diferencas)
+
+    def responder(self, cobranca, *, status, **diferencas):
+        from infrastructure.pagamentos.mercado_pago import PagamentoConsultado
+        dados = {'pagamento_id': cobranca.pagamento_id, 'status': status, 'valor': cobranca.valor,
+                 'moeda': 'BRL', 'referencia': str(cobranca.referencia), **diferencas}
+        self.pagamentos[cobranca.pagamento_id] = PagamentoConsultado(**dados)
+
+    def consultar(self, pagamento_id):
+        from infrastructure.pagamentos.mercado_pago import PagamentoConsultado
+        self.consultas.append(pagamento_id)
+        return self.pagamentos.get(pagamento_id) or PagamentoConsultado(pagamento_id, 'pending', None, 'BRL', '')

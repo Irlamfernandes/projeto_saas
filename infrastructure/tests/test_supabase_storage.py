@@ -138,3 +138,35 @@ class FromSettingsTest(SimpleTestCase):
 
         self.assertTrue(url.startswith(f"{BASE}/storage/v1/object/public/imagens/1/"))
         self.assertEqual(requests_mock.post.call_args.kwargs['headers']['apikey'], "chave-settings")
+
+
+@patch('infrastructure.utils.supabase_storage.requests')
+class BaixarTest(SimpleTestCase):
+    URL = f"{BASE}/storage/v1/object/public/imagens/lojas/logo.webp"
+
+    def setUp(self):
+        self.storage = SupabaseStorage(BASE, "chave")
+
+    def test_baixa_arquivo_do_bucket(self, requests_mock):
+        requests_mock.get.return_value = MagicMock(status_code=200, content=b"imagem")
+
+        self.assertEqual(self.storage.baixar(self.URL), b"imagem")
+        requests_mock.get.assert_called_once_with(self.URL, timeout=SupabaseStorage.TIMEOUT_SEGUNDOS)
+
+    def test_recusa_enderecos_de_fora_do_bucket(self, requests_mock):
+        """O servidor não pode ser usado para buscar endereços quaisquer."""
+        for url in [None, "", "https://outro.site/logo.webp", f"{BASE}.malicioso.com/storage/v1/object/public/imagens/x",
+                    f"{BASE}/storage/v1/object/public/outro-bucket/x", f"{BASE}/storage/v1/object/public/imagens/"]:
+            with self.subTest(url=url):
+                self.assertIsNone(self.storage.baixar(url))
+        self.assertIsNone(SupabaseStorage("", "chave").baixar("/storage/v1/object/public/imagens/x"))
+        requests_mock.get.assert_not_called()
+
+    def test_falhas_viram_none(self, requests_mock):
+        requests_mock.RequestException = RequestException
+        requests_mock.get.return_value = MagicMock(status_code=404)
+        self.assertIsNone(self.storage.baixar(self.URL))
+
+        requests_mock.get.side_effect = RequestException("caiu")
+        with self.assertLogs('infrastructure.utils.supabase_storage', 'WARNING'):
+            self.assertIsNone(self.storage.baixar(self.URL))

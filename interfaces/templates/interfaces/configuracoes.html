@@ -1,0 +1,99 @@
+{% extends 'interfaces/base.html' %}
+
+{% block title %}Configurações · Gestão da Loja{% endblock %}
+{% block header_title %}Configurações{% endblock %}
+{% block subtitulo %}Sua conta, a marca da loja e o plano.{% endblock %}
+
+{% block content %}
+<div class="grid gap-5 max-w-2xl">
+
+<section class="cartao cartao-corpo" aria-labelledby="t-conta">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-conta" class="titulo-cartao">Conta</h2><p class="subtitulo">Só o administrador do sistema pode alterar estes dados.</p></div>
+    </div>
+    <dl class="grid gap-3 sm:grid-cols-2">
+        <div class="campo">
+            <dt class="rotulo">Usuário</dt>
+            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.username }}</span><svg class="ico ico-sm shrink-0" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
+        </div>
+        <div class="campo">
+            <dt class="rotulo">Loja</dt>
+            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.loja.nome_loja|default:"Painel global" }}</span><svg class="ico ico-sm shrink-0" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
+        </div>
+    </dl>
+</section>
+
+{% if request.user.loja %}
+<section class="cartao cartao-corpo" aria-labelledby="t-marca">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-marca" class="titulo-cartao">Marca da loja</h2><p class="subtitulo">Aparece no topo do sistema e nos PDFs (extrato do cliente e relatórios).</p></div>
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+        {% include 'interfaces/_marca_loja.html' with classes='w-20 h-20 rounded-2xl text-2xl' %}
+        <form method="POST" action="{% url 'marca_enviar' %}" enctype="multipart/form-data" class="grid gap-3 flex-1 basis-60">
+            {% csrf_token %}
+            <div class="campo">
+                <label for="id_marca" class="rotulo">{% if request.user.loja.logo_url %}Trocar a marca{% else %}Enviar a marca{% endif %} <span class="obrigatorio" aria-hidden="true">*</span></label>
+                <input type="file" id="id_marca" name="marca" required accept="image/jpeg,image/png,image/webp" class="entrada-arquivo">
+                <p class="ajuda">JPG, PNG ou WEBP, até {{ tamanho_maximo_mb }} MB. Imagens quadradas ficam melhores; nós reduzimos o arquivo automaticamente.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar marca</button>
+                {% if request.user.loja.logo_url %}
+                <button type="submit" form="form-remover-marca" class="btn-secundario"><svg class="ico"><use href="#i-lixeira"/></svg>Remover marca</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    {% if request.user.loja.logo_url %}
+    <form id="form-remover-marca" method="POST" action="{% url 'marca_remover' %}" onsubmit="return confirm('Remover a marca da loja?')">{% csrf_token %}</form>
+    {% endif %}
+</section>
+{% endif %}
+
+{% if plano %}
+<section id="plano" class="cartao cartao-corpo scroll-mt-6" aria-labelledby="t-plano">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-plano" class="titulo-cartao">Plano</h2><p class="subtitulo">A data de vencimento só muda quando o pagamento é confirmado.</p></div>
+        {% if plano.vencido %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Vencido</span>
+        {% elif plano.nivel %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>Vence em breve</span>
+        {% else %}<span class="pilula-bom"><svg class="ico ico-sm"><use href="#i-check"/></svg>Em dia</span>{% endif %}
+    </div>
+    <dl class="grid gap-3 sm:grid-cols-2">
+        <div class="campo">
+            <dt class="rotulo">Vencimento</dt>
+            <dd class="text-lg font-bold tabular-nums">{{ plano.vencimento|date:"d/m/Y" }}</dd>
+        </div>
+        <div class="campo">
+            <dt class="rotulo">Situação</dt>
+            <dd class="text-sm text-tinta-suave">
+                {% if plano.vencido %}Uso limitado: dá para consultar tudo, mas não registrar nem alterar.
+                {% elif plano.dias_restantes == 0 %}Vence hoje.
+                {% elif plano.dias_restantes == 1 %}Vence amanhã.
+                {% else %}Faltam {{ plano.dias_restantes }} dias.{% endif %}
+                {% if em_teste_gratis and not plano.vencido %}<span class="block">Período de teste grátis.</span>{% endif %}
+            </dd>
+        </div>
+    </dl>
+    {% for cobranca in pix_aguardando %}
+    <a href="{% url 'cobranca' cobranca.pk %}" class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-controle border border-marca-200 bg-marca-50 px-3.5 py-2.5 text-sm text-marca-700 hover:border-marca-500" data-pix-aguardando>
+        <span class="flex items-center gap-2 font-semibold"><svg class="ico shrink-0"><use href="#i-tempo"/></svg>Pix do plano {{ cobranca.plano_nome }} aguardando pagamento</span>
+        <span class="inline-flex items-center gap-1 font-bold">Abrir<svg class="ico ico-sm"><use href="#i-seta"/></svg></span>
+    </a>
+    {% endfor %}
+    <a href="{% url 'planos' %}" class="btn-primario mt-4 w-full sm:w-auto"><svg class="ico"><use href="#i-calendario"/></svg>Ver planos e renovar</a>
+</section>
+{% endif %}
+
+<section class="cartao cartao-corpo" aria-labelledby="t-sair">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 id="t-sair" class="titulo-cartao">Sair da conta</h2><p class="subtitulo">Encerra o acesso neste aparelho.</p></div>
+        <form action="{% url 'logout' %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn-secundario"><svg class="ico"><use href="#i-sair"/></svg>Sair</button>
+        </form>
+    </div>
+</section>
+
+</div>
+{% endblock %}

@@ -77,6 +77,18 @@ class SupabaseStorage:
         if resposta.status_code not in (200, 204):
             logger.warning("Supabase recusou remover %s (%s)", caminho, resposta.status_code)
 
+    def baixar(self, url_publica):
+        """Conteúdo de um arquivo deste bucket, ou None. Recusa URLs de fora (o servidor não busca endereços quaisquer)."""
+        prefixo = f"{self._base_url}/storage/v1/object/public/{self.BUCKET}/"
+        if not self._base_url or not (url_publica or '').startswith(prefixo) or url_publica == prefixo:
+            return None
+        try:
+            resposta = requests.get(url_publica, timeout=self.TIMEOUT_SEGUNDOS)
+        except requests.RequestException:
+            logger.warning("Falha ao baixar %s do Supabase", url_publica, exc_info=True)
+            return None
+        return resposta.content if resposta.status_code == 200 else None
+
     def _configurado(self):
         return bool(self._base_url and self._chave)
 

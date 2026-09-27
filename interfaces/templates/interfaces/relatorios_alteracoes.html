@@ -3,7 +3,7 @@
 
 {% block title %}Alterações · Gestão da Loja{% endblock %}
 {% block header_title %}Relatórios{% endblock %}
-{% block subtitulo %}Quem fez o quê e quando: vendas, pagamentos, produtos e clientes.{% endblock %}
+{% block subtitulo %}Quem fez o quê e quando: vendas, pagamentos, produtos, clientes e a loja.{% endblock %}
 
 {% block content %}
 {% include 'interfaces/_abas_relatorios.html' %}
@@ -26,7 +26,7 @@
         {% for registro in registros %}
         <li class="flex gap-3 border-b border-grade py-3.5 last:border-b-0">
             <span class="grid place-items-center w-9 h-9 shrink-0 rounded-full {% if registro.acao == 'venda_cancelada' %}bg-critico-suave text-critico-texto{% else %}bg-marca-50 text-marca-700{% endif %}" aria-hidden="true">
-                <svg class="ico ico-sm"><use href="#{% if registro.acao == 'venda_cancelada' %}i-x{% elif 'venda' in registro.acao %}i-venda{% elif 'pagamento' in registro.acao %}i-carteira{% elif 'produto' in registro.acao %}i-produto{% else %}i-clientes{% endif %}"/></svg>
+                <svg class="ico ico-sm"><use href="#{{ registro.acao|icone_da_acao }}"/></svg>
             </span>
             <div class="min-w-0 flex-1">
                 <p class="text-sm"><b>{{ registro.get_acao_display }}</b> · {{ registro.descricao }}</p>
