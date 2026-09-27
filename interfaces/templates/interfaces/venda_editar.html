@@ -55,7 +55,7 @@
 </section>
 </div>
 
-<dialog id="modal-cancelar-venda" class="w-full max-w-md rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-tinta/40" aria-labelledby="t-modal-cancelar">
+<dialog id="modal-cancelar-venda" class="w-full max-w-md rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-veu/50" aria-labelledby="t-modal-cancelar">
     <form method="POST" action="{% url 'venda_cancelar' venda.id %}" class="grid gap-4 p-6">
         {% csrf_token %}
         <div>
@@ -73,7 +73,7 @@
         </div>
         <div class="flex flex-wrap justify-end gap-2">
             <button type="button" class="btn-secundario" onclick="this.closest('dialog').close()">Voltar</button>
-            <button type="submit" class="btn-perigo bg-critico text-white hover:bg-critico-texto"><svg class="ico"><use href="#i-x"/></svg>Confirmar cancelamento</button>
+            <button type="submit" class="btn-perigo bg-critico text-white hover:bg-critico/85"><svg class="ico"><use href="#i-x"/></svg>Confirmar cancelamento</button>
         </div>
     </form>
 </dialog>

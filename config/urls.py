@@ -8,7 +8,7 @@ from interfaces.views import (
     extrato_cliente_view, venda_editar_view, relatorio_view, exportar_excel_modular_view,
     exportar_pdf_modular_view, relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view,
     relatorios_alteracoes_view, venda_cancelar_view, configuracoes_view, marca_enviar_view, marca_remover_view,
-    planos_view, cobranca_view, cobranca_situacao_view,
+    planos_view, cobranca_view, cobranca_situacao_view, tema_view,
 )
 
 urlpatterns = [
@@ -35,6 +35,7 @@ urlpatterns = [
     path('configuracoes/', configuracoes_view, name='configuracoes'),
     path('configuracoes/marca/', marca_enviar_view, name='marca_enviar'),
     path('configuracoes/marca/remover/', marca_remover_view, name='marca_remover'),
+    path('configuracoes/tema/', tema_view, name='tema'),
     path('configuracoes/planos/', planos_view, name='planos'),
     path('configuracoes/planos/cobranca/<int:pk>/', cobranca_view, name='cobranca'),
     path('configuracoes/planos/cobranca/<int:pk>/situacao/', cobranca_situacao_view, name='cobranca_situacao'),

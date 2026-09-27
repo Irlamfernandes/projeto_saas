@@ -87,7 +87,7 @@
 
         <form method="GET" class="grid gap-3 rounded-controle bg-fundo p-3.5 mb-4" aria-label="Filtros de produtos">
             <div class="grid grid-cols-1 sm:grid-cols-[1.4fr_1fr_1fr] gap-2.5">
-                <div class="entrada-grupo bg-white">
+                <div class="entrada-grupo bg-superficie">
                     <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
                     <label for="id_busca_produto" class="sr-only">Buscar produto</label>
                     <input type="search" id="id_busca_produto" name="q" value="{{ filtro_busca }}" placeholder="Nome ou código">
@@ -134,7 +134,7 @@
                                                 onclick="abrirModalGaleria([{% for img in imagens %}'{{ img.imagem_url|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}], 0)"
                                                 class="relative shrink-0 rounded-lg focus-visible:ring-2 cursor-zoom-in" title="Ver fotos">
                                             <img src="{{ imagens.0.imagem_url }}" alt="{{ produto.nome }}" loading="lazy" class="w-10 h-10 rounded-lg object-cover border border-linha">
-                                            {% if imagens|length > 1 %}<span class="absolute -right-1.5 -bottom-1.5 rounded-full bg-tinta px-1.5 text-[0.65rem] font-bold text-white">+{{ imagens|length|add:"-1" }}</span>{% endif %}
+                                            {% if imagens|length > 1 %}<span class="absolute -right-1.5 -bottom-1.5 rounded-full bg-tinta text-superficie px-1.5 text-[0.65rem] font-bold">+{{ imagens|length|add:"-1" }}</span>{% endif %}
                                         </button>
                                     {% endif %}
                                 {% endwith %}
@@ -165,7 +165,7 @@
     </section>
 </div>
 
-<div id="modal-imagem" class="fixed inset-0 z-50 hidden flex-col items-center justify-center gap-4 bg-tinta/95 px-4 pt-16 pb-6" role="dialog" aria-modal="true" aria-label="Fotos do produto">
+<div id="modal-imagem" class="fixed inset-0 z-50 hidden flex-col items-center justify-center gap-4 bg-veu/95 px-4 pt-16 pb-6" role="dialog" aria-modal="true" aria-label="Fotos do produto">
     <button type="button" class="btn-secundario btn-pequeno absolute top-4 right-4" onclick="fecharModalDireto()"><svg class="ico ico-sm"><use href="#i-fechar"/></svg>Fechar</button>
     <img id="modal-imagem-src" src="" alt="Foto ampliada do produto" class="min-h-0 max-h-full max-w-full rounded-cartao object-contain">
     <div class="flex shrink-0 items-center gap-3">

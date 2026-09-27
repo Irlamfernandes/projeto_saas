@@ -162,6 +162,30 @@ describe('desenharGraficos', () => {
         delete globalThis.Chart;
     });
 
+    test('com o tema automático, redesenha quando o aparelho troca de claro para escuro', () => {
+        let aoTrocar;
+        window.matchMedia = jest.fn(() => ({ matches: false, addEventListener: (_evento, funcao) => { aoTrocar = funcao; } }));
+        const antigo = { destroy: jest.fn() };
+        const novo = { destroy: jest.fn() };
+        const redesenhar = jest.fn(() => [novo]);
+
+        g.acompanharTemaDoAparelho([antigo], redesenhar);
+        aoTrocar();
+        aoTrocar();
+
+        expect(antigo.destroy).toHaveBeenCalledTimes(1);
+        expect(novo.destroy).toHaveBeenCalledTimes(1);
+        expect(redesenhar).toHaveBeenCalledTimes(2);
+        delete window.matchMedia;
+    });
+
+    test('navegador sem aviso de troca de tema: não acompanha', () => {
+        expect(() => g.acompanharTemaDoAparelho([])).not.toThrow();
+        window.matchMedia = jest.fn(() => ({ matches: false }));
+        expect(() => g.acompanharTemaDoAparelho([])).not.toThrow();
+        delete window.matchMedia;
+    });
+
     test('lerTokens lê as variáveis CSS', () => {
         expect(g.lerTokens().marca).toBe('#0d9488');
     });

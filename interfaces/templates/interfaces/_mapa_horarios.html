@@ -11,7 +11,7 @@
                 <th scope="row" class="pr-1 text-right font-medium text-tinta-fraca tabular-nums">{{ hora }}h</th>
                 {% for c in celulas %}
                 <td class="h-6 min-w-8 rounded-md" title="{{ c.dia }}, {{ c.hora }}h: R$ {{ c.total|moeda }} em {{ c.vendas }} venda{{ c.vendas|pluralize }}"
-                    style="background: {% if c.vendas %}color-mix(in oklab, var(--cor-marca) {{ c.intensidade|intensidade }}%, white){% else %}var(--cor-grade){% endif %}">
+                    style="background: {% if c.vendas %}color-mix(in oklab, var(--cor-marca) {{ c.intensidade|intensidade }}%, var(--cor-superficie)){% else %}var(--cor-grade){% endif %}">
                     <span class="sr-only">{{ c.dia }} {{ c.hora }}h: R$ {{ c.total|moeda }}</span>
                 </td>
                 {% endfor %}
@@ -23,9 +23,9 @@
 <div class="flex flex-wrap items-center justify-between gap-2 mt-3 text-xs text-tinta-fraca">
     <p>Melhor horário: <b class="text-tinta">{{ mapa.melhor.dia }}, {{ mapa.melhor.hora }}h</b> (R$ {{ mapa.melhor.total|moeda }})</p>
     <p class="flex items-center gap-1.5" aria-hidden="true">menos
-        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 15%, white)"></i>
-        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 45%, white)"></i>
-        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 75%, white)"></i>
+        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 15%, var(--cor-superficie))"></i>
+        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 45%, var(--cor-superficie))"></i>
+        <i class="inline-block w-4 h-2.5 rounded" style="background: color-mix(in oklab, var(--cor-marca) 75%, var(--cor-superficie))"></i>
         <i class="inline-block w-4 h-2.5 rounded" style="background: var(--cor-marca)"></i> mais
     </p>
 </div>

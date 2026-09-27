@@ -11,6 +11,13 @@ class CustomUsernameValidator(UnicodeUsernameValidator):
         'espaços e os caracteres @/./+/-/_.'
     )
 
+class Tema(models.TextChoices):
+    """Aparência do sistema, escolhida por cada usuário em Configurações."""
+    AUTOMATICO = 'auto', 'Automático'
+    CLARO = 'claro', 'Claro'
+    ESCURO = 'escuro', 'Escuro'
+
+
 class UsuarioModel(AbstractUser):
     username_validator = CustomUsernameValidator()
 
@@ -36,6 +43,10 @@ class UsuarioModel(AbstractUser):
     deve_trocar_senha = models.BooleanField(
         default=True, 
         help_text="Indica se o usuário deve trocar a senha no próximo login."
+    )
+    tema = models.CharField(
+        max_length=10, choices=Tema.choices, default=Tema.AUTOMATICO,
+        help_text="Automático segue o celular ou o computador (claro de dia, escuro à noite, se o aparelho fizer isso).",
     )
 
     class Meta:

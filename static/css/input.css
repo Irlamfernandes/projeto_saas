@@ -3,8 +3,37 @@
 @tailwind utilities;
 
 @layer base {
-  /* Cores lidas pelos gráficos (static/js/graficos.js); espelham o tailwind.config.js */
+  /* Cores do tema em canais RGB (o tailwind.config.js lê daqui). Mesmos nomes nos dois temas. */
   :root {
+    color-scheme: light;
+    --marca-50: 240 249 248;
+    --marca-100: 230 244 242;
+    --marca-200: 196 230 225;
+    --marca-500: 13 148 136;
+    --marca-600: 15 118 110;
+    --marca-700: 17 94 89;
+    --destaque-50: 251 240 227;
+    --destaque-100: 247 224 196;
+    --destaque-500: 201 106 5;
+    --destaque-700: 138 74 5;
+    --corsario-azul-escuro: 51 86 126;
+    --tinta: 22 33 31;
+    --tinta-suave: 75 91 88;
+    --tinta-fraca: 124 138 135;
+    --fundo: 244 247 246;
+    --superficie: 255 255 255;
+    --linha: 226 233 231;
+    --grade: 237 241 240;
+    --bom: 12 163 12;
+    --bom-texto: 11 107 29;
+    --bom-suave: 232 246 232;
+    --alerta: 250 178 25;
+    --alerta-texto: 138 90 0;
+    --alerta-suave: 255 245 220;
+    --critico: 208 59 59;
+    --critico-texto: 164 42 42;
+    --critico-suave: 253 234 234;
+    /* Gráficos (static/js/graficos.js): o canvas recebe a cor pronta */
     --cor-marca: #0d9488;
     --cor-destaque: #c96a05;
     --cor-neutra: #c9d3d1;
@@ -15,7 +44,94 @@
     --cor-grade: #edf1f0;
     --cor-superficie: #ffffff;
   }
+  /* Modo escuro: escolhido em Configurações, ou "Automático" com o aparelho no escuro.
+     Os dois blocos escuros são iguais (CSS não reaproveita bloco); um teste confere. */
+  :root[data-tema="escuro"] {
+    color-scheme: dark;
+    --marca-50: 15 39 36;
+    --marca-100: 19 52 48;
+    --marca-200: 29 76 70;
+    --marca-500: 44 181 166;
+    --marca-600: 15 118 110;
+    --marca-700: 109 213 199;
+    --destaque-50: 43 31 15;
+    --destaque-100: 59 43 20;
+    --destaque-500: 227 145 51;
+    --destaque-700: 242 182 107;
+    --corsario-azul-escuro: 111 159 216;
+    --tinta: 227 235 233;
+    --tinta-suave: 169 183 180;
+    --tinta-fraca: 138 154 150;
+    --fundo: 13 21 20;
+    --superficie: 20 30 28;
+    --linha: 44 59 56;
+    --grade: 28 40 38;
+    --bom: 60 194 60;
+    --bom-texto: 134 220 146;
+    --bom-suave: 18 42 25;
+    --alerta: 250 178 25;
+    --alerta-texto: 244 198 90;
+    --alerta-suave: 45 36 13;
+    --critico: 208 59 59;
+    --critico-texto: 243 160 160;
+    --critico-suave: 52 24 24;
+    /* Gráficos (static/js/graficos.js): o canvas recebe a cor pronta */
+    --cor-marca: #2cb5a6;
+    --cor-destaque: #e39133;
+    --cor-neutra: #3b4b48;
+    --cor-tinta: #e3ebe9;
+    --cor-tinta-suave: #a9b7b4;
+    --cor-tinta-fraca: #8a9a96;
+    --cor-linha: #2c3b38;
+    --cor-grade: #1c2826;
+    --cor-superficie: #141e1c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-tema="auto"] {
+      color-scheme: dark;
+      --marca-50: 15 39 36;
+      --marca-100: 19 52 48;
+      --marca-200: 29 76 70;
+      --marca-500: 44 181 166;
+      --marca-600: 15 118 110;
+      --marca-700: 109 213 199;
+      --destaque-50: 43 31 15;
+      --destaque-100: 59 43 20;
+      --destaque-500: 227 145 51;
+      --destaque-700: 242 182 107;
+      --corsario-azul-escuro: 111 159 216;
+      --tinta: 227 235 233;
+      --tinta-suave: 169 183 180;
+      --tinta-fraca: 138 154 150;
+      --fundo: 13 21 20;
+      --superficie: 20 30 28;
+      --linha: 44 59 56;
+      --grade: 28 40 38;
+      --bom: 60 194 60;
+      --bom-texto: 134 220 146;
+      --bom-suave: 18 42 25;
+      --alerta: 250 178 25;
+      --alerta-texto: 244 198 90;
+      --alerta-suave: 45 36 13;
+      --critico: 208 59 59;
+      --critico-texto: 243 160 160;
+      --critico-suave: 52 24 24;
+      /* Gráficos (static/js/graficos.js): o canvas recebe a cor pronta */
+      --cor-marca: #2cb5a6;
+      --cor-destaque: #e39133;
+      --cor-neutra: #3b4b48;
+      --cor-tinta: #e3ebe9;
+      --cor-tinta-suave: #a9b7b4;
+      --cor-tinta-fraca: #8a9a96;
+      --cor-linha: #2c3b38;
+      --cor-grade: #1c2826;
+      --cor-superficie: #141e1c;
+    }
+  }
   html { -webkit-tap-highlight-color: transparent; }
+  /* A janela nativa vem branca: acompanha o tema */
+  dialog { @apply bg-superficie text-tinta; }
+  dialog::backdrop { @apply bg-veu/50; }
   body { @apply bg-fundo text-tinta font-sans antialiased; }
   h1, h2, h3 { @apply font-titulo tracking-tight; text-wrap: balance; }
   :focus-visible { @apply outline-none ring-2 ring-marca-600 ring-offset-2 ring-offset-fundo; }
@@ -30,7 +146,7 @@
   .ico-sm { @apply w-4 h-4; }
 
   /* Superfícies */
-  .cartao { @apply bg-white border border-linha rounded-cartao min-w-0; }
+  .cartao { @apply bg-superficie border border-linha rounded-cartao min-w-0; }
   .cartao-corpo { @apply p-4 sm:p-6; }
   .cartao-cabecalho { @apply flex flex-wrap items-start justify-between gap-3 mb-4; }
   .titulo-cartao { @apply text-base font-bold text-tinta; }
@@ -39,8 +155,8 @@
 
   /* Botões */
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-controle px-4 py-2.5 text-sm font-semibold transition cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-primario { @apply btn bg-marca-600 text-white hover:bg-marca-700; }
-  .btn-secundario { @apply btn bg-white text-tinta border border-linha hover:border-tinta-fraca; }
+  .btn-primario { @apply btn bg-marca-600 text-white hover:bg-marca-profundo; }
+  .btn-secundario { @apply btn bg-superficie text-tinta border border-linha hover:border-tinta-fraca; }
   .btn-perigo { @apply btn bg-critico-suave text-critico-texto hover:bg-critico hover:text-white; }
   .btn-corsario { @apply btn border border-corsario-azul/40 bg-white/5 text-corsario-claro hover:border-corsario-azul hover:bg-corsario-azul/15; }
   .btn-fantasma { @apply btn px-3 text-tinta-suave hover:bg-fundo hover:text-tinta; }
@@ -53,11 +169,11 @@
   .obrigatorio { @apply font-bold text-critico; }
   .ajuda { @apply text-xs text-tinta-fraca leading-relaxed; }
   .entrada-arquivo { @apply block w-full text-sm text-tinta-suave cursor-pointer file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200; }
-  .entrada { @apply w-full rounded-controle border border-linha bg-white px-3 py-2.5 text-[0.95rem] text-tinta placeholder:text-tinta-fraca transition focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100; }
+  .entrada { @apply w-full rounded-controle border border-linha bg-superficie px-3 py-2.5 text-[0.95rem] text-tinta placeholder:text-tinta-fraca transition focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100; }
   /* Seta própria: a nativa fica por cima do texto e muda de navegador para navegador */
   select.entrada { @apply appearance-none truncate pr-10 bg-no-repeat cursor-pointer; background-position: right 0.8rem center; background-size: 1rem;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c8a87' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); }
-  .entrada-grupo { @apply flex w-full min-w-0 items-center rounded-controle border border-linha bg-white transition focus-within:border-marca-500 focus-within:ring-4 focus-within:ring-marca-100; }
+  .entrada-grupo { @apply flex w-full min-w-0 items-center rounded-controle border border-linha bg-superficie transition focus-within:border-marca-500 focus-within:ring-4 focus-within:ring-marca-100; }
   .entrada-grupo > input, .entrada-grupo > select { @apply w-full min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-[0.95rem] text-tinta focus:outline-none focus:ring-0; }
   /* O grupo inteiro já mostra o foco (focus-within); sem isto o campo ganhava um segundo contorno por dentro. */
   .entrada-grupo > input:focus-visible, .entrada-grupo > select:focus-visible { @apply ring-0 ring-offset-0; }
@@ -74,7 +190,7 @@
 
   /* Tabelas */
   .tabela { @apply w-full text-left text-sm border-collapse; }
-  .tabela thead th { @apply sticky top-0 bg-white px-2 sm:px-4 py-3 text-xs font-semibold uppercase tracking-wider text-tinta-fraca border-b border-linha whitespace-nowrap; }
+  .tabela thead th { @apply sticky top-0 bg-superficie px-2 sm:px-4 py-3 text-xs font-semibold uppercase tracking-wider text-tinta-fraca border-b border-linha whitespace-nowrap; }
   .tabela tbody td { @apply px-2 sm:px-4 py-3 border-b border-grade align-middle; }
   .tabela tbody tr:last-child td { @apply border-b-0; }
   .tabela tbody tr { @apply transition-colors hover:bg-fundo/60; }
@@ -89,12 +205,12 @@
 
   /* Abas (links) */
   /* No celular, 2×2 (todas as abas visíveis); a partir de sm, em linha */
-  .abas { @apply grid grid-cols-2 gap-1 rounded-controle bg-white border border-linha p-1 sm:flex sm:w-fit; }
+  .abas { @apply grid grid-cols-2 gap-1 rounded-controle bg-superficie border border-linha p-1 sm:flex sm:w-fit; }
   .aba { @apply rounded-lg px-3.5 py-2 text-center text-sm font-semibold text-tinta-suave whitespace-nowrap transition hover:text-tinta hover:bg-fundo; }
   .aba-ativa { @apply bg-marca-100 text-marca-700 hover:bg-marca-100 hover:text-marca-700; }
 
   /* Busca de produtos (combobox) e carrinho da venda */
-  .lista-busca { @apply absolute inset-x-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-controle border border-linha bg-white py-1 shadow-lg; }
+  .lista-busca { @apply absolute inset-x-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-controle border border-linha bg-superficie py-1 shadow-lg; }
   .opcao-busca { @apply flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-sm; }
   .opcao-busca[aria-selected="true"] { @apply bg-marca-50; }
   .opcao-busca[aria-disabled="true"] { @apply cursor-not-allowed opacity-50; }
@@ -105,9 +221,20 @@
 
   /* Escolha em botões (rádio escondido + rótulo) */
   .opcao { @apply cursor-pointer; }
-  .opcao-rotulo { @apply inline-flex items-center rounded-full border border-linha bg-white px-3.5 py-2 text-sm font-semibold text-tinta-suave transition hover:border-tinta-fraca peer-checked:border-marca-600 peer-checked:bg-marca-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-marca-600 peer-focus-visible:ring-offset-2; }
+  .opcao-rotulo { @apply inline-flex items-center rounded-full border border-linha bg-superficie px-3.5 py-2 text-sm font-semibold text-tinta-suave transition hover:border-tinta-fraca peer-checked:border-marca-600 peer-checked:bg-marca-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-marca-600 peer-focus-visible:ring-offset-2; }
   /* Cartões de escolha do plano (rádio escondido; o cartão inteiro é clicável) */
-  .opcao-plano { @apply flex cursor-pointer items-center justify-between gap-3 rounded-controle border border-linha bg-white px-4 py-3 transition hover:border-tinta-fraca has-[:checked]:border-marca-600 has-[:checked]:bg-marca-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-marca-600 has-[:focus-visible]:ring-offset-2; }
+  .opcao-plano { @apply flex cursor-pointer items-center justify-between gap-3 rounded-controle border border-linha bg-superficie px-4 py-3 transition hover:border-tinta-fraca has-[:checked]:border-marca-600 has-[:checked]:bg-marca-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-marca-600 has-[:focus-visible]:ring-offset-2; }
+
+  /* Janelas (<dialog>) e a ajuda "?" de cada tela */
+  .janela { @apply w-[calc(100%-2rem)] max-h-[85dvh] overflow-y-auto rounded-cartao border border-linha p-0 shadow-xl; }
+  .btn-ajuda { @apply grid h-8 w-8 shrink-0 place-items-center rounded-full text-tinta-fraca transition hover:bg-marca-100 hover:text-marca-700; }
+  .texto-ajuda { @apply grid gap-3 text-sm leading-relaxed text-tinta-suave; }
+  .texto-ajuda h3 { @apply font-sans text-sm font-bold text-tinta; }
+  .texto-ajuda ul, .texto-ajuda ol { @apply grid gap-1.5 pl-5; }
+  .texto-ajuda ul { @apply list-disc; }
+  .texto-ajuda ol { @apply list-decimal; }
+  .texto-ajuda li::marker { @apply text-marca-600; }
+  .texto-ajuda b { @apply font-semibold text-tinta; }
 
   /* Gráficos */
   .area-grafico { @apply relative w-full min-w-0 h-64 overflow-hidden; }

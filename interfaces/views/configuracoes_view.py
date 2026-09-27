@@ -2,11 +2,13 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 from application.assinatura.selectors import em_teste_gratis
+from application.contas.services import trocar_tema
 from application.exceptions import RegraDeNegocioError
 from application.lojas.services import remover_marca, trocar_marca
 from interfaces.decorators import loja_required
 from interfaces.desenvolvedor import CORSARIOS_CODE
-from interfaces.forms import MarcaForm
+from infrastructure.models import Tema
+from interfaces.forms import MarcaForm, TemaForm
 from interfaces.forms.produto_form import TAMANHO_MAXIMO_MB
 from interfaces.views.comum import executar_formulario
 from interfaces.views.planos_view import conferir_pix_abertos
@@ -22,6 +24,7 @@ def configuracoes_view(request):
         'tamanho_maximo_mb': TAMANHO_MAXIMO_MB,
         'em_teste_gratis': loja is not None and em_teste_gratis(loja),
         'pix_aguardando': pix_aguardando,
+        'temas': Tema.choices,
         'link_suporte': CORSARIOS_CODE.link_suporte(loja.nome_loja if loja else 'Painel global'),
     })
 
@@ -47,4 +50,17 @@ def marca_remover_view(request):
         messages.error(request, str(erro))
     else:
         messages.success(request, "Marca removida.")
+    return redirect('configuracoes')
+
+
+@require_POST
+@loja_required(trava_plano_vencido=False)
+def tema_view(request):
+    """Aparência é preferência de cada pessoa: vale mesmo com o plano vencido."""
+    form = TemaForm(request.POST)
+    executar_formulario(
+        request, form,
+        acao=lambda: trocar_tema(request.user, form.cleaned_data['tema']),
+        mensagem_sucesso="Aparência atualizada.",
+    )
     return redirect('configuracoes')
