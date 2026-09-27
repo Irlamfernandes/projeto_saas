@@ -79,6 +79,11 @@ describe('carrinho', () => {
         expect(total()).toBe('R$ 0,00');
     });
 
+    test('a lista de sugestões vira listbox quando o script liga a busca', () => {
+        const { resultados } = montarPagina();
+        expect(resultados.getAttribute('role')).toBe('listbox');
+    });
+
     test('digitar mostra os resultados com preço e estoque; Enter adiciona o primeiro', () => {
         const { busca, resultados } = montarPagina();
         digitar(busca, 'pao');

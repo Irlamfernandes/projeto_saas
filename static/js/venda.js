@@ -68,6 +68,8 @@ function iniciarCarrinho(raiz) {
     const total = raiz.querySelector('[data-total]');
     const itens = [];
     let encontrados = [];
+    // A lista de sugestões só existe com este script (as opções também ganham o papel aqui).
+    resultados.setAttribute('role', 'listbox');
     let ativo = -1;
 
     lerJson(raiz.dataset.itens).forEach((inicial) => {
@@ -225,6 +227,13 @@ function iniciarCarrinho(raiz) {
     return { itens, adicionar, remover, mudarQuantidade };
 }
 
+/* Frase do resumo quando a venda tem cliente: `fica` é o que falta pagar (negativo vira crédito). */
+function resumoComCliente(fica) {
+    if (fica > 0) return `Vai para a caderneta: ${formatarReais(fica)}.`;
+    if (fica < 0) return `Sobra ${formatarReais(-fica)} de crédito para o cliente.`;
+    return 'Pago por completo agora.';
+}
+
 /* Resumo de pagamento da nova venda: balcão é pago na hora; com cliente, o que não pagar fica na caderneta. */
 function iniciarResumoDePagamento(formulario) {
     const cliente = formulario.querySelector('[name="cliente"]');
@@ -243,12 +252,6 @@ function iniciarResumoDePagamento(formulario) {
         }
         const pago = Number(pagoAgora?.value) || 0;
         resumo.textContent = resumoComCliente(total - pago);
-    }
-
-    function resumoComCliente(fica) {
-        if (fica > 0) return `Vai para a caderneta: ${formatarReais(fica)}.`;
-        if (fica < 0) return `Sobra ${formatarReais(-fica)} de crédito para o cliente.`;
-        return 'Pago por completo agora.';
     }
 
     formulario.addEventListener('carrinho:total', (evento) => { total = evento.detail.total; atualizar(); });
