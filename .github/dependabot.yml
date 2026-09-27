@@ -1,13 +1,13 @@
-# Dependabot: avisa e abre PR quando sair correção de segurança ou versão nova das bibliotecas.
-# Atualizações pequenas (correção e melhoria) chegam juntas: um PR por semana para Python e outro para JS.
-# Correções de segurança continuam vindo em PR próprio, para não esperarem a semana.
+# Dependabot: PRs de versão nova PAUSADOS enquanto o sistema recebe melhorias (open-pull-requests-limit: 0).
+# As atualizações são feitas à mão, testadas, num PR só. Para religar, troque os 0 por 5.
+# Alertas e correções de segurança não dependem deste arquivo: ficam em Settings > Code security no GitHub.
 version: 2
 updates:
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     groups:
       python:
         applies-to: version-updates
@@ -15,11 +15,17 @@ updates:
     ignore:
       # Tem que ser a versão exata que o pydantic pede: sobe junto com ele, nunca sozinho.
       - dependency-name: pydantic-core
+      # O realtime (Supabase) só aceita websockets < 16: sobe quando ele liberar.
+      - dependency-name: websockets
+        update-types: [version-update:semver-major]
+      # Versão principal do Django é migração planejada (como a 5.2 -> 6.1), não PR automático.
+      - dependency-name: django
+        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     groups:
       javascript:
         applies-to: version-updates
@@ -32,3 +38,4 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    open-pull-requests-limit: 0
