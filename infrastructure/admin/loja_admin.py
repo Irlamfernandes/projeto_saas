@@ -48,10 +48,11 @@ class LojaAdmin(ModelAdmin):
         return request.user.is_superuser
 
     def save_model(self, request, obj, form, change):
+        # Fora o superusuário, cada um só salva a própria loja; quem não tem loja não salva nenhuma.
         if not request.user.is_superuser:
-            if hasattr(request.user, 'loja') and request.user.loja:
-                if change and obj.pk != request.user.loja.pk:
-                    raise PermissionDenied("Acesso negado: Você não tem permissão para alterar esta loja.")
+            loja_do_usuario = getattr(request.user, 'loja', None)
+            if loja_do_usuario is None or obj.pk != loja_do_usuario.pk:
+                raise PermissionDenied("Acesso negado: Você não tem permissão para alterar esta loja.")
 
         super().save_model(request, obj, form, change)
 

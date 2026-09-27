@@ -133,3 +133,20 @@ class UsuarioAdminTest(TestCase):
         novo_usuario.refresh_from_db()
         self.assertTrue(novo_usuario.deve_trocar_senha)
         self.assertTrue(novo_usuario.has_usable_password())
+
+    def test_save_model_editing_user_keeps_password(self):
+        """Editar um usuário que já tem senha não gera senha nova nem pede troca."""
+        self.user_loja1.deve_trocar_senha = False
+        self.user_loja1.save()
+        senha_antes = self.user_loja1.password
+        request = self.factory.post('/admin/change/')
+        request.user = self.superuser
+        self._add_session_and_messages(request)
+
+        self.user_loja1.first_name = "Caixa"
+        self.user_admin.save_model(request, self.user_loja1, form=None, change=True)
+
+        self.user_loja1.refresh_from_db()
+        self.assertEqual(self.user_loja1.password, senha_antes)
+        self.assertFalse(self.user_loja1.deve_trocar_senha)
+        self.assertEqual(list(request._messages), [])

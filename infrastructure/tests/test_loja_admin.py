@@ -134,3 +134,10 @@ class LojaAdminTest(TestCase):
 
         with self.assertRaises(PermissionDenied):
             self.loja_admin.save_model(request, self.loja2, form=None, change=True)
+
+    def test_save_model_user_without_loja_raises_exception(self):
+        """Funcionário do admin sem loja não salva loja nenhuma (nem chega à tela, mas o servidor também barra)."""
+        request = DummyRequest(user=self.user_sem_loja)
+
+        with self.assertRaises(PermissionDenied):
+            self.loja_admin.save_model(request, self.loja1, form=None, change=True)

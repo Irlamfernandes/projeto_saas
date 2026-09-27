@@ -1,4 +1,6 @@
 [run]
+# Mede também os caminhos de cada decisão (os dois lados de cada if), não só as linhas
+branch = True
 source = application
          interfaces
          infrastructure
