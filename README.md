@@ -125,8 +125,8 @@ make test        # pytest com cobertura + jest
 
 ## Configurações e marca da loja
 
-- **Configurações** (engrenagem no topo do celular; item acima de "Sair" no menu lateral): usuário e loja só para
-  consulta, marca da loja e "Sair".
+- **Configurações** (engrenagem no topo do celular; último item do menu lateral): usuário e loja só para
+  consulta, marca da loja, plano e "Sair" (o único lugar para sair da conta).
 - **Marca da loja** (`LojaModel.logo_url`, `application/lojas/`): qualquer usuário da loja envia; é reduzida para
   512px em WebP e aparece no topo do sistema e no cabeçalho dos PDFs (extrato e relatórios, `pdf_marca.py`).
   O PDF baixa a marca só do bucket do Supabase; se não conseguir, sai sem ela.
@@ -147,6 +147,8 @@ make test        # pytest com cobertura + jest
   próprio Mercado Pago responder aprovado, com o valor da cobrança, em reais e com a referência dela. A soma
   parte do maior entre hoje e o vencimento atual (planos em meses somam meses de calendário) e nunca é feita
   duas vezes para a mesma cobrança. O e-mail do comprovante é guardado exatamente como foi digitado.
+- **Pagou e fechou a tela?** Ao abrir o Início ou Configurações, os Pix ainda abertos da loja são conferidos
+  (`conferir_pendentes`); Configurações lista os que seguem aguardando pagamento.
 
 ## CSS (Tailwind)
 

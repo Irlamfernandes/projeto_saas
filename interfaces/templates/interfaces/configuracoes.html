@@ -71,10 +71,16 @@
                 {% elif plano.dias_restantes == 0 %}Vence hoje.
                 {% elif plano.dias_restantes == 1 %}Vence amanhã.
                 {% else %}Faltam {{ plano.dias_restantes }} dias.{% endif %}
-                {% if em_teste_gratis %}<span class="block">Período de teste grátis.</span>{% endif %}
+                {% if em_teste_gratis and not plano.vencido %}<span class="block">Período de teste grátis.</span>{% endif %}
             </dd>
         </div>
     </dl>
+    {% for cobranca in pix_aguardando %}
+    <a href="{% url 'cobranca' cobranca.pk %}" class="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-controle border border-marca-200 bg-marca-50 px-3.5 py-2.5 text-sm text-marca-700 hover:border-marca-500" data-pix-aguardando>
+        <span class="flex items-center gap-2 font-semibold"><svg class="ico shrink-0"><use href="#i-tempo"/></svg>Pix do plano {{ cobranca.plano_nome }} aguardando pagamento</span>
+        <span class="inline-flex items-center gap-1 font-bold">Abrir<svg class="ico ico-sm"><use href="#i-seta"/></svg></span>
+    </a>
+    {% endfor %}
     <a href="{% url 'planos' %}" class="btn-primario mt-4 w-full sm:w-auto"><svg class="ico"><use href="#i-calendario"/></svg>Ver planos e renovar</a>
 </section>
 {% endif %}

@@ -28,12 +28,6 @@
 
             <div class="mt-auto grid gap-0.5 border-t border-linha pt-3 text-sm">
                 {% include 'interfaces/_menu_item.html' with rota='configuracoes' icone='i-config' rotulo='Configurações' ativo_se='configuracoes planos cobranca' %}
-                <form action="{% url 'logout' %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-fantasma w-full justify-start px-2.5">
-                        <svg class="ico"><use href="#i-sair"/></svg>Sair
-                    </button>
-                </form>
             </div>
         </aside>
 

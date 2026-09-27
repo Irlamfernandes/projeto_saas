@@ -6,7 +6,9 @@ from django.test import TestCase
 from django.utils import timezone
 from application.assinatura.exceptions import PagamentoIndisponivel, PixRecusado, PlanoIndisponivel
 from application.assinatura.selectors import em_teste_gratis, planos_disponiveis
-from application.assinatura.services import MARGEM_APOS_EXPIRAR, MINUTOS_PARA_PAGAR, conferir_cobranca, gerar_cobranca
+from application.assinatura.services import (
+    MARGEM_APOS_EXPIRAR, MINUTOS_PARA_PAGAR, conferir_cobranca, conferir_pendentes, gerar_cobranca,
+)
 from infrastructure.models import Acao, Cobranca, LojaModel, Plano, RegistroDeAlteracao, StatusDaCobranca
 from infrastructure.pagamentos.mercado_pago import MercadoPagoError, MercadoPagoRecusou
 from tests.apoio import MercadoPagoFalso
@@ -225,3 +227,39 @@ class TesteGratisTest(AssinaturaTestCase):
         self.mp.aprovar(cobranca)
         conferir_cobranca(cobranca, gateway=self.mp)
         self.assertFalse(em_teste_gratis(self.loja))
+
+
+class ConferirPendentesTest(AssinaturaTestCase):
+    """Quem paga e fecha a tela antes da confirmação tem o plano renovado na próxima visita."""
+
+    def test_sem_pix_aberto_nao_chama_o_mercado_pago(self):
+        class Proibido:
+            def consultar(self, pagamento_id):
+                raise AssertionError("não deveria consultar")
+        self.assertEqual(conferir_pendentes(self.loja, gateway=Proibido()), [])
+
+    def test_confirma_os_pagos_e_mantem_os_que_aguardam(self):
+        paga = self.gerar()
+        aguardando = self.gerar(plano=Plano.objects.get(nome="90 dias"))
+        self.mp.aprovar(paga)
+
+        conferidas = conferir_pendentes(self.loja, gateway=self.mp)
+
+        self.assertEqual({c.pk: c.status for c in conferidas},
+                         {paga.pk: StatusDaCobranca.PAGA, aguardando.pk: StatusDaCobranca.PENDENTE})
+        self.loja.refresh_from_db()
+        self.assertEqual(self.loja.vencimento, HOJE + timedelta(days=35))
+
+    def test_ignora_as_ja_pagas_ou_expiradas_e_as_de_outra_loja(self):
+        cobranca = self.gerar()
+        Cobranca.objects.filter(pk=cobranca.pk).update(status=StatusDaCobranca.EXPIRADA)
+        outra = LojaModel.objects.create(nome_loja="Outra")
+        gerar_cobranca(outra, self.plano_30, email="a@b.com", usuario=None, gateway=self.mp)
+        self.assertEqual(conferir_pendentes(self.loja, gateway=self.mp), [])
+        self.assertEqual(self.mp.consultas, [])
+
+    def test_sem_gateway_usa_o_do_settings(self):
+        self.gerar()
+        with patch('application.assinatura.services.MercadoPago.from_settings', return_value=self.mp):
+            conferir_pendentes(self.loja)
+        self.assertEqual(len(self.mp.consultas), 1)

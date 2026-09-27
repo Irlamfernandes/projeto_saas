@@ -73,6 +73,20 @@ def conferir_cobranca(cobranca, *, gateway=None):
     return cobranca
 
 
+def conferir_pendentes(loja, *, gateway=None):
+    """Confere os Pix ainda abertos da loja: cobre quem pagou e fechou a tela antes da confirmação.
+
+    Devolve as cobranças conferidas (já com o status novo). Sem Pix aberto, não chama o Mercado Pago.
+    """
+    pendentes = list(
+        Cobranca.objects.filter(loja=loja, status=StatusDaCobranca.PENDENTE).exclude(pagamento_id='')
+    )
+    if not pendentes:
+        return []
+    gateway = gateway or MercadoPago.from_settings()
+    return [conferir_cobranca(cobranca, gateway=gateway) for cobranca in pendentes]
+
+
 def _cobranca_aberta(loja, plano, email):
     minimo = timezone.now() + timedelta(minutes=MINUTOS_MINIMOS_PARA_REAPROVEITAR)
     return (

@@ -8,16 +8,19 @@ from interfaces.decorators import loja_required
 from interfaces.forms import MarcaForm
 from interfaces.forms.produto_form import TAMANHO_MAXIMO_MB
 from interfaces.views.comum import executar_formulario
+from interfaces.views.planos_view import conferir_pix_abertos
 
 TEMPLATE_CONFIGURACOES = 'interfaces/configuracoes.html'
 
 
 @loja_required(trava_plano_vencido=False)
 def configuracoes_view(request):
+    pix_aguardando = conferir_pix_abertos(request)
     loja = request.user.loja
     return render(request, TEMPLATE_CONFIGURACOES, {
         'tamanho_maximo_mb': TAMANHO_MAXIMO_MB,
         'em_teste_gratis': loja is not None and em_teste_gratis(loja),
+        'pix_aguardando': pix_aguardando,
     })
 
 

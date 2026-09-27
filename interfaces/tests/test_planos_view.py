@@ -158,3 +158,49 @@ class ConfiguracoesComPlanoTest(PlanosTestCase):
     def test_aviso_de_vencimento_leva_direto_aos_planos(self):
         response = self.client.get(reverse('dashboard'))
         self.assertContains(response, f'href="{reverse("planos")}" class="btn-primario btn-pequeno')
+
+
+class ConfirmacaoAtualizaATelaTest(PlanosTestCase):
+    """Regressão: a página da confirmação ainda mostrava 'Seu plano venceu' (loja antiga na memória)."""
+
+    def setUp(self):
+        super().setUp()
+        LojaModel.objects.filter(pk=self.loja.pk).update(vencimento=HOJE - timedelta(days=2))
+
+    def test_tela_do_pix_confirmada_ja_nao_mostra_plano_vencido(self):
+        cobranca = self.cobranca()
+        self.mp.aprovar(cobranca)
+        response = self.client.get(reverse('cobranca', args=[cobranca.pk]))
+        self.assertContains(response, "Pagamento confirmado!")
+        self.assertNotContains(response, "Seu plano venceu")
+
+    def test_pagou_e_fechou_a_tela_o_inicio_ja_entra_renovado(self):
+        cobranca = self.cobranca()
+        self.mp.aprovar(cobranca)
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertNotContains(response, "Seu plano venceu")
+        self.assertEqual(Cobranca.objects.get().status, StatusDaCobranca.PAGA)
+
+    def test_configuracoes_confirma_e_lista_os_pix_ainda_abertos(self):
+        paga = self.cobranca()
+        aberta = gerar_cobranca(self.loja, Plano.objects.get(nome="90 dias"), email="a@b.com", usuario=None, gateway=self.mp)
+        self.mp.aprovar(paga)
+
+        response = self.client.get(reverse('configuracoes'))
+
+        self.assertNotContains(response, "Vencido")
+        self.assertContains(response, 'data-pix-aguardando', count=1)
+        self.assertContains(response, reverse('cobranca', args=[aberta.pk]))
+        self.assertContains(response, "Pix do plano 90 dias aguardando pagamento")
+
+    def test_fim_do_teste_gratis_nao_aparece_como_periodo_de_teste(self):
+        self.assertNotContains(self.client.get(reverse('configuracoes')), "Período de teste grátis.")
+
+
+class SairTest(PlanosTestCase):
+
+    def test_sair_fica_so_em_configuracoes(self):
+        self.assertNotContains(self.client.get(reverse('dashboard')), f'action="{reverse("logout")}"')
+        self.assertContains(self.client.get(reverse('configuracoes')), f'action="{reverse("logout")}"', count=1)

@@ -8,9 +8,10 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from application.assinatura.selectors import cobrancas_da_loja, planos_disponiveis
-from application.assinatura.services import conferir_cobranca, gerar_cobranca
+from application.assinatura.services import conferir_cobranca, conferir_pendentes, gerar_cobranca
 from application.assinatura.tempo import novo_vencimento
 from application.exceptions import RegraDeNegocioError
+from infrastructure.models import StatusDaCobranca
 from interfaces.decorators import loja_required
 from interfaces.forms import RenovarPlanoForm
 from interfaces.views.comum import primeiro_erro
@@ -45,6 +46,7 @@ def planos_view(request):
 @loja_required(trava_plano_vencido=False)
 def cobranca_view(request, pk):
     cobranca = conferir_cobranca(_cobranca_da_loja(request, pk))
+    request.user.loja.refresh_from_db(fields=['vencimento'])  # a confirmação acabou de mudar o vencimento
     return render(request, TEMPLATE_COBRANCA, {
         'cobranca': cobranca,
         'pix_de_teste': settings.MERCADO_PAGO_ACCESS_TOKEN.startswith('TEST-'),
@@ -56,6 +58,17 @@ def cobranca_situacao_view(request, pk):
     """Consultada pela tela do Pix a cada poucos segundos até o pagamento ser confirmado."""
     cobranca = conferir_cobranca(_cobranca_da_loja(request, pk))
     return JsonResponse({'status': cobranca.status})
+
+
+def conferir_pix_abertos(request):
+    """Confirma Pix pagos com a tela fechada e devolve os que continuam aguardando pagamento."""
+    loja = request.user.loja
+    if loja is None:
+        return []
+    conferidas = conferir_pendentes(loja)
+    if conferidas:
+        loja.refresh_from_db(fields=['vencimento'])
+    return [cobranca for cobranca in conferidas if cobranca.status == StatusDaCobranca.PENDENTE]
 
 
 def _loja_do_usuario(request):
