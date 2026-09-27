@@ -6,7 +6,7 @@ A caderneta guarda só compras e pagamentos; o que está em aberto em cada compr
 3. os pagamentos feitos na caderneta quitam primeiro a compra mais antiga.
 Por ser calculado, nada fica desatualizado quando uma venda é editada ou cancelada.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import ROUND_DOWN, Decimal
 from django.db.models import Prefetch, prefetch_related_objects
@@ -31,6 +31,12 @@ class Pendencia:
     vencimento: date | None
     valor: Decimal
     pendente: Decimal
+    numero: int = 1  # parcela 2 de 3: numero=2, de=3
+    de: int = 1
+
+    @property
+    def parcelada(self):
+        return self.de > 1
 
     def situacao(self, hoje=None):
         hoje = hoje or timezone.localdate()
@@ -63,8 +69,8 @@ def pendencias_da_venda(venda):
         return []
     vencimentos = [parcela.vencimento for parcela in venda.parcelas.all()] or [None]
     return [
-        Pendencia(venda=venda, vencimento=vencimento, valor=valor, pendente=valor)
-        for vencimento, valor in zip(vencimentos, dividir(restante, len(vencimentos)))
+        Pendencia(venda=venda, vencimento=vencimento, valor=valor, pendente=valor, numero=numero, de=len(vencimentos))
+        for numero, (vencimento, valor) in enumerate(zip(vencimentos, dividir(restante, len(vencimentos))), start=1)
     ]
 
 
@@ -74,7 +80,7 @@ def abater(pendencias, credito):
     for pendencia in pendencias:
         usado = min(credito, pendencia.valor)
         credito -= usado
-        resultado.append(Pendencia(pendencia.venda, pendencia.vencimento, pendencia.valor, pendencia.valor - usado))
+        resultado.append(replace(pendencia, pendente=pendencia.valor - usado))
     return resultado
 
 

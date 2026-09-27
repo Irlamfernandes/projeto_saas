@@ -107,6 +107,13 @@ class PendenciasDoClienteTest(TestCase):
             (venda.pk, HOJE, Decimal('50.00'), Decimal('10.00')),
             (venda.pk, HOJE + timedelta(days=30), Decimal('50.00'), Decimal('50.00')),
         ])
+        primeira, segunda = pendencias_do_cliente(self.ana)
+        self.assertEqual((primeira.numero, primeira.de, segunda.numero, segunda.parcelada), (1, 2, 2, True))
+
+    def test_uma_data_so_nao_e_parcelada(self):
+        self.venda('10.00', dias_atras=1, vencimentos=[HOJE])
+        [pendencia] = pendencias_do_cliente(self.ana)
+        self.assertEqual((pendencia.numero, pendencia.de, pendencia.parcelada), (1, 1, False))
 
     def test_soma_do_que_falta_bate_com_o_saldo_da_caderneta(self):
         self.venda('50.00', dias_atras=10, vencimentos=[HOJE])

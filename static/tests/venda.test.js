@@ -4,7 +4,8 @@
 const {
     normalizar, buscarProdutos, totalDoCarrinho, formatarReais, subtotal, descreverEstoque, descreverPreco,
     iniciarCarrinho, iniciarResumoDePagamento,
-    formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento,
+    formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento, dividirEmParcelas,
+    datasDasParcelas, resumoDasParcelas,
 } = require('../js/venda.js');
 
 const CATALOGO = [
@@ -462,14 +463,19 @@ describe('regras finas do carrinho (achadas pelo teste de mutação)', () => {
 describe('vencimento', () => {
     const HOJE = () => new Date(2026, 0, 28);
 
-    function montar({ comPagoAgora = true, pagouNoAto } = {}) {
+    function montar({ comPagoAgora = true, pagouNoAto, vencimentos = '' } = {}) {
         document.body.innerHTML = `
             <form ${pagouNoAto ? `data-pagou-no-ato="${pagouNoAto}"` : ''}>
                 <select name="cliente"><option value="">Balcão</option><option value="7">Ana</option></select>
                 ${comPagoAgora ? '<input name="valor_pago">' : ''}
-                <div data-vencimento>
-                    <input type="date" name="vencimento">
+                <div data-vencimento data-vencimentos="${vencimentos}">
+                    <input type="date" name="vencimento" value="${vencimentos.split(' ')[0]}">
                     <button type="button" data-prazo-dias="7"></button><button type="button" data-prazo-dias=""></button>
+                    <div data-opcoes-parcelas class="hidden">
+                        <select data-numero-parcelas>${[1, 2, 3, 4].map((n) => `<option value="${n}">${n}</option>`).join('')}</select>
+                        <select data-intervalo-parcelas><option value="30">30</option><option value="15">15</option></select>
+                    </div>
+                    <ol data-parcelas></ol><p data-resumo-parcelas></p>
                 </div>
             </form>`;
         const formulario = document.querySelector('form');
@@ -480,6 +486,8 @@ describe('vencimento', () => {
             cliente: formulario.querySelector('[name="cliente"]'),
             pago: formulario.querySelector('[name="valor_pago"]'),
             data: formulario.querySelector('[name="vencimento"]'),
+            $: (seletor) => formulario.querySelector(seletor),
+            datas: () => [...formulario.querySelectorAll('[name="vencimento"]')].map((campo) => campo.value),
             visivel: () => !formulario.querySelector('[data-vencimento]').classList.contains('hidden'),
         };
     }
@@ -543,10 +551,69 @@ describe('vencimento', () => {
 
     test('usa a data de hoje quando não recebe outra', () => {
         document.body.innerHTML = `<form><select name="cliente"></select>
-            <div data-vencimento><input type="date" name="vencimento"><button data-prazo-dias="1"></button></div></form>`;
+            <div data-vencimento><input type="date" name="vencimento"><button data-prazo-dias="1"></button>
+            <div data-opcoes-parcelas><select data-numero-parcelas><option>1</option></select><select data-intervalo-parcelas></select></div>
+            <ol data-parcelas></ol><p data-resumo-parcelas></p></div></form>`;
         iniciarVencimento(document.querySelector('form'));
         document.querySelector('[data-prazo-dias]').click();
         expect(document.querySelector('[name="vencimento"]').value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    test('divide em centavos como o servidor e sugere as datas pelo intervalo', () => {
+        expect(dividirEmParcelas(100, 3)).toEqual([33.33, 33.33, 33.34]);
+        expect(dividirEmParcelas(90, 3)).toEqual([30, 30, 30]);
+        expect(datasDasParcelas('2026-01-31', 3, 30)).toEqual(['2026-01-31', '2026-03-02', '2026-04-01']);
+        expect(resumoDasParcelas(100, 3)).toBe(`3 parcelas de ${formatarReais(33.33)} (a última de ${formatarReais(33.34)})`);
+        expect(resumoDasParcelas(90, 3)).toBe(`3 parcelas de ${formatarReais(30)}`);
+    });
+
+    test('com data escolhida dá para parcelar; as datas seguintes vêm do intervalo', () => {
+        const tela = montar();
+        mudar(tela.cliente, '7');
+        tela.total(100);
+        expect(tela.$('[data-opcoes-parcelas]').classList.contains('hidden')).toBe(true);
+
+        tela.$('[data-prazo-dias="7"]').click();
+        expect(tela.$('[data-opcoes-parcelas]').classList.contains('hidden')).toBe(false);
+
+        mudar(tela.$('[data-numero-parcelas]'), '3');
+        expect(tela.datas()).toEqual(['2026-02-04', '2026-03-06', '2026-04-05']);
+        expect(tela.$('[data-resumo-parcelas]').textContent).toContain('3 parcelas de');
+        expect(tela.$('label[for="vencimento-parcela-2"]').textContent).toBe('2ª parcela');
+
+        mudar(tela.$('[data-intervalo-parcelas]'), '15');
+        expect(tela.datas()).toEqual(['2026-02-04', '2026-02-19', '2026-03-06']);
+
+        mudar(tela.data, '2026-05-01');
+        expect(tela.datas()).toEqual(['2026-05-01', '2026-05-16', '2026-05-31']);
+
+        mudar(tela.pago, '40', 'input');
+        expect(tela.$('[data-resumo-parcelas]').textContent).toBe(`3 parcelas de ${formatarReais(20)}`);
+    });
+
+    test('sem prazo volta para uma vez e some com as parcelas', () => {
+        const tela = montar();
+        mudar(tela.cliente, '7');
+        tela.total(100);
+        tela.$('[data-prazo-dias="7"]').click();
+        mudar(tela.$('[data-numero-parcelas]'), '2');
+
+        tela.$('[data-prazo-dias=""]').click();
+
+        expect(tela.datas()).toEqual(['']);
+        expect(tela.$('[data-numero-parcelas]').value).toBe('1');
+        expect(tela.$('[data-resumo-parcelas]').textContent).toBe('');
+        expect(tela.$('[data-opcoes-parcelas]').classList.contains('hidden')).toBe(true);
+    });
+
+    test('na edição começa com as parcelas que a venda já tem, sem trocar as datas', () => {
+        const tela = montar({ vencimentos: '2026-02-10 2026-03-01 2026-03-20' });
+        expect(tela.$('[data-numero-parcelas]').value).toBe('3');
+        expect(tela.datas()).toEqual(['2026-02-10', '2026-03-01', '2026-03-20']);
+
+        const umaSo = montar({ vencimentos: '2026-02-10' });
+        expect(umaSo.datas()).toEqual(['2026-02-10']);
+        expect(umaSo.$('[data-numero-parcelas]').value).toBe('1');
     });
 
     test('página sem o campo não quebra', () => {

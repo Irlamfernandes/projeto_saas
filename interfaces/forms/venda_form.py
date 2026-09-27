@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from infrastructure.models import Cliente, FormaDePagamento
 
 MAXIMO_DE_ITENS = 50
+MAXIMO_DE_PARCELAS = 12
 QUANTIDADE_MAXIMA = Decimal('1000000')
 ERRO_ITEM = "Um dos itens da venda é inválido. Remova-o e adicione de novo."
 
@@ -32,8 +33,6 @@ class _VendaForm(forms.Form):
     observacoes = forms.CharField(required=False, max_length=500, error_messages={
         'max_length': "As observações podem ter no máximo 500 caracteres.",
     })
-    # Data combinada para pagar o que ficar na caderneta. Em branco = sem prazo.
-    vencimento = forms.DateField(required=False, error_messages={'invalid': "Data de vencimento inválida."})
 
     def __init__(self, *args, clientes, **kwargs):
         super().__init__(*args, **kwargs)
@@ -42,7 +41,16 @@ class _VendaForm(forms.Form):
     def clean(self):
         dados = super().clean()
         dados['itens'] = self._ler_itens()
+        dados['vencimentos'] = self._ler_vencimentos()
         return dados
+
+    def _ler_vencimentos(self):
+        """Uma data por parcela do que fica na caderneta (campo `vencimento` repetido). Nenhuma = sem prazo."""
+        textos = [texto for texto in self.data.getlist('vencimento') if texto.strip()]
+        if len(textos) > MAXIMO_DE_PARCELAS:
+            raise ValidationError(f"Divida em no máximo {MAXIMO_DE_PARCELAS} parcelas.")
+        campo = forms.DateField(error_messages={'invalid': "Data de vencimento inválida."})
+        return sorted(campo.clean(texto) for texto in textos)
 
     def _ler_itens(self):
         produtos = self.data.getlist('item_produto')
@@ -71,7 +79,7 @@ class _VendaForm(forms.Form):
             'itens': dados['itens'],
             'forma_pagamento': dados['forma_pagamento'],
             'observacoes': dados['observacoes'],
-            'vencimentos': [dados['vencimento']] if dados['vencimento'] else [],
+            'vencimentos': dados['vencimentos'],
         }
 
 

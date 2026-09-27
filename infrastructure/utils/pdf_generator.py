@@ -70,12 +70,19 @@ def linhas_de_compras(cliente):
         [
             timezone.localtime(venda.data_venda).strftime('%d/%m/%Y %H:%M'),
             ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.produto.nome) for i in venda.itens.all())
-            + "".join(f" · vence {parcela.vencimento:%d/%m/%Y}" for parcela in venda.parcelas.all()),
+            + _vencimentos(venda),
             reais(venda.valor_total),
         ]
         for venda in vendas
     ]
     return linhas or [["-", "Nenhuma compra registrada", "-"]]
+
+
+def _vencimentos(venda):
+    datas = [f"{parcela.vencimento:%d/%m/%Y}" for parcela in venda.parcelas.all()]
+    if len(datas) > 1:
+        return f" · {len(datas)} parcelas: {', '.join(datas)}"
+    return "".join(f" · vence {data}" for data in datas)
 
 
 def _tabela_de_compras(cliente):

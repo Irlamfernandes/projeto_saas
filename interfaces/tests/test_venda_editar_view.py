@@ -69,17 +69,23 @@ class VendaEditarViewTest(VendaEditarViewTestCase):
 
     def test_get_mostra_o_vencimento_atual_e_o_valor_pago_no_ato(self):
         Parcela.objects.create(venda=self.venda, vencimento=date(2026, 10, 15))
+        Parcela.objects.create(venda=self.venda, vencimento=date(2026, 11, 15))
         self.client.force_login(self.user_loja1)
 
         response = self.client.get(self.url)
 
-        self.assertEqual(response.context['vencimento'], date(2026, 10, 15))
+        self.assertEqual(response.context['vencimentos'], [date(2026, 10, 15), date(2026, 11, 15)])
+        self.assertContains(response, 'data-vencimentos="2026-10-15 2026-11-15 "')
         self.assertContains(response, 'name="vencimento" value="2026-10-15"')
         self.assertContains(response, 'data-pagou-no-ato="40.00"')
 
     def test_salva_o_novo_vencimento(self):
         self._editar([(self.arroz, 3)], vencimento='2026-11-01')
         self.assertEqual(list(self.venda.parcelas.values_list('vencimento', flat=True)), [date(2026, 11, 1)])
+
+    def test_salva_parcelas(self):
+        self._editar([(self.arroz, 5)], vencimento=['2026-12-01', '2026-11-01'])
+        self.assertEqual(list(self.venda.parcelas.values_list('vencimento', flat=True)), [date(2026, 11, 1), date(2026, 12, 1)])
 
     def test_salva_varios_itens(self):
         Produto.objects.filter(pk=self.cafe.pk).update(quantidade_estoque=5)

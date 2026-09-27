@@ -312,29 +312,97 @@ function somarDias(data, dias) {
     return `${alvo.getFullYear()}-${doisDigitos(alvo.getMonth() + 1)}-${doisDigitos(alvo.getDate())}`;
 }
 
+/* Valor de cada parcela como o servidor divide: partes iguais em centavos, o que sobrar vai na última. */
+function dividirEmParcelas(valor, partes) {
+    const centavos = Math.round(valor * 100);
+    const parte = Math.floor(centavos / partes);
+    return [...Array(partes - 1).fill(parte), centavos - parte * (partes - 1)].map((c) => c / 100);
+}
+
+/* Datas das parcelas: a primeira e as seguintes a cada `intervalo` dias (texto aaaa-mm-dd). */
+function datasDasParcelas(primeira, quantidade, intervalo) {
+    const [ano, mes, dia] = primeira.split('-').map(Number);
+    return Array.from({ length: quantidade }, (_, indice) => somarDias(new Date(ano, mes - 1, dia), indice * intervalo));
+}
+
+function resumoDasParcelas(valor, quantidade) {
+    const valores = dividirEmParcelas(valor, quantidade);
+    const ultima = valores.at(-1);
+    const diferenca = ultima === valores[0] ? '' : ` (a última de ${formatarReais(ultima)})`;
+    return `${quantidade} parcelas de ${formatarReais(valores[0])}${diferenca}`;
+}
+
 /* "Vence em" só aparece quando fica algo na caderneta: venda com cliente que não foi paga por completo no ato.
-   Na edição, o que foi pago no ato vem em data-pagou-no-ato. Os botões de prazo preenchem a data a partir de hoje. */
+   Na edição, o que foi pago no ato vem em data-pagou-no-ato e as datas atuais em data-vencimentos.
+   Com data escolhida, dá para parcelar: as datas seguintes são sugeridas pelo intervalo e podem ser ajustadas. */
 function iniciarVencimento(formulario, hoje = () => new Date()) {
     const bloco = formulario.querySelector('[data-vencimento]');
     const cliente = formulario.querySelector('[name="cliente"]');
     if (!bloco || !cliente) return;
     const data = bloco.querySelector('[name="vencimento"]');
     const pagoAgora = formulario.querySelector('[name="valor_pago"]');
+    const opcoes = bloco.querySelector('[data-opcoes-parcelas]');
+    const numero = bloco.querySelector('[data-numero-parcelas]');
+    const intervalo = bloco.querySelector('[data-intervalo-parcelas]');
+    const lista = bloco.querySelector('[data-parcelas]');
+    const resumo = bloco.querySelector('[data-resumo-parcelas]');
     let total = 0;
 
+    const aPrazo = () => total - (Number(pagoAgora ? pagoAgora.value : formulario.dataset.pagouNoAto) || 0);
+
+    function campoDaParcela(indice, valor) {
+        const linha = criarElemento('li', 'flex items-center gap-3');
+        const campo = criarElemento('input', 'entrada tabular-nums');
+        Object.assign(campo, { type: 'date', name: 'vencimento', value: valor, id: `vencimento-parcela-${indice + 1}` });
+        const rotulo = criarElemento('label', 'w-24 shrink-0 text-sm font-semibold text-tinta-suave', `${indice + 1}ª parcela`);
+        rotulo.htmlFor = campo.id;
+        linha.append(rotulo, campo);
+        return linha;
+    }
+
+    /* Refaz os campos das parcelas 2 em diante com as datas dadas (a 1ª é o campo principal). */
+    function desenharParcelas(datas) {
+        lista.replaceChildren(...datas.slice(1).map((valor, indice) => campoDaParcela(indice + 1, valor)));
+        atualizarResumo();
+    }
+
+    function sugerirDatas() {
+        const quantidade = Number(numero.value);
+        desenharParcelas(data.value && quantidade > 1 ? datasDasParcelas(data.value, quantidade, Number(intervalo.value)) : []);
+    }
+
+    function atualizarResumo() {
+        const quantidade = lista.children.length + 1;
+        resumo.textContent = quantidade > 1 && aPrazo() > 0 ? resumoDasParcelas(aPrazo(), quantidade) : '';
+    }
+
     function atualizar() {
-        const pago = Number(pagoAgora ? pagoAgora.value : formulario.dataset.pagouNoAto) || 0;
-        bloco.classList.toggle('hidden', !cliente.value || total - pago <= 0);
+        bloco.classList.toggle('hidden', !cliente.value || aPrazo() <= 0);
+        opcoes.classList.toggle('hidden', !data.value);
+        atualizarResumo();
     }
 
     bloco.querySelectorAll('[data-prazo-dias]').forEach((botao) => {
         botao.addEventListener('click', () => {
             data.value = botao.dataset.prazoDias ? somarDias(hoje(), Number(botao.dataset.prazoDias)) : '';
+            if (!data.value) numero.value = '1';
+            sugerirDatas();
+            atualizar();
         });
     });
+    data.addEventListener('change', () => { sugerirDatas(); atualizar(); });
+    numero.addEventListener('change', sugerirDatas);
+    intervalo.addEventListener('change', sugerirDatas);
     formulario.addEventListener('carrinho:total', (evento) => { total = evento.detail.total; atualizar(); });
     cliente.addEventListener('change', atualizar);
     pagoAgora?.addEventListener('input', atualizar);
+
+    // Na edição, começa com as parcelas que a venda já tem.
+    const atuais = (bloco.dataset.vencimentos || '').split(' ').filter(Boolean);
+    if (atuais.length > 1) {
+        numero.value = String(atuais.length);
+        desenharParcelas(atuais);
+    }
     atualizar();
 }
 
@@ -378,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         normalizar, buscarProdutos, totalDoCarrinho, formatarReais, subtotal, descreverEstoque, descreverPreco, iniciarCarrinho, iniciarResumoDePagamento,
-        formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento,
+        formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento, dividirEmParcelas,
+        datasDasParcelas, resumoDasParcelas,
     };
 }

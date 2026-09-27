@@ -47,6 +47,24 @@ class NovaVendaFormTest(TestCase):
             with self.subTest(quantidade=quantidade):
                 self.assertEqual(primeiro_erro(self._form(((1, quantidade),), cliente=self.cliente.pk)), ERRO_ITEM)
 
+    def test_varias_parcelas_em_ordem_ignorando_campos_vazios(self):
+        post = dados_do_post(cliente=self.cliente.pk)
+        post.setlist('vencimento', ['2026-12-01', '', '2026-10-15', '2026-11-01'])
+        form = NovaVendaForm(post, clientes=self.clientes)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.parametros()['vencimentos'], [date(2026, 10, 15), date(2026, 11, 1), date(2026, 12, 1)])
+
+    def test_parcelas_demais_ou_data_invalida_sao_recusadas(self):
+        casos = {
+            'parcelas demais': ([f'2027-01-{dia:02d}' for dia in range(1, 14)], "Divida em no máximo 12 parcelas."),
+            'data inválida': (['2026-10-15', '31/31/2026'], "Data de vencimento inválida."),
+        }
+        for nome, (datas, mensagem) in casos.items():
+            with self.subTest(nome):
+                post = dados_do_post(cliente=self.cliente.pk)
+                post.setlist('vencimento', datas)
+                self.assertEqual(primeiro_erro(NovaVendaForm(post, clientes=self.clientes)), mensagem)
+
     def test_vencimento_vira_lista_de_vencimentos(self):
         form = self._form(cliente=self.cliente.pk, vencimento='2026-10-15')
         self.assertTrue(form.is_valid(), form.errors)

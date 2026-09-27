@@ -30,7 +30,7 @@
 
         {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada=venda.forma_pagamento obrigatoria=forma_obrigatoria %}
 
-        {% include 'interfaces/_vencimento.html' with valor=vencimento %}
+        {% include 'interfaces/_vencimento.html' with vencimentos=vencimentos %}
 
         <div class="campo">
             <label for="id_observacoes_venda" class="rotulo">Observações <span class="rotulo-opcional">opcional</span></label>
