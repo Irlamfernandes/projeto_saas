@@ -1,5 +1,5 @@
 annotated-types==0.8.0
-anyio==4.15.0
+anyio==4.15.1
 asgiref==3.12.1
 certifi==2026.7.22
 cffi==2.1.1
@@ -18,17 +18,17 @@ httpcore==1.0.9
 httpx==0.28.1
 hyperframe==6.1.0
 idna==3.20
-multidict==6.7.1
+multidict==6.9.1
 openpyxl==3.1.5
 packaging==26.3
 pillow==12.3.0
 postgrest==2.31.0
-propcache==0.5.2
-psycopg2-binary==2.9.12
+propcache==0.5.4
+psycopg2-binary==2.9.13
 pycparser==3.0
 pydantic==2.13.5
 pydantic_core==2.46.5
-PyJWT==2.13.0
+PyJWT==2.15.0
 realtime==2.31.0
 reportlab==5.0.1
 requests==2.34.2
@@ -43,4 +43,4 @@ typing_extensions==4.16.0
 urllib3==2.8.0
 websockets==15.0.1
 whitenoise==6.12.0
-yarl==1.24.5
+yarl==1.25.1
