@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
@@ -5,7 +6,7 @@ from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
 from application.vendas.services import registrar_venda
-from infrastructure.models import Acao, Cliente, LojaModel, Produto, RegistroDeAlteracao, Venda
+from infrastructure.models import Acao, Cliente, LojaModel, Parcela, Produto, RegistroDeAlteracao, Venda
 
 User = get_user_model()
 
@@ -65,6 +66,20 @@ class VendaEditarViewTest(VendaEditarViewTestCase):
         self.assertEqual(arroz['estoque'], 10, "as 2 unidades desta venda voltam a ficar disponíveis para ela")
         self.assertEqual(response.context['pago_no_ato'], Decimal('40'))
         self.assertContains(response, 'id="modal-cancelar-venda"')
+
+    def test_get_mostra_o_vencimento_atual_e_o_valor_pago_no_ato(self):
+        Parcela.objects.create(venda=self.venda, vencimento=date(2026, 10, 15))
+        self.client.force_login(self.user_loja1)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.context['vencimento'], date(2026, 10, 15))
+        self.assertContains(response, 'name="vencimento" value="2026-10-15"')
+        self.assertContains(response, 'data-pagou-no-ato="40.00"')
+
+    def test_salva_o_novo_vencimento(self):
+        self._editar([(self.arroz, 3)], vencimento='2026-11-01')
+        self.assertEqual(list(self.venda.parcelas.values_list('vencimento', flat=True)), [date(2026, 11, 1)])
 
     def test_salva_varios_itens(self):
         Produto.objects.filter(pk=self.cafe.pk).update(quantidade_estoque=5)

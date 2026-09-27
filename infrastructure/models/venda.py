@@ -128,3 +128,20 @@ class PagamentoCliente(models.Model):
     def __str__(self):
         cliente_nome = self.cliente.nome if self.cliente else 'Cliente Não Identificado'
         return f"Pagamento - {cliente_nome} (R$ {self.valor})"
+
+class Parcela(models.Model):
+    """Data combinada para pagar a parte da venda que ficou na caderneta. Venda a prazo sem data = sem parcela.
+
+    O valor de cada parcela não é guardado: é o que ficou a prazo dividido entre elas (sempre em dia se a venda mudar).
+    """
+    venda = models.ForeignKey(Venda, on_delete=models.CASCADE, related_name='parcelas')
+    vencimento = models.DateField(db_index=True)
+
+    class Meta:
+        db_table = 'parcelas_venda'
+        verbose_name = 'Parcela'
+        verbose_name_plural = 'Parcelas'
+        ordering = ['vencimento', 'pk']
+
+    def __str__(self):
+        return f"Venda #{self.venda_id} · vence {self.vencimento:%d/%m/%Y}"

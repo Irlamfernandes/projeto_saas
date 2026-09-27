@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
@@ -73,6 +74,15 @@ class VendasViewTest(TestCase):
         self.assertEqual(venda.itens.count(), 2)
         self.assertEqual(PagamentoCliente.objects.get().venda, venda)
         self.assertEqual(RegistroDeAlteracao.objects.get().usuario, self.user_loja1)
+
+    def test_venda_a_prazo_com_vencimento_aparece_no_historico(self):
+        self._vender([(self.cafe, 2)], vencimento='2026-10-15')
+
+        venda = Venda.objects.get()
+        self.assertEqual(list(venda.parcelas.values_list('vencimento', flat=True)), [date(2026, 10, 15)])
+        response = self.client.get(self.url)
+        self.assertContains(response, 'vence 15/10/2026')
+        self.assertContains(response, 'data-prazo-dias="30"')
 
     def test_venda_de_balcao_na_loja_do_usuario(self):
         self._vender([(self.cafe, 1)], cliente='', forma_pagamento='dinheiro')

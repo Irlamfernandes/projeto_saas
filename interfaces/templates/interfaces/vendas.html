@@ -34,6 +34,8 @@
 
             {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada='dinheiro' obrigatoria=True %}
 
+            {% include 'interfaces/_vencimento.html' %}
+
             <p data-resumo-pagamento class="rounded-controle bg-marca-50 px-3.5 py-2.5 text-sm font-semibold text-marca-700" aria-live="polite">Venda de balcão: paga na hora.</p>
 
             <div class="campo">
@@ -60,7 +62,7 @@
                             {% if venda.cliente %}<a href="{% url 'extrato_cliente' venda.cliente.id %}" class="font-semibold hover:text-marca-700 hover:underline" title="Caderneta de {{ venda.cliente.nome }}">{{ venda.cliente.nome }}</a>{% else %}<span class="font-semibold text-tinta-fraca">Balcão</span>{% endif %}
                             <span class="block text-xs text-tinta-suave">{% for item in venda.itens.all %}{{ item.quantidade }}× {{ item.produto.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
                             {% if venda.observacoes %}<span class="block text-xs italic text-tinta-fraca">{{ venda.observacoes }}</span>{% endif %}
-                            <span class="block text-xs text-tinta-fraca tabular-nums">{{ venda.data_venda|date:"d/m/Y" }} às {{ venda.data_venda|date:"H:i" }}{% if venda.forma_pagamento %} · {{ venda.get_forma_pagamento_display }}{% endif %}</span>
+                            <span class="block text-xs text-tinta-fraca tabular-nums">{{ venda.data_venda|date:"d/m/Y" }} às {{ venda.data_venda|date:"H:i" }}{% if venda.forma_pagamento %} · {{ venda.get_forma_pagamento_display }}{% endif %}{% for parcela in venda.parcelas.all %} · vence {{ parcela.vencimento|date:"d/m/Y" }}{% endfor %}</span>
                         </td>
                         <td class="text-right align-top">
                             <span class="block numero font-bold">R$ {{ venda.valor_total|moeda }}</span>

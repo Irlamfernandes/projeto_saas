@@ -260,6 +260,39 @@ function iniciarResumoDePagamento(formulario) {
     atualizar();
 }
 
+/* Data `dias` depois de `data`, no formato do campo de data (aaaa-mm-dd, no fuso de quem usa). */
+function somarDias(data, dias) {
+    const alvo = new Date(data.getFullYear(), data.getMonth(), data.getDate() + dias);
+    const doisDigitos = (numero) => String(numero).padStart(2, '0');
+    return `${alvo.getFullYear()}-${doisDigitos(alvo.getMonth() + 1)}-${doisDigitos(alvo.getDate())}`;
+}
+
+/* "Vence em" só aparece quando fica algo na caderneta: venda com cliente que não foi paga por completo no ato.
+   Na edição, o que foi pago no ato vem em data-pagou-no-ato. Os botões de prazo preenchem a data a partir de hoje. */
+function iniciarVencimento(formulario, hoje = () => new Date()) {
+    const bloco = formulario.querySelector('[data-vencimento]');
+    const cliente = formulario.querySelector('[name="cliente"]');
+    if (!bloco || !cliente) return;
+    const data = bloco.querySelector('[name="vencimento"]');
+    const pagoAgora = formulario.querySelector('[name="valor_pago"]');
+    let total = 0;
+
+    function atualizar() {
+        const pago = Number(pagoAgora ? pagoAgora.value : formulario.dataset.pagouNoAto) || 0;
+        bloco.classList.toggle('hidden', !cliente.value || total - pago <= 0);
+    }
+
+    bloco.querySelectorAll('[data-prazo-dias]').forEach((botao) => {
+        botao.addEventListener('click', () => {
+            data.value = botao.dataset.prazoDias ? somarDias(hoje(), Number(botao.dataset.prazoDias)) : '';
+        });
+    });
+    formulario.addEventListener('carrinho:total', (evento) => { total = evento.detail.total; atualizar(); });
+    cliente.addEventListener('change', atualizar);
+    pagoAgora?.addEventListener('input', atualizar);
+    atualizar();
+}
+
 /* Mesma regra do servidor: a forma de pagamento é obrigatória no balcão ou quando houve pagamento no ato. */
 function formaDePagamentoObrigatoria(formulario) {
     const cliente = formulario.querySelector('[name="cliente"]');
@@ -290,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (formulario) {
             iniciarResumoDePagamento(formulario);
             iniciarFormaObrigatoria(formulario);
+            iniciarVencimento(formulario);
         }
         iniciarCarrinho(raiz);
     });
@@ -299,6 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,
-        formaDePagamentoObrigatoria, iniciarFormaObrigatoria,
+        formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento,
     };
 }

@@ -3,7 +3,7 @@
  */
 const {
     normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,
-    formaDePagamentoObrigatoria, iniciarFormaObrigatoria,
+    formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento,
 } = require('../js/venda.js');
 
 const CATALOGO = [
@@ -457,3 +457,101 @@ describe('regras finas do carrinho (achadas pelo teste de mutação)', () => {
     });
 });
 
+
+describe('vencimento', () => {
+    const HOJE = () => new Date(2026, 0, 28);
+
+    function montar({ comPagoAgora = true, pagouNoAto } = {}) {
+        document.body.innerHTML = `
+            <form ${pagouNoAto ? `data-pagou-no-ato="${pagouNoAto}"` : ''}>
+                <select name="cliente"><option value="">Balcão</option><option value="7">Ana</option></select>
+                ${comPagoAgora ? '<input name="valor_pago">' : ''}
+                <div data-vencimento>
+                    <input type="date" name="vencimento">
+                    <button type="button" data-prazo-dias="7"></button><button type="button" data-prazo-dias=""></button>
+                </div>
+            </form>`;
+        const formulario = document.querySelector('form');
+        iniciarVencimento(formulario, HOJE);
+        const total = (valor) => formulario.dispatchEvent(new CustomEvent('carrinho:total', { detail: { total: valor } }));
+        return {
+            formulario, total,
+            cliente: formulario.querySelector('[name="cliente"]'),
+            pago: formulario.querySelector('[name="valor_pago"]'),
+            data: formulario.querySelector('[name="vencimento"]'),
+            visivel: () => !formulario.querySelector('[data-vencimento]').classList.contains('hidden'),
+        };
+    }
+
+    function mudar(campo, valor, evento = 'change') {
+        campo.value = valor;
+        campo.dispatchEvent(new Event(evento, { bubbles: true }));
+    }
+
+    test('soma dias virando o mês e o ano, com dois dígitos', () => {
+        expect(somarDias(new Date(2026, 0, 28), 7)).toBe('2026-02-04');
+        expect(somarDias(new Date(2026, 11, 30), 3)).toBe('2027-01-02');
+        expect(somarDias(new Date(2026, 8, 1), 0)).toBe('2026-09-01');
+    });
+
+    test('só aparece com cliente e quando sobra algo para a caderneta', () => {
+        const tela = montar();
+        tela.total(50);
+        expect(tela.visivel()).toBe(false);
+
+        mudar(tela.cliente, '7');
+        expect(tela.visivel()).toBe(true);
+
+        mudar(tela.pago, '50', 'input');
+        expect(tela.visivel()).toBe(false);
+
+        mudar(tela.pago, '49.99', 'input');
+        expect(tela.visivel()).toBe(true);
+    });
+
+    test('carrinho vazio esconde', () => {
+        const tela = montar();
+        mudar(tela.cliente, '7');
+        tela.total(0);
+        expect(tela.visivel()).toBe(false);
+    });
+
+    test('na edição usa o que foi pago no ato', () => {
+        const tela = montar({ comPagoAgora: false, pagouNoAto: '40.00' });
+        mudar(tela.cliente, '7');
+        tela.total(40);
+        expect(tela.visivel()).toBe(false);
+        tela.total(60);
+        expect(tela.visivel()).toBe(true);
+    });
+
+    test('na edição sem pagamento no ato, todo o total fica a prazo', () => {
+        const tela = montar({ comPagoAgora: false });
+        mudar(tela.cliente, '7');
+        tela.total(1);
+        expect(tela.visivel()).toBe(true);
+    });
+
+    test('botões de prazo preenchem a data e "sem prazo" limpa', () => {
+        const tela = montar();
+        tela.formulario.querySelector('[data-prazo-dias="7"]').click();
+        expect(tela.data.value).toBe('2026-02-04');
+        tela.formulario.querySelector('[data-prazo-dias=""]').click();
+        expect(tela.data.value).toBe('');
+    });
+
+    test('usa a data de hoje quando não recebe outra', () => {
+        document.body.innerHTML = `<form><select name="cliente"></select>
+            <div data-vencimento><input type="date" name="vencimento"><button data-prazo-dias="1"></button></div></form>`;
+        iniciarVencimento(document.querySelector('form'));
+        document.querySelector('[data-prazo-dias]').click();
+        expect(document.querySelector('[name="vencimento"]').value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    test('página sem o campo não quebra', () => {
+        document.body.innerHTML = '<form><select name="cliente"></select></form>';
+        expect(() => iniciarVencimento(document.querySelector('form'))).not.toThrow();
+        document.body.innerHTML = '<form><div data-vencimento></div></form>';
+        expect(() => iniciarVencimento(document.querySelector('form'))).not.toThrow();
+    });
+});

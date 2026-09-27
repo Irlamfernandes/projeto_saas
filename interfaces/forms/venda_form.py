@@ -23,6 +23,8 @@ class _VendaForm(forms.Form):
     observacoes = forms.CharField(required=False, max_length=500, error_messages={
         'max_length': "As observações podem ter no máximo 500 caracteres.",
     })
+    # Data combinada para pagar o que ficar na caderneta. Em branco = sem prazo.
+    vencimento = forms.DateField(required=False, error_messages={'invalid': "Data de vencimento inválida."})
 
     def __init__(self, *args, clientes, **kwargs):
         super().__init__(*args, **kwargs)
@@ -60,6 +62,7 @@ class _VendaForm(forms.Form):
             'itens': dados['itens'],
             'forma_pagamento': dados['forma_pagamento'],
             'observacoes': dados['observacoes'],
+            'vencimentos': [dados['vencimento']] if dados['vencimento'] else [],
         }
 
 
