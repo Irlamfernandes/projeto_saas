@@ -31,7 +31,7 @@ def relatorios_vendas_view(request):
         'grafico_diario': graficos.diario(faturamento_por_dia(request.user, dias)),
         'grafico_mensal': graficos.mensal(faturamento_por_mes(request.user, meses=12)),
         'mais_vendidos': ranking,
-        'grafico_mais_vendidos': graficos.ranking([p.nome for p in ranking], [p.quantidade for p in ranking], 'Unidades'),
+        'grafico_mais_vendidos': graficos.ranking([p.nome for p in ranking], [float(p.quantidade) for p in ranking], 'Quantidade'),
         'mapa': mapa_de_horarios(request.user),
         'formas_de_pagamento': formas,
         'total_recebido': recebido,

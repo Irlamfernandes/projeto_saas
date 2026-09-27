@@ -1,11 +1,16 @@
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.cliente import Cliente
-from infrastructure.models.produto import Produto
+from infrastructure.models.produto import Produto, campo_de_quantidade
+
+def subtotal(quantidade, preco):
+    """Quantidade × preço, em centavos (0,350 kg × R$ 39,90 = R$ 13,97)."""
+    return (quantidade * preco).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
 
 class FormaDePagamento(models.TextChoices):
     DINHEIRO = 'dinheiro', 'Dinheiro'
@@ -58,9 +63,9 @@ class Venda(models.Model):
 class ItemVenda(models.Model):
     venda = models.ForeignKey(Venda, on_delete=models.CASCADE, related_name='itens', db_index=True)
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT, db_index=True)
-    quantidade = models.PositiveIntegerField(
-        default=1,
-        validators=[MinValueValidator(1)]
+    quantidade = campo_de_quantidade(
+        default=Decimal('1'),
+        validators=[MinValueValidator(Decimal('0.001'))]
     )
     preco_unitario = models.DecimalField(
         max_digits=10, 
@@ -85,7 +90,7 @@ class ItemVenda(models.Model):
         super().save(*args, **kwargs)
 
     def subtotal(self):
-        return self.quantidade * self.preco_unitario
+        return subtotal(self.quantidade, self.preco_unitario)
 
     def __str__(self):
         produto_nome = self.produto.nome if self.produto else 'Produto Removido'

@@ -44,14 +44,14 @@
     </div>
     {% if mais_vendidos %}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        {% include 'interfaces/_grafico.html' with id='dados-mais-vendidos' tipo='barras-horizontais' formato='unidades' dados=grafico_mais_vendidos descricao='Produtos mais vendidos em unidades' altura='h-80' %}
+        {% include 'interfaces/_grafico.html' with id='dados-mais-vendidos' tipo='barras-horizontais' formato='unidades' dados=grafico_mais_vendidos descricao='Produtos mais vendidos em quantidade' altura='h-80' %}
         <div class="relative overflow-x-auto">
             <table class="tabela">
-                <caption class="sr-only">Mais vendidos em unidades e em reais</caption>
+                <caption class="sr-only">Mais vendidos em quantidade e em reais</caption>
                 <thead><tr><th scope="col">Produto</th><th scope="col" class="text-right">Faturamento</th></tr></thead>
                 <tbody>
                     {% for p in mais_vendidos %}
-                    <tr><td class="font-medium"><span class="text-tinta-fraca tabular-nums">{{ forloop.counter }}.</span> {{ p.nome }}<span class="block text-xs font-normal text-tinta-fraca">{{ p.quantidade }} un. vendidas</span></td><td class="numero">R$ {{ p.faturamento|moeda }}</td></tr>
+                    <tr><td class="font-medium"><span class="text-tinta-fraca tabular-nums">{{ forloop.counter }}.</span> {{ p.nome }}<span class="block text-xs font-normal text-tinta-fraca">{{ p.quantidade|quantidade:p.unidade }} vendidos</span></td><td class="numero">R$ {{ p.faturamento|moeda }}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

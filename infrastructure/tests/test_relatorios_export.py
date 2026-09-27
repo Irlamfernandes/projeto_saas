@@ -18,7 +18,8 @@ def _relatorio(**campos):
         total_fiado_pendente=Decimal('120.50'),
         clientes_credito=[SimpleNamespace(nome="Bia", valor_credito=Decimal('20.00'))],
         total_credito_clientes=Decimal('20.00'),
-        estoque_ordenado=[SimpleNamespace(nome="Arroz", preco_venda=Decimal('25.90'), quantidade_estoque=3)],
+        estoque_ordenado=[SimpleNamespace(nome="Arroz", preco_venda=Decimal('25.90'), quantidade_estoque=Decimal('3.000'), unidade='un'),
+                          SimpleNamespace(nome="Queijo", preco_venda=Decimal('39.90'), quantidade_estoque=Decimal('2.500'), unidade='kg')],
     )
     return Relatorio(**{**base, **campos})
 
@@ -48,6 +49,7 @@ class ExportacaoPdfTest(SimpleTestCase):
         self.assertEqual(_texto_pdf(Decimal('10.5')), "R$ 10,50")
         self.assertEqual(_texto_pdf(Decimal('1234.5')), "R$ 1.234,50")  # regressão: saía "R$ 1234.50"
         self.assertEqual(_texto_pdf(3), "3")
+        self.assertEqual(_texto_pdf(2.5), "2,5")
         self.assertEqual(_texto_pdf("Arroz"), "Arroz")
 
 
@@ -76,7 +78,8 @@ class ExportacaoExcelTest(SimpleTestCase):
 
     def test_valores_monetarios_sao_numeros_formatados(self):
         aba = _abrir_excel('estoque').active
-        self.assertEqual([c.value for c in aba[2]], ["Arroz", 25.9, 3])
+        self.assertEqual([c.value for c in aba[2]], ["Arroz", 25.9, 3, "un."])
+        self.assertEqual([c.value for c in aba[3]], ["Queijo", 39.9, 2.5, "kg"])
         self.assertEqual(aba['B2'].number_format, FORMATO_MOEDA_EXCEL)
         self.assertEqual(aba['C2'].data_type, 'n')
 

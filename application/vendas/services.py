@@ -10,11 +10,13 @@ from django.db import transaction
 from django.db.models import F
 from application.auditoria.services import registrar_alteracao
 from application.vendas.exceptions import (
-    EstoqueInsuficiente, ProdutoNaoEncontrado, SenhaIncorreta, VendaSemItens, VendaSemLoja,
+    EstoqueInsuficiente, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
 from application.vendas.pendencias import a_prazo
 from application.vendas.selectors import produtos_da_loja
 from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Parcela, Produto, Venda
+from infrastructure.models.produto import quantidade_aceita
+from infrastructure.models.venda import subtotal
 from infrastructure.utils.formatacao import reais
 
 
@@ -99,7 +101,10 @@ def fotografar_venda(venda):
         'forma_pagamento': venda.get_forma_pagamento_display(),
         'observacoes': venda.observacoes,
         'itens': [
-            {'produto': item.produto.nome, 'quantidade': item.quantidade, 'preco_unitario': str(item.preco_unitario)}
+            {
+                'produto': item.produto.nome, 'quantidade': str(item.quantidade.normalize()),
+                'unidade': item.produto.unidade, 'preco_unitario': str(item.preco_unitario),
+            }
             for item in venda.itens.select_related('produto')
         ],
         'pago_no_ato': [str(pagamento.valor) for pagamento in venda.pagamentos_no_ato.all()],
@@ -108,7 +113,10 @@ def fotografar_venda(venda):
 
 
 def _reservar_estoque(loja, itens, precos=None):
-    """Trava os produtos, confere e baixa o estoque. Retorna [(produto, quantidade, preço unitário)]."""
+    """Trava os produtos, confere e baixa o estoque. Retorna [(produto, quantidade, preço unitário)].
+
+    Produto sem controle de estoque é vendido sem conferir nem baixar a quantidade.
+    """
     quantidades = Counter()
     for produto_id, quantidade in itens:
         quantidades[produto_id] += quantidade
@@ -124,17 +132,26 @@ def _reservar_estoque(loja, itens, precos=None):
     linhas = []
     for produto in produtos:
         quantidade = quantidades[produto.pk]
-        if produto.quantidade_estoque < quantidade:
-            raise EstoqueInsuficiente(produto)
-        produto.quantidade_estoque -= quantidade
-        produto.save(update_fields=['quantidade_estoque'])
+        if not quantidade_aceita(quantidade, produto.unidade):
+            raise QuantidadeFracionada(produto)
+        if produto.controla_estoque:
+            _baixar_estoque(produto, quantidade)
         linhas.append((produto, quantidade, precos.get(produto.pk, produto.preco_venda)))
     return linhas
 
 
+def _baixar_estoque(produto, quantidade):
+    if produto.quantidade_estoque < quantidade:
+        raise EstoqueInsuficiente(produto)
+    produto.quantidade_estoque -= quantidade
+    produto.save(update_fields=['quantidade_estoque'])
+
+
 def _devolver_estoque(venda):
     for item in venda.itens.all():
-        Produto.objects.filter(pk=item.produto_id).update(quantidade_estoque=F('quantidade_estoque') + item.quantidade)
+        Produto.objects.filter(pk=item.produto_id, controla_estoque=True).update(
+            quantidade_estoque=F('quantidade_estoque') + item.quantidade,
+        )
 
 
 def _criar_itens(venda, linhas):
@@ -160,7 +177,7 @@ def _definir_vencimentos(venda, vencimentos):
 
 
 def _total(linhas):
-    return sum((preco * quantidade for _, quantidade, preco in linhas), Decimal('0'))
+    return sum((subtotal(quantidade, preco) for _, quantidade, preco in linhas), Decimal('0'))
 
 
 def _para_quem(venda):

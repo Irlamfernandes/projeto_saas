@@ -5,9 +5,43 @@
 
 const LIMITE_DE_RESULTADOS = 8;
 const reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const quantidades = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
+const POR_UNIDADE = 'un.';
 
 function formatarReais(valor) {
     return reais.format(valor);
+}
+
+/* Produto sem controle de estoque (estoque null) vende qualquer quantidade. */
+function limiteDoEstoque(produto) {
+    return produto.estoque ?? Infinity;
+}
+
+/* Menor quantidade aceita: 1 para unidade, 0,001 para quilo (3 casas), 0,01 para metro... */
+function passoDaQuantidade(produto) {
+    return 10 ** -(produto.casas || 0);
+}
+
+/* Unidade que vale mostrar ao lado do número: 'kg', 'L'... (por unidade não precisa). */
+function unidadeVisivel(produto) {
+    return produto.unidade && produto.unidade !== POR_UNIDADE ? produto.unidade : '';
+}
+
+function descreverEstoque(produto) {
+    if (produto.estoque === null) return 'sem controle de estoque';
+    const unidade = unidadeVisivel(produto);
+    return `${quantidades.format(produto.estoque)}${unidade ? ` ${unidade}` : ''} em estoque`;
+}
+
+function descreverPreco(produto, preco) {
+    const unidade = unidadeVisivel(produto);
+    return `${formatarReais(preco)} ${unidade ? `por ${unidade}` : 'cada'}`;
+}
+
+/* Quantidade × preço em centavos, com contas inteiras (0,35 kg × R$ 39,90 = R$ 13,97, como no servidor). */
+function subtotal(item) {
+    const centavos = Math.round(item.preco * 100) * Math.round(item.quantidade * 1000);
+    return Math.round(centavos / 1000) / 100;
 }
 
 function normalizar(texto) {
@@ -35,7 +69,7 @@ function buscarProdutos(catalogo, termo, limite = LIMITE_DE_RESULTADOS) {
 }
 
 function totalDoCarrinho(itens) {
-    return itens.reduce((soma, item) => soma + item.preco * item.quantidade, 0);
+    return itens.reduce((soma, item) => soma + subtotal(item), 0);
 }
 
 function criarElemento(tag, classes, texto) {
@@ -79,10 +113,11 @@ function iniciarCarrinho(raiz) {
 
     function adicionar(produto) {
         const existente = itens.find((item) => item.produto.id === produto.id);
+        const limite = limiteDoEstoque(produto);
         if (existente) {
-            existente.quantidade = Math.min(existente.quantidade + 1, produto.estoque);
-        } else if (produto.estoque > 0) {
-            itens.push({ produto, quantidade: 1, preco: Number(produto.preco) });
+            existente.quantidade = Math.min(existente.quantidade + 1, limite);
+        } else if (limite > 0) {
+            itens.push({ produto, quantidade: Math.min(1, limite), preco: Number(produto.preco) });
         }
         busca.value = '';
         fecharResultados();
@@ -91,7 +126,10 @@ function iniciarCarrinho(raiz) {
     }
 
     function mudarQuantidade(item, quantidade) {
-        item.quantidade = Math.max(1, Math.min(Number(quantidade) || 1, item.produto.estoque));
+        const casas = item.produto.casas || 0;
+        const pedida = Number(String(quantidade).replace(',', '.')) || 1;
+        const limitada = Math.min(pedida, limiteDoEstoque(item.produto));
+        item.quantidade = Math.max(passoDaQuantidade(item.produto), Number(limitada.toFixed(casas)));
         desenharItens();
     }
 
@@ -115,17 +153,24 @@ function iniciarCarrinho(raiz) {
         info.append(
             criarElemento('span', 'block font-semibold leading-snug', item.produto.nome),
             criarElemento('span', 'block text-xs text-tinta-fraca tabular-nums',
-                `${formatarReais(item.preco)} cada · ${item.produto.estoque} em estoque`),
+                `${descreverPreco(item.produto, item.preco)} · ${descreverEstoque(item.produto)}`),
         );
 
         const quantidade = criarElemento('div', 'quantidade');
         const menos = botaoIcone('i-menos', `Diminuir ${item.produto.nome}`, 'quantidade-botao');
         const campo = criarElemento('input', 'quantidade-campo');
         const mais = botaoIcone('i-mais', `Aumentar ${item.produto.nome}`, 'quantidade-botao');
-        Object.assign(campo, { type: 'number', min: 1, max: item.produto.estoque, value: item.quantidade, name: 'item_quantidade', inputMode: 'numeric' });
-        campo.setAttribute('aria-label', `Quantidade de ${item.produto.nome}`);
-        menos.disabled = item.quantidade <= 1;
-        mais.disabled = item.quantidade >= item.produto.estoque;
+        const passo = passoDaQuantidade(item.produto);
+        const limite = limiteDoEstoque(item.produto);
+        Object.assign(campo, {
+            type: 'number', min: passo, step: passo, value: item.quantidade, name: 'item_quantidade',
+            inputMode: passo < 1 ? 'decimal' : 'numeric',
+        });
+        if (limite !== Infinity) campo.max = limite;
+        const unidade = unidadeVisivel(item.produto);
+        campo.setAttribute('aria-label', `Quantidade de ${item.produto.nome}${unidade ? ` em ${unidade}` : ''}`);
+        menos.disabled = item.quantidade <= passo;
+        mais.disabled = item.quantidade >= limite;
         menos.addEventListener('click', () => mudarQuantidade(item, item.quantidade - 1));
         mais.addEventListener('click', () => mudarQuantidade(item, item.quantidade + 1));
         campo.addEventListener('change', () => mudarQuantidade(item, campo.value));
@@ -134,12 +179,12 @@ function iniciarCarrinho(raiz) {
         const produto = criarElemento('input');
         Object.assign(produto, { type: 'hidden', name: 'item_produto', value: item.produto.id });
 
-        const subtotal = criarElemento('span', 'w-24 text-right font-semibold tabular-nums', formatarReais(item.preco * item.quantidade));
+        const valor = criarElemento('span', 'w-24 text-right font-semibold tabular-nums', formatarReais(subtotal(item)));
         const tirar = botaoIcone('i-lixeira', `Tirar ${item.produto.nome} da venda`, 'btn-fantasma btn-pequeno px-2 text-critico-texto');
         tirar.addEventListener('click', () => remover(item));
 
         const acoes = criarElemento('div', 'flex items-center gap-2');
-        acoes.append(quantidade, subtotal, tirar);
+        acoes.append(quantidade, valor, tirar);
         linha.append(info, acoes, produto);
         return linha;
     }
@@ -161,13 +206,13 @@ function iniciarCarrinho(raiz) {
         const opcao = criarElemento('li', 'opcao-busca');
         opcao.id = `produto-${produto.id}`;
         opcao.setAttribute('role', 'option');
-        const semEstoque = produto.estoque < 1;
+        const semEstoque = limiteDoEstoque(produto) <= 0;
         opcao.setAttribute('aria-disabled', String(semEstoque));
         const nome = criarElemento('span', 'min-w-0');
         nome.append(
             criarElemento('span', 'block font-semibold truncate', produto.nome),
             criarElemento('span', 'block text-xs text-tinta-fraca',
-                [produto.codigo && `#${produto.codigo}`, semEstoque ? 'sem estoque' : `${produto.estoque} em estoque`].filter(Boolean).join(' · ')),
+                [produto.codigo && `#${produto.codigo}`, semEstoque ? 'sem estoque' : descreverEstoque(produto)].filter(Boolean).join(' · ')),
         );
         opcao.append(nome, criarElemento('span', 'shrink-0 font-semibold tabular-nums', formatarReais(Number(produto.preco))));
         // mousedown (antes do blur do campo) para o clique não se perder ao fechar a lista.
@@ -210,7 +255,7 @@ function iniciarCarrinho(raiz) {
         } else if (evento.key === 'Enter') {
             evento.preventDefault(); // Enter na busca adiciona o produto; nunca envia a venda pela metade.
             const produto = encontrados[ativo];
-            if (produto && produto.estoque > 0) adicionar(produto);
+            if (produto && limiteDoEstoque(produto) > 0) adicionar(produto);
         } else if (evento.key === 'Escape') {
             fecharResultados();
         }
@@ -332,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /* istanbul ignore else */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,
+        normalizar, buscarProdutos, totalDoCarrinho, formatarReais, subtotal, descreverEstoque, descreverPreco, iniciarCarrinho, iniciarResumoDePagamento,
         formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento,
     };
 }

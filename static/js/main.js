@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarEnvioAoMudar();
     inicializarMarcaDaLoja();
     inicializarAcoes();
+    inicializarEstoqueDoProduto();
 });
 
 function inicializarFocoInputs() {
@@ -264,6 +265,26 @@ function inicializarAcoes(raiz = document) {
     });
 }
 
+/* Cadastro de produto: a unidade escolhida define o passo e a sigla da quantidade (0,001 kg; 1 un.);
+   "Não controlar o estoque" esconde a quantidade, que deixa de ser obrigatória. */
+function inicializarEstoqueDoProduto(raiz = document) {
+    raiz.querySelectorAll('[data-estoque-produto]').forEach((bloco) => {
+        const unidade = bloco.querySelector('[name="unidade"]');
+        const quantidade = bloco.querySelector('[name="quantidade_estoque"]');
+        const semControle = bloco.querySelector('[name="sem_controle_de_estoque"]');
+        const atualizar = () => {
+            const opcao = unidade.selectedOptions[0];
+            quantidade.step = String(10 ** -Number(opcao.dataset.casas));
+            bloco.querySelector('[data-sigla-do-estoque]').textContent = opcao.dataset.sigla;
+            bloco.querySelector('[data-bloco-quantidade]').classList.toggle('hidden', semControle.checked);
+            quantidade.required = !semControle.checked;
+        };
+        unidade.addEventListener('change', atualizar);
+        semControle.addEventListener('change', atualizar);
+        atualizar();
+    });
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
@@ -277,6 +298,7 @@ if (typeof module !== 'undefined') {
         inicializarDialogos,
         inicializarEnvioAoMudar,
         inicializarMarcaDaLoja,
-        inicializarAcoes
+        inicializarAcoes,
+        inicializarEstoqueDoProduto
     };
 }

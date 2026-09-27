@@ -70,6 +70,7 @@ class AnalisesDeVendasTest(TestCase):
             ("Bolo", 3, Decimal('85.00')),
         ])
         self.assertEqual(len(mais_vendidos(self.usuario, limite=1)), 1)
+        self.assertEqual({p.unidade for p in ranking}, {'un'})
 
     def test_mapa_de_horarios(self):
         self.c.venda(CenarioDeLoja.quando(2026, 3, 16, 8, 10), [(self.bolo, 1)])   # segunda 8h

@@ -91,7 +91,9 @@ def montar_relatorio(user, inicio=None, fim=None, agora=None):
         total_fiado_pendente=sum((c.saldo_calculado for c in devendo), Decimal('0.00')),
         clientes_credito=credito,
         total_credito_clientes=sum((c.valor_credito for c in credito), Decimal('0.00')),
-        estoque_ordenado=list(filtrar_por_loja(Produto.objects.all(), user).order_by('quantidade_estoque', 'nome')),
+        estoque_ordenado=list(
+            filtrar_por_loja(Produto.objects.filter(controla_estoque=True), user).order_by('quantidade_estoque', 'nome')
+        ),
     )
 
 
@@ -110,7 +112,9 @@ def montar_painel(user, limite_estoque=LIMITE_ESTOQUE_BAIXO_PADRAO, agora=None):
         vendas_bimestre=faturamento['bimestre'],
         vendas_trimestre=faturamento['trimestre'],
         vendas_ano=faturamento['ano'],
-        produtos_baixo_estoque=produtos.filter(quantidade_estoque__lte=limite_estoque).order_by('quantidade_estoque'),
+        produtos_baixo_estoque=(
+            produtos.filter(controla_estoque=True, quantidade_estoque__lte=limite_estoque).order_by('quantidade_estoque')
+        ),
     )
 
 

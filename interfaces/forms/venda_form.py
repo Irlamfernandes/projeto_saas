@@ -1,10 +1,19 @@
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django import forms
 from django.core.exceptions import ValidationError
 from infrastructure.models import Cliente, FormaDePagamento
 
 MAXIMO_DE_ITENS = 50
+QUANTIDADE_MAXIMA = Decimal('1000000')
 ERRO_ITEM = "Um dos itens da venda é inválido. Remova-o e adicione de novo."
+
+
+def _quantidade(texto):
+    """Aceita vírgula ou ponto (2,5 ou 2.5). As casas permitidas dependem da unidade e são conferidas na venda."""
+    quantidade = Decimal(texto.strip().replace(',', '.'))
+    if not quantidade.is_finite() or quantidade >= QUANTIDADE_MAXIMA:
+        raise InvalidOperation
+    return quantidade
 
 
 class _VendaForm(forms.Form):
@@ -43,10 +52,10 @@ class _VendaForm(forms.Form):
         if len(produtos) != len(quantidades) or len(produtos) > MAXIMO_DE_ITENS:
             raise ValidationError(ERRO_ITEM)
         try:
-            itens = [(int(produto), int(quantidade)) for produto, quantidade in zip(produtos, quantidades)]
-        except ValueError:
+            itens = [(int(produto), _quantidade(quantidade)) for produto, quantidade in zip(produtos, quantidades)]
+        except (ValueError, InvalidOperation):
             raise ValidationError(ERRO_ITEM) from None
-        if any(quantidade < 1 for _, quantidade in itens):
+        if any(quantidade <= 0 for _, quantidade in itens):
             raise ValidationError("A quantidade de cada produto deve ser maior que zero.")
         return itens
 

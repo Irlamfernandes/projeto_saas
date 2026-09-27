@@ -5,7 +5,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-from infrastructure.utils.formatacao import reais
+from infrastructure.utils.formatacao import item as descrever_item, reais
 from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 QUANTIDADE_DE_COMPRAS_NO_EXTRATO = 5
@@ -69,7 +69,7 @@ def linhas_de_compras(cliente):
     linhas = [
         [
             timezone.localtime(venda.data_venda).strftime('%d/%m/%Y %H:%M'),
-            ", ".join(f"{item.quantidade}x {item.produto.nome}" for item in venda.itens.all())
+            ", ".join(descrever_item(i.quantidade, i.produto.unidade, i.produto.nome) for i in venda.itens.all())
             + "".join(f" · vence {parcela.vencimento:%d/%m/%Y}" for parcela in venda.parcelas.all()),
             reais(venda.valor_total),
         ]

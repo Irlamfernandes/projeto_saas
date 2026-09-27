@@ -46,12 +46,12 @@ class CenarioDeLoja:
         from zoneinfo import ZoneInfo
         return datetime(ano, mes, dia, hora, minuto, tzinfo=ZoneInfo('America/Sao_Paulo'))
 
-    def produto(self, nome, preco_venda='10.00', preco_custo='0.00', estoque=10, categoria=''):
+    def produto(self, nome, preco_venda='10.00', preco_custo='0.00', estoque=10, categoria='', **extras):
         from decimal import Decimal
         from infrastructure.models import Produto
         return Produto.objects.create(
             loja=self.loja, nome=nome, categoria=categoria, quantidade_estoque=estoque,
-            preco_venda=Decimal(preco_venda), preco_custo=Decimal(preco_custo),
+            preco_venda=Decimal(preco_venda), preco_custo=Decimal(preco_custo), **extras,
         )
 
     def cliente(self, nome):

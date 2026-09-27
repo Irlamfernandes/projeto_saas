@@ -27,8 +27,9 @@ def diferencas(antes, depois):
 
 def _para_json(valor):
     if isinstance(valor, Decimal):
-        # 10 e 10.00 são o mesmo preço: com casas fixas, digitar "10" não vira uma alteração falsa.
-        if valor.as_tuple().exponent > -2:
+        # 10, 10.00 e 10.000 são o mesmo valor: com casas fixas, digitar "10" não vira uma alteração falsa.
+        # Só quantidades com frações de verdade (0.125 kg) ficam com mais de duas casas.
+        if valor == valor.quantize(CENTAVOS):
             valor = valor.quantize(CENTAVOS)
         return str(valor)
     return valor

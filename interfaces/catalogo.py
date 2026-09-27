@@ -2,7 +2,10 @@
 
 
 def catalogo_para_venda(produtos, reservados=None):
-    """`reservados`: {id do produto: quantidade} já presa na venda em edição — volta a ficar disponível para ela."""
+    """`reservados`: {id do produto: quantidade} já presa na venda em edição — volta a ficar disponível para ela.
+
+    `estoque` None = produto sem controle de estoque (vende qualquer quantidade). `casas`: decimais aceitos.
+    """
     reservados = reservados or {}
     return [
         {
@@ -10,15 +13,23 @@ def catalogo_para_venda(produtos, reservados=None):
             'nome': produto.nome,
             'codigo': produto.codigo_interno,
             'preco': str(produto.preco_venda),
-            'estoque': produto.quantidade_estoque + reservados.get(produto.pk, 0),
+            'estoque': _estoque(produto, reservados.get(produto.pk, 0)),
+            'unidade': produto.sigla,
+            'casas': produto.casas_decimais,
         }
         for produto in produtos
     ]
 
 
+def _estoque(produto, reservado):
+    if not produto.controla_estoque:
+        return None
+    return float(produto.quantidade_estoque + reservado)
+
+
 def itens_da_venda(venda):
     """Itens atuais da venda no formato do carrinho, com o preço da época."""
     return [
-        {'id': item.produto_id, 'quantidade': item.quantidade, 'preco': str(item.preco_unitario)}
+        {'id': item.produto_id, 'quantidade': float(item.quantidade), 'preco': str(item.preco_unitario)}
         for item in venda.itens.all()
     ]

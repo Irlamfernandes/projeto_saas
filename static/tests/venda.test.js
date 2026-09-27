@@ -2,7 +2,8 @@
  * @jest-environment jsdom
  */
 const {
-    normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,
+    normalizar, buscarProdutos, totalDoCarrinho, formatarReais, subtotal, descreverEstoque, descreverPreco,
+    iniciarCarrinho, iniciarResumoDePagamento,
     formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento,
 } = require('../js/venda.js');
 
@@ -13,7 +14,7 @@ const CATALOGO = [
     { id: 4, nome: 'Bolo esgotado', codigo: 'B1', preco: '30.00', estoque: 0 },
 ];
 
-function montarPagina({ itens = null, comResumo = false } = {}) {
+function montarPagina({ itens = null, comResumo = false, catalogo = CATALOGO } = {}) {
     document.body.innerHTML = `
         <form>
             ${comResumo ? `<select name="cliente"><option value="">Balcão</option><option value="7">Ana</option></select>
@@ -23,7 +24,7 @@ function montarPagina({ itens = null, comResumo = false } = {}) {
                 <ul data-itens-lista></ul><p data-carrinho-vazio></p><strong data-total></strong>
             </div>
         </form>
-        <script type="application/json" id="catalogo">${JSON.stringify(CATALOGO)}</script>
+        <script type="application/json" id="catalogo">${JSON.stringify(catalogo)}</script>
         ${itens ? `<script type="application/json" id="iniciais">${JSON.stringify(itens)}</script>` : ''}`;
     const raiz = document.querySelector('[data-carrinho]');
     const formulario = document.querySelector('form');
@@ -553,5 +554,69 @@ describe('vencimento', () => {
         expect(() => iniciarVencimento(document.querySelector('form'))).not.toThrow();
         document.body.innerHTML = '<form><div data-vencimento></div></form>';
         expect(() => iniciarVencimento(document.querySelector('form'))).not.toThrow();
+    });
+});
+
+describe('unidades e estoque sem controle', () => {
+    const QUEIJO = { id: 1, nome: 'Queijo', codigo: 'Q', preco: '39.90', estoque: 2.35, unidade: 'kg', casas: 3 };
+    const BOLO = { id: 3, nome: 'Bolo sob encomenda', codigo: '', preco: '50.00', estoque: null, unidade: 'un.', casas: 0 };
+
+    test('subtotal em centavos arredonda como o servidor', () => {
+        expect(subtotal({ preco: 39.9, quantidade: 0.35 })).toBe(13.97);
+        expect(subtotal({ preco: 0.8, quantidade: 3 })).toBe(2.4);
+        expect(totalDoCarrinho([{ preco: 39.9, quantidade: 0.35 }, { preco: 0.1, quantidade: 3 }])).toBeCloseTo(14.27);
+    });
+
+    test('textos de estoque e preço conforme a unidade', () => {
+        expect(descreverEstoque(QUEIJO)).toBe('2,35 kg em estoque');
+        expect(descreverEstoque(BOLO)).toBe('sem controle de estoque');
+        expect(descreverEstoque({ estoque: 3 })).toBe('3 em estoque');
+        expect(descreverPreco(QUEIJO, 39.9)).toBe(`${formatarReais(39.9)} por kg`);
+        expect(descreverPreco(BOLO, 50)).toBe(`${formatarReais(50)} cada`);
+    });
+
+    test('por quilo aceita frações, com passo e limite do estoque', () => {
+        const { carrinho } = montarPagina();
+        carrinho.adicionar(QUEIJO);
+        const campo = document.querySelector('.quantidade-campo');
+        expect([campo.step, campo.min, campo.max, campo.inputMode]).toEqual(['0.001', '0.001', '2.35', 'decimal']);
+        expect(campo.getAttribute('aria-label')).toBe('Quantidade de Queijo em kg');
+
+        campo.value = '0.3456';
+        campo.dispatchEvent(new Event('change'));
+        expect(enviados().quantidades).toEqual(['0.346']);
+        expect(total()).toBe(formatarReais(13.81));
+
+        const campoNovo = document.querySelector('.quantidade-campo');
+        campoNovo.value = '9';
+        campoNovo.dispatchEvent(new Event('change'));
+        expect(enviados().quantidades).toEqual(['2.35']);
+    });
+
+    test('pouco estoque fracionado entra com o que tem; o menos para no mínimo', () => {
+        const { carrinho } = montarPagina();
+        carrinho.adicionar({ ...QUEIJO, estoque: 0.5 });
+        expect(enviados().quantidades).toEqual(['0.5']);
+        document.querySelectorAll('.quantidade-botao')[0].click();
+        expect(enviados().quantidades).toEqual(['0.001']);
+        expect(document.querySelectorAll('.quantidade-botao')[0].disabled).toBe(true);
+    });
+
+    test('sem controle de estoque vende qualquer quantidade e aparece na busca', () => {
+        const { carrinho, busca, resultados } = montarPagina();
+        carrinho.adicionar(BOLO);
+        const campo = document.querySelector('.quantidade-campo');
+        expect(campo.hasAttribute('max')).toBe(false);
+        expect(campo.inputMode).toBe('numeric');
+        campo.value = '500';
+        campo.dispatchEvent(new Event('change'));
+        expect(enviados().quantidades).toEqual(['500']);
+        expect(document.querySelectorAll('.quantidade-botao')[1].disabled).toBe(false);
+
+        const pagina = montarPagina({ catalogo: [BOLO] });
+        digitar(pagina.busca, 'bolo');
+        expect(pagina.resultados.textContent).toContain('sem controle de estoque');
+        tecla(pagina.busca, 'Enter');
+        expect(enviados().produtos).toEqual(['3']);
     });
 });

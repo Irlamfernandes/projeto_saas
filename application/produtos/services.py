@@ -12,7 +12,8 @@ from infrastructure.utils.supabase_storage import StorageError, SupabaseStorage
 logger = logging.getLogger(__name__)
 
 CAMPOS_DO_PRODUTO = (
-    'nome', 'codigo_interno', 'categoria', 'preco_custo', 'preco_venda', 'quantidade_estoque', 'descricao',
+    'nome', 'codigo_interno', 'categoria', 'preco_custo', 'preco_venda', 'unidade', 'controla_estoque', 'quantidade_estoque',
+    'descricao',
 )
 
 

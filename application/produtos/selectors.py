@@ -23,7 +23,7 @@ def filtrar_produtos(produtos, *, busca='', categoria='', baixo_estoque=False, o
     if categoria:
         produtos = produtos.filter(categoria=categoria)
     if baixo_estoque:
-        produtos = produtos.filter(quantidade_estoque__lte=LIMITE_ESTOQUE_BAIXO)
+        produtos = produtos.filter(controla_estoque=True, quantidade_estoque__lte=LIMITE_ESTOQUE_BAIXO)
     return produtos.prefetch_related('imagens').order_by(ordem)
 
 

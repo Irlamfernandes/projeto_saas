@@ -53,6 +53,26 @@ class ProdutoFormTest(TestCase):
             with self.subTest(caso):
                 self.assertErro(self._form(**dados), mensagem)
 
+    def test_unidade_padrao_e_estoque_com_fracao_so_nas_unidades_que_aceitam(self):
+        padrao = self._form()
+        self.assertTrue(padrao.is_valid(), padrao.errors)
+        self.assertEqual((padrao.instance.unidade, padrao.instance.controla_estoque), ('un', True))
+
+        por_quilo = self._form(unidade='kg', quantidade_estoque='2.350')
+        self.assertTrue(por_quilo.is_valid(), por_quilo.errors)
+        self.assertEqual(por_quilo.instance.quantidade_estoque, Decimal('2.350'))
+
+        self.assertErro(self._form(unidade='un', quantidade_estoque='2.5'), "Esta unidade só aceita números inteiros no estoque.")
+        self.assertErro(self._form(unidade='kg', quantidade_estoque='2.3456'),
+                        "Use no máximo 3 casas depois da vírgula na quantidade em estoque.")
+        self.assertErro(self._form(unidade='tonelada'), "Unidade de medida inválida.")
+
+    def test_sem_controle_de_estoque_zera_a_quantidade(self):
+        form = self._form(sem_controle_de_estoque='1', quantidade_estoque='7')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertFalse(form.instance.controla_estoque)
+        self.assertEqual(form.instance.quantidade_estoque, Decimal('0'))
+
     def test_aceita_varias_imagens(self):
         form = self._form(arquivos={'imagens': [imagem_de_teste('a.png'), imagem_de_teste('b.jpg', 'JPEG')]})
 

@@ -3,11 +3,12 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from application.vendas.exceptions import (
-    EstoqueInsuficiente, ProdutoNaoEncontrado, SenhaIncorreta, VendaSemItens, VendaSemLoja,
+    EstoqueInsuficiente, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
 from application.vendas.services import cancelar_venda, editar_venda, registrar_venda
 from infrastructure.models import (
-    Acao, Cliente, FormaDePagamento, ItemVenda, LojaModel, PagamentoCliente, Parcela, Produto, RegistroDeAlteracao, Venda,
+    Acao, Cliente, FormaDePagamento, ItemVenda, LojaModel, PagamentoCliente, Parcela, Produto, RegistroDeAlteracao, Unidade,
+    Venda,
 )
 
 
@@ -93,7 +94,7 @@ class RegistrarVendaTest(ServicoDeVendaTestCase):
             self.vender([])
 
     def test_estoque_insuficiente_nao_altera_nada(self):
-        with self.assertRaisesMessage(EstoqueInsuficiente, "Estoque insuficiente para 'Feijão'. Disponível: 3."):
+        with self.assertRaisesMessage(EstoqueInsuficiente, "Estoque insuficiente para 'Feijão'. Disponível: 3 un."):
             self.vender([(self.arroz.pk, 1), (self.feijao.pk, 4)])
 
         self.assertFalse(Venda.objects.exists())
@@ -113,7 +114,9 @@ class RegistrarVendaTest(ServicoDeVendaTestCase):
         registro = RegistroDeAlteracao.objects.get()
         self.assertEqual((registro.acao, registro.usuario, registro.loja), (Acao.VENDA_REGISTRADA, self.usuario, self.loja))
         self.assertEqual(registro.descricao, f"Venda #{venda.pk} · Ana · R$ 40,00")
-        self.assertEqual(registro.detalhes['venda']['itens'], [{'produto': 'Arroz', 'quantidade': 2, 'preco_unitario': '20.00'}])
+        self.assertEqual(registro.detalhes['venda']['itens'], [
+            {'produto': 'Arroz', 'quantidade': '2', 'unidade': 'un', 'preco_unitario': '20.00'},
+        ])
 
 
 class VencimentoTest(ServicoDeVendaTestCase):
@@ -161,6 +164,46 @@ class VencimentoTest(ServicoDeVendaTestCase):
         venda = self.vender([(self.arroz.pk, 2)], vencimentos=[DIA_15])
         cancelar_venda(venda, usuario=self.usuario, senha="senha-certa", motivo="erro")
         self.assertFalse(Parcela.objects.exists())
+
+
+class UnidadesEControleDeEstoqueTest(ServicoDeVendaTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.queijo = Produto.objects.create(loja=self.loja, nome="Queijo", preco_venda=Decimal('39.90'),
+                                             unidade=Unidade.QUILO, quantidade_estoque=Decimal('2.500'))
+        self.bolo = Produto.objects.create(loja=self.loja, nome="Bolo", preco_venda=Decimal('50.00'), controla_estoque=False)
+
+    def test_por_quilo_vende_fracao_e_o_total_fica_em_centavos(self):
+        venda = self.vender([(self.queijo.pk, Decimal('0.350'))])
+
+        self.assertEqual(venda.valor_total, Decimal('13.97'))
+        self.assertEqual(venda.itens.get().quantidade, Decimal('0.350'))
+        self.assertEstoque(self.queijo, Decimal('2.150'))
+        self.assertEqual(RegistroDeAlteracao.objects.get().detalhes['venda']['itens'][0],
+                         {'produto': 'Queijo', 'quantidade': '0.35', 'unidade': 'kg', 'preco_unitario': '39.90'})
+
+    def test_fracao_onde_a_unidade_nao_aceita_e_recusada(self):
+        casos = {
+            (self.arroz.pk, Decimal('1.5')): "'Arroz' é vendido por unidade: use só números inteiros.",
+            (self.queijo.pk, Decimal('0.3505')): "'Queijo' é vendido por quilo (kg): use no máximo 3 casas depois da vírgula.",
+        }
+        for item, mensagem in casos.items():
+            with self.subTest(mensagem), self.assertRaisesMessage(QuantidadeFracionada, mensagem):
+                self.vender([item])
+        self.assertEstoque(self.arroz, 10)
+
+    def test_estoque_insuficiente_mostra_a_unidade(self):
+        with self.assertRaisesMessage(EstoqueInsuficiente, "Disponível: 2,5 kg"):
+            self.vender([(self.queijo.pk, Decimal('3'))])
+
+    def test_sem_controle_vende_qualquer_quantidade_sem_mexer_no_estoque(self):
+        venda = self.vender([(self.bolo.pk, 40)])
+        self.assertEqual(venda.valor_total, Decimal('2000.00'))
+        self.assertEstoque(self.bolo, 0)
+
+        cancelar_venda(venda, usuario=self.usuario, senha="senha-certa", motivo="teste")
+        self.assertEstoque(self.bolo, 0)
 
 
 class EditarVendaTest(ServicoDeVendaTestCase):

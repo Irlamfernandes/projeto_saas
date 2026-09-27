@@ -613,3 +613,43 @@ describe('Testes de Cobertura Total - main.js', () => {
     });
 });
 
+
+describe('estoque do produto', () => {
+    function montar({ unidade = 'un', semControle = false } = {}) {
+        document.body.innerHTML = `
+            <div data-estoque-produto>
+                <select name="unidade">
+                    <option value="un" data-sigla="un." data-casas="0" ${unidade === 'un' ? 'selected' : ''}>Unidade</option>
+                    <option value="kg" data-sigla="kg" data-casas="3" ${unidade === 'kg' ? 'selected' : ''}>Quilo</option>
+                </select>
+                <div data-bloco-quantidade><input name="quantidade_estoque" required><span data-sigla-do-estoque></span></div>
+                <input type="checkbox" name="sem_controle_de_estoque" ${semControle ? 'checked' : ''}>
+            </div>`;
+        require('../js/main.js').inicializarEstoqueDoProduto(document);
+        const $ = (seletor) => document.querySelector(seletor);
+        const mudar = (seletor, alterar) => { alterar($(seletor)); $(seletor).dispatchEvent(new Event('change')); };
+        return { $, mudar };
+    }
+
+    test('a unidade define o passo e a sigla da quantidade', () => {
+        const { $, mudar } = montar();
+        expect([$('[name="quantidade_estoque"]').step, $('[data-sigla-do-estoque]').textContent]).toEqual(['1', 'un.']);
+
+        mudar('[name="unidade"]', (select) => { select.value = 'kg'; });
+
+        expect([$('[name="quantidade_estoque"]').step, $('[data-sigla-do-estoque]').textContent]).toEqual(['0.001', 'kg']);
+        // As opções da lista continuam com o próprio nome (a sigla vai só no campo de quantidade).
+        expect([...document.querySelectorAll('option')].map((o) => o.textContent)).toEqual(['Unidade', 'Quilo']);
+    });
+
+    test('sem controle esconde a quantidade e ela deixa de ser obrigatória', () => {
+        const { $, mudar } = montar({ unidade: 'kg', semControle: true });
+        expect($('[data-bloco-quantidade]').classList.contains('hidden')).toBe(true);
+        expect($('[name="quantidade_estoque"]').required).toBe(false);
+
+        mudar('[name="sem_controle_de_estoque"]', (caixa) => { caixa.checked = false; });
+
+        expect($('[data-bloco-quantidade]').classList.contains('hidden')).toBe(false);
+        expect($('[name="quantidade_estoque"]').required).toBe(true);
+    });
+});

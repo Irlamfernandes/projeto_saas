@@ -117,6 +117,20 @@ class ProdutosViewTest(TestCase):
         self.assertEqual(produto.imagens.count(), 2)
         self.assertEqual(len(self.storage.enviados), 2)
 
+    def test_cadastra_por_quilo_e_sem_controle_de_estoque(self):
+        self._cadastrar(nome='Queijo', unidade='kg', quantidade_estoque='2.5')
+        self._cadastrar(nome='Bolo', sem_controle_de_estoque='1')
+
+        queijo, bolo = Produto.objects.get(nome='Queijo'), Produto.objects.get(nome='Bolo')
+        self.assertEqual((queijo.unidade, queijo.quantidade_estoque), ('kg', Decimal('2.500')))
+        self.assertFalse(bolo.controla_estoque)
+
+        response = self.client.get(self.url)
+        self.assertContains(response, '2,5 kg')
+        self.assertContains(response, 'Sem controle de estoque')
+        self.assertContains(response, 'data-estoque-produto')
+        self.assertContains(response, 'value="kg" data-sigla="kg" data-casas="3"')
+
     def test_dados_invalidos_nao_cadastram(self):
         response = self._cadastrar(nome='')
 

@@ -52,10 +52,10 @@
 
     <section class="cartao cartao-corpo" aria-labelledby="t-top">
         <div class="cartao-cabecalho">
-            <div><h2 id="t-top" class="titulo-cartao">Mais vendidos</h2><p class="subtitulo">Unidades nos últimos 30 dias</p></div>
+            <div><h2 id="t-top" class="titulo-cartao">Mais vendidos</h2><p class="subtitulo">Quantidade vendida nos últimos 30 dias</p></div>
         </div>
         {% if mais_vendidos %}
-            {% include 'interfaces/_grafico.html' with id='dados-mais-vendidos' tipo='barras-horizontais' formato='unidades' dados=grafico_mais_vendidos descricao='Produtos mais vendidos em unidades' %}
+            {% include 'interfaces/_grafico.html' with id='dados-mais-vendidos' tipo='barras-horizontais' formato='unidades' dados=grafico_mais_vendidos descricao='Produtos mais vendidos em quantidade' %}
         {% else %}
             {% include 'interfaces/_vazio.html' with icone='i-estrela' titulo='Nenhuma venda nos últimos 30 dias' texto='Os produtos mais vendidos aparecem aqui.' %}
         {% endif %}
@@ -92,7 +92,7 @@
             <li class="flex items-center gap-3 py-2.5">
                 <span class="flex-1 min-w-0">
                     <span class="block text-sm font-medium truncate">{{ item.nome }}</span>
-                    <span class="block text-xs text-tinta-fraca">{{ item.estoque }} un. em estoque · vende {{ item.media_diaria }}/dia</span>
+                    <span class="block text-xs text-tinta-fraca">{{ item.estoque|quantidade:item.unidade }} em estoque · vende {{ item.media_diaria|quantidade:item.unidade }}/dia</span>
                 </span>
                 {% if item.estoque == 0 %}
                     <span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
@@ -129,12 +129,12 @@
 
     <section class="cartao cartao-corpo" aria-labelledby="t-estoque">
         <div class="cartao-cabecalho">
-            <div><h2 id="t-estoque" class="titulo-cartao">Estoque baixo</h2><p class="subtitulo">Produtos com poucas unidades, do menor para o maior estoque</p></div>
+            <div><h2 id="t-estoque" class="titulo-cartao">Estoque baixo</h2><p class="subtitulo">Produtos com pouco estoque, do menor para o maior</p></div>
             <form method="GET" class="flex items-center gap-2" data-enviar-ao-mudar>
                 <label for="limite_estoque" class="text-xs font-semibold text-tinta-suave whitespace-nowrap">Com até</label>
                 <select name="limite_estoque" id="limite_estoque" class="entrada py-1.5 text-sm w-auto">
                     {% for opcao in opcoes_de_limite %}
-                    <option value="{{ opcao }}" {% if limite_estoque == opcao %}selected{% endif %}>{{ opcao }} un.</option>
+                    <option value="{{ opcao }}" {% if limite_estoque == opcao %}selected{% endif %}>{{ opcao }}</option>
                     {% endfor %}
                 </select>
                 <noscript><button type="submit" class="btn-secundario btn-pequeno">Filtrar</button></noscript>
@@ -151,7 +151,7 @@
                         <td class="numero">R$ {{ prod.preco_venda|moeda }}</td>
                         <td class="text-right">
                             {% if prod.quantidade_estoque == 0 %}<span class="pilula-critico"><svg class="ico ico-sm"><use href="#i-x"/></svg>Esgotado</span>
-                            {% else %}<span class="pilula-alerta">{{ prod.quantidade_estoque }} un.</span>{% endif %}
+                            {% else %}<span class="pilula-alerta">{{ prod.quantidade_estoque|quantidade:prod.unidade }}</span>{% endif %}
                         </td>
                     </tr>
                     {% empty %}

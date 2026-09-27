@@ -4,7 +4,7 @@ from django.http import QueryDict
 from django.test import TestCase
 from infrastructure.models import Cliente, FormaDePagamento, LojaModel, PagamentoCliente, Venda
 from interfaces.forms import CancelarVendaForm, EditarVendaForm, NovaVendaForm
-from interfaces.forms.venda_form import MAXIMO_DE_ITENS
+from interfaces.forms.venda_form import ERRO_ITEM, MAXIMO_DE_ITENS
 from interfaces.views.comum import primeiro_erro
 
 
@@ -36,6 +36,16 @@ class NovaVendaFormTest(TestCase):
             'cliente': self.cliente, 'itens': [(1, 2), (5, 1)], 'forma_pagamento': 'pix',
             'observacoes': 'obs', 'valor_pago': Decimal('10.50'), 'vencimentos': [],
         })
+
+    def test_quantidade_com_fracao_aceita_virgula_ou_ponto(self):
+        form = self._form(((1, '0,350'), (2, '1.5')), cliente=self.cliente.pk)
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.parametros()['itens'], [(1, Decimal('0.350')), (2, Decimal('1.5'))])
+
+    def test_quantidade_infinita_ou_enorme_e_recusada(self):
+        for quantidade in ('Infinity', 'NaN', '1000000', '1e9'):
+            with self.subTest(quantidade=quantidade):
+                self.assertEqual(primeiro_erro(self._form(((1, quantidade),), cliente=self.cliente.pk)), ERRO_ITEM)
 
     def test_vencimento_vira_lista_de_vencimentos(self):
         form = self._form(cliente=self.cliente.pk, vencimento='2026-10-15')
