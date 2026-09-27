@@ -42,6 +42,7 @@
   .btn-primario { @apply btn bg-marca-600 text-white hover:bg-marca-700; }
   .btn-secundario { @apply btn bg-white text-tinta border border-linha hover:border-tinta-fraca; }
   .btn-perigo { @apply btn bg-critico-suave text-critico-texto hover:bg-critico hover:text-white; }
+  .btn-corsario { @apply btn border border-corsario-azul/40 bg-white/5 text-corsario-claro hover:border-corsario-azul hover:bg-corsario-azul/15; }
   .btn-fantasma { @apply btn px-3 text-tinta-suave hover:bg-fundo hover:text-tinta; }
   .btn-pequeno { @apply px-3 py-1.5 text-xs rounded-lg; }
 

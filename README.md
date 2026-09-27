@@ -150,6 +150,19 @@ make test        # pytest com cobertura + jest
 - **Pagou e fechou a tela?** Ao abrir o Início ou Configurações, os Pix ainda abertos da loja são conferidos
   (`conferir_pendentes`); Configurações lista os que seguem aguardando pagamento.
 
+## Marca da CorsariosCode
+
+Quem desenvolveu o sistema aparece sem atrapalhar a loja. Os contatos ficam só em `interfaces/desenvolvedor.py`
+(campo vazio esconde o botão; o Instagram entra quando a conta existir).
+
+- **Login e troca de senha:** faixa compacta com o emblema "CC", o nome e o WhatsApp.
+- **Login › "Quero cadastrar minha loja":** WhatsApp com o pedido de acesso já escrito (contas novas são
+  criadas pelo administrador).
+- **Fim das páginas:** "Sistema feito por CorsariosCode", discreto e não fixo (não tira espaço do trabalho).
+- **Configurações › Suporte:** WhatsApp com a mensagem já escrita com o nome da loja.
+- **Relatórios em PDF:** rodapé com data, página e "Sistema CorsariosCode". O extrato do cliente **não** leva
+  a marca: é um documento da loja para o cliente dela.
+
 ## CSS (Tailwind)
 
 `static/css/output.css` é **versionado** e servido direto em produção. Sempre que adicionar ou
@@ -158,6 +171,14 @@ trocar classes nos templates ou em `static/js`, recompile:
 ```bash
 make css         # ou: npm run watch:css durante o desenvolvimento
 ```
+
+**Unidades** (para funcionar bem em qualquer tela e com a letra grande do celular/navegador):
+
+- `rem` para textos, espaços e tamanhos (é o que as classes do Tailwind já geram);
+- `em` nos pontos de quebra (`screens` em `tailwind.config.js`): com letra grande, o layout vira o de celular antes;
+- `dvh` para altura de tela cheia (`min-h-dvh`), que desconta a barra de endereço do celular;
+- `px` só em bordas, anéis de foco e sombras. `width`/`height` de `<img>` são números sem unidade (só a proporção).
+- Nos gráficos (canvas só aceita px), o texto é convertido de `rem` na hora (`remEmPx` em `graficos.js`).
 
 ## Deploy (Render)
 

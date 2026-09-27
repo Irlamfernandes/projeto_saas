@@ -1,8 +1,8 @@
 from django.db import transaction
 from application.auditoria.services import diferencas, fotografar, registrar_alteracao
 from application.clientes.exceptions import ClienteSemLoja
-from application.formatacao import reais
 from infrastructure.models import Acao, Cliente, PagamentoCliente
+from infrastructure.utils.formatacao import reais
 
 OBSERVACAO_PADRAO_PAGAMENTO = 'Pagamento na caderneta'
 CAMPOS_DO_CLIENTE = ('nome', 'telefone', 'email', 'endereco')

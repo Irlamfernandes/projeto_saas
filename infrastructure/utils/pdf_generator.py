@@ -5,6 +5,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from infrastructure.utils.formatacao import reais
 from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 QUANTIDADE_DE_COMPRAS_NO_EXTRATO = 5
@@ -54,9 +55,9 @@ def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None, stora
 def situacao_financeira(saldo):
     """Texto e cor do resumo: positivo = devendo, negativo = crédito."""
     if saldo > 0:
-        return f"Situação: DEVENDO R$ {saldo:.2f} (Valor Pendente)", COR_DEVENDO
+        return f"Situação: DEVENDO {reais(saldo)} (Valor Pendente)", COR_DEVENDO
     if saldo < 0:
-        return f"Situação: CRÉDITO DE R$ {abs(saldo):.2f} (Valor a mais)", COR_CREDITO
+        return f"Situação: CRÉDITO DE {reais(abs(saldo))} (Valor a mais)", COR_CREDITO
     return "Situação: TUDO CERTO (Conta Quitado / Sem Saldo Pendente)", COR_NEUTRA
 
 
@@ -69,7 +70,7 @@ def linhas_de_compras(cliente):
         [
             timezone.localtime(venda.data_venda).strftime('%d/%m/%Y %H:%M'),
             ", ".join(f"{item.quantidade}x {item.produto.nome}" for item in venda.itens.all()),
-            f"R$ {venda.valor_total:.2f}",
+            reais(venda.valor_total),
         ]
         for venda in vendas
     ]

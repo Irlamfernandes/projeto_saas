@@ -5,6 +5,7 @@ from application.assinatura.selectors import em_teste_gratis
 from application.exceptions import RegraDeNegocioError
 from application.lojas.services import remover_marca, trocar_marca
 from interfaces.decorators import loja_required
+from interfaces.desenvolvedor import CORSARIOS_CODE
 from interfaces.forms import MarcaForm
 from interfaces.forms.produto_form import TAMANHO_MAXIMO_MB
 from interfaces.views.comum import executar_formulario
@@ -21,6 +22,7 @@ def configuracoes_view(request):
         'tamanho_maximo_mb': TAMANHO_MAXIMO_MB,
         'em_teste_gratis': loja is not None and em_teste_gratis(loja),
         'pix_aguardando': pix_aguardando,
+        'link_suporte': CORSARIOS_CODE.link_suporte(loja.nome_loja if loja else 'Painel global'),
     })
 
 

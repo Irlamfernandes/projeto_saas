@@ -10,9 +10,9 @@ from django.utils import timezone
 from application.assinatura.exceptions import PagamentoIndisponivel, PixRecusado, PlanoIndisponivel
 from application.assinatura.tempo import novo_vencimento
 from application.auditoria.services import registrar_alteracao
-from application.formatacao import reais
 from infrastructure.models import Acao, Cobranca, LojaModel, StatusDaCobranca
 from infrastructure.pagamentos.mercado_pago import MercadoPago, MercadoPagoError, MercadoPagoRecusou
+from infrastructure.utils.formatacao import reais
 
 logger = logging.getLogger(__name__)
 

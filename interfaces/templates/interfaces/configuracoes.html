@@ -1,4 +1,5 @@
 {% extends 'interfaces/base.html' %}
+{% load static %}
 
 {% block title %}Configurações · Gestão da Loja{% endblock %}
 {% block header_title %}Configurações{% endblock %}
@@ -82,6 +83,21 @@
     </a>
     {% endfor %}
     <a href="{% url 'planos' %}" class="btn-primario mt-4 w-full sm:w-auto"><svg class="ico"><use href="#i-calendario"/></svg>Ver planos e renovar</a>
+</section>
+{% endif %}
+
+{% if link_suporte %}
+<section class="cartao cartao-corpo" aria-labelledby="t-suporte">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+            <img src="{% static 'images/corsarioscode-emblema.webp' %}" alt="" width="48" height="48" loading="lazy" class="w-12 h-12 shrink-0 rounded-xl">
+            <div class="min-w-0">
+                <h2 id="t-suporte" class="titulo-cartao">Suporte</h2>
+                <p class="subtitulo">Dúvidas ou problemas? Fale com a {{ desenvolvedor.nome }}, que desenvolveu o sistema. {{ desenvolvedor.whatsapp_formatado }}</p>
+            </div>
+        </div>
+        <a href="{{ link_suporte }}" target="_blank" rel="noopener" class="btn-primario w-full sm:w-auto"><svg class="ico"><use href="#i-whatsapp"/></svg>Falar no WhatsApp</a>
+    </div>
 </section>
 {% endif %}
 

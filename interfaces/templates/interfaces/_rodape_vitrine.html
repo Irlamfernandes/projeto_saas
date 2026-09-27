@@ -1,0 +1,26 @@
+{% load static %}{% comment %}
+Rodapé das telas de entrada (login e troca de senha): uma faixa compacta com o emblema, o nome e o WhatsApp
+da CorsariosCode, no azul-marinho da logo.
+{% endcomment %}
+<footer class="bg-corsario-fundo text-corsario-claro" aria-label="Quem desenvolveu o sistema">
+    <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 py-3 sm:justify-between">
+        <div class="flex items-center gap-3">
+            <img src="{% static 'images/corsarioscode-emblema.webp' %}" alt="" width="44" height="44" loading="lazy" class="w-11 h-11 rounded-lg ring-1 ring-white/10">
+            <p class="leading-tight">
+                <span class="block text-[0.7rem] text-corsario-claro/60">Sistema desenvolvido por</span>
+                <span class="block font-titulo text-base font-bold">Corsarios<span class="text-corsario-azul">Code</span></span>
+                <span class="block text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-corsario-azul/80">{{ desenvolvedor.frase }}</span>
+            </p>
+        </div>
+        {% if desenvolvedor.link_whatsapp or desenvolvedor.link_instagram %}
+        <nav class="flex gap-2" aria-label="Contatos da {{ desenvolvedor.nome }}">
+            {% if desenvolvedor.link_whatsapp %}
+            <a href="{{ desenvolvedor.link_whatsapp }}" target="_blank" rel="noopener" class="btn-corsario btn-pequeno"><svg class="ico ico-sm"><use href="#i-whatsapp"/></svg>WhatsApp</a>
+            {% endif %}
+            {% if desenvolvedor.link_instagram %}
+            <a href="{{ desenvolvedor.link_instagram }}" target="_blank" rel="noopener" class="btn-corsario btn-pequeno"><svg class="ico ico-sm"><use href="#i-instagram"/></svg>Instagram</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+    </div>
+</footer>

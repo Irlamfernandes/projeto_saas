@@ -2,7 +2,7 @@
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from django import template
-from application.formatacao import reais
+from infrastructure.utils.formatacao import reais
 
 register = template.Library()
 

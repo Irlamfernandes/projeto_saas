@@ -4,6 +4,7 @@
 const g = require('../js/graficos.js');
 
 const tokens = {
+    fonte: 12,
     marca: '#0d9488', destaque: '#c96a05', neutra: '#c9d3d1', tinta: '#16211f', tintaSuave: '#4b5b58',
     tintaFraca: '#7c8a87', linha: '#e2e9e7', grade: '#edf1f0', superficie: '#ffffff',
 };
@@ -110,6 +111,7 @@ describe('plugins', () => {
         g.pluginRotulosNoFim(tokens, { eixo: (v) => `${v}` }).afterDatasetsDraw(grafico);
 
         expect(ctx.fillText).toHaveBeenCalledWith('412', 106, 20);
+        expect(ctx.font).toBe('600 12px Figtree, system-ui, sans-serif');
         expect(ctx.fillText).toHaveBeenCalledWith('97', 36, 50);
     });
 });
@@ -162,5 +164,18 @@ describe('desenharGraficos', () => {
 
     test('lerTokens lê as variáveis CSS', () => {
         expect(g.lerTokens().marca).toBe('#0d9488');
+    });
+
+    test('texto dos gráficos acompanha a letra da página (rem)', () => {
+        const ChartFalso = jest.fn();
+        ChartFalso.defaults = { font: {} };
+
+        document.documentElement.style.fontSize = '20px'; // usuário com letra grande
+        g.desenharGraficos(document, ChartFalso);
+        expect(g.remEmPx(0.75)).toBe(15);
+        expect(ChartFalso.defaults.font.size).toBe(15);
+
+        document.documentElement.style.fontSize = '';
+        expect(g.remEmPx(0.75)).toBe(12); // padrão de 16px sem letra configurada
     });
 });

@@ -1,7 +1,7 @@
 {% load formatacao %}
 {% if mapa.melhor %}
 <div class="relative overflow-x-auto">
-    <table class="w-full border-separate text-xs" style="border-spacing: 3px" aria-label="Total vendido por dia da semana e hora">
+    <table class="w-full border-separate text-xs" style="border-spacing: 0.2rem" aria-label="Total vendido por dia da semana e hora">
         <thead>
             <tr><th class="w-10"></th>{% for dia in mapa.dias %}<th scope="col" class="font-semibold text-tinta-fraca pb-1">{{ dia }}</th>{% endfor %}</tr>
         </thead>

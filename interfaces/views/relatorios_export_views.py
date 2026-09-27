@@ -3,6 +3,7 @@ from django.http import FileResponse, Http404
 from application.relatorios.selectors import montar_relatorio
 from infrastructure.utils.relatorios_export import TIPOS_DE_RELATORIO, gerar_relatorio_excel, gerar_relatorio_pdf
 from interfaces.decorators import loja_required
+from interfaces.desenvolvedor import CORSARIOS_CODE
 from interfaces.forms import PeriodoForm
 
 FORMATOS = {
@@ -31,7 +32,7 @@ def _exportar(request, tipo, formato):
     arquivo = io.BytesIO()
     relatorio = montar_relatorio(request.user, inicio, fim)
     if formato == 'pdf':
-        gerar(tipo, relatorio, arquivo, loja=request.user.loja)
+        gerar(tipo, relatorio, arquivo, loja=request.user.loja, assinatura=CORSARIOS_CODE.assinatura)
     else:
         gerar(tipo, relatorio, arquivo)
     arquivo.seek(0)
