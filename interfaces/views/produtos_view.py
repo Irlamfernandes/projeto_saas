@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import render, redirect
-from application.produtos.selectors import categorias_em_uso, filtrar_produtos, produtos_do_usuario
+from application.produtos.selectors import MAXIMO_DE_FOTOS, categorias_em_uso, filtrar_produtos, produtos_do_usuario
 from application.produtos.services import cadastrar_produto
 from infrastructure.models import Produto
 from interfaces.decorators import loja_required
@@ -16,7 +16,7 @@ def produtos_view(request):
         form = ProdutoForm(request.POST, request.FILES, instance=Produto(loja=request.user.loja))
         executar_formulario(
             request, form,
-            acao=lambda: cadastrar_produto(**form.parametros()),
+            acao=lambda: cadastrar_produto(**form.parametros(), usuario=request.user),
             mensagem_sucesso="Produto e imagens cadastrados com sucesso!",
         )
         return redirect('produtos')
@@ -37,5 +37,6 @@ def produtos_view(request):
         'filtro_categoria': criterios['categoria'],
         'filtro_ordem': criterios['ordem'],
         'filtro_baixo_estoque': criterios['baixo_estoque'],
+        'maximo_de_fotos': MAXIMO_DE_FOTOS,
     }
     return render(request, TEMPLATE_PRODUTOS, context)

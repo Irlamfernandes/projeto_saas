@@ -1,5 +1,7 @@
-"""Páginas de relatórios por assunto: vendas, produtos e clientes/caderneta."""
+"""Páginas de relatórios por assunto: vendas, produtos, clientes/caderneta e alterações."""
 from django.shortcuts import render
+from application.auditoria.selectors import registros_do_usuario
+from application.relatorios.pagamentos import recebido_por_forma
 from application.relatorios.clientes import clientes_sumidos, idade_das_dividas, melhores_clientes
 from application.relatorios.produtos import curva_abc, lucro_estimado, previsao_de_reposicao, produtos_parados
 from application.relatorios.vendas import (
@@ -8,6 +10,8 @@ from application.relatorios.vendas import (
 from interfaces import graficos
 from interfaces.decorators import loja_required
 from interfaces.forms import PeriodoForm, escolher_dias
+from interfaces.views.comum import paginar
+from infrastructure.models import Acao
 
 
 def _base(request, aba):
@@ -20,6 +24,7 @@ def relatorios_vendas_view(request):
     inicio, fim, context = _base(request, 'vendas')
     dias = escolher_dias(request.GET.get('dias'), (30, 90), 30)
     ranking = mais_vendidos(request.user, inicio, fim, limite=10)
+    formas, recebido = recebido_por_forma(request.user, inicio, fim)
     context.update({
         'dias': dias,
         'manter': {'dias': dias},
@@ -28,6 +33,9 @@ def relatorios_vendas_view(request):
         'mais_vendidos': ranking,
         'grafico_mais_vendidos': graficos.ranking([p.nome for p in ranking], [p.quantidade for p in ranking], 'Unidades'),
         'mapa': mapa_de_horarios(request.user),
+        'formas_de_pagamento': formas,
+        'total_recebido': recebido,
+        'grafico_formas': graficos.ranking([f.forma for f in formas], [f.valor for f in formas], 'Recebido'),
     })
     return render(request, 'interfaces/relatorios_vendas.html', context)
 
@@ -65,3 +73,18 @@ def relatorios_clientes_view(request):
         'sumidos': clientes_sumidos(request.user),
     })
     return render(request, 'interfaces/relatorios_clientes.html', context)
+
+
+@loja_required
+def relatorios_alteracoes_view(request):
+    acao = request.GET.get('acao', '')
+    if acao not in Acao.values:
+        acao = ''
+    registros = paginar(request, registros_do_usuario(request.user, acao))
+    return render(request, 'interfaces/relatorios_alteracoes.html', {
+        'aba': 'alteracoes',
+        'registros': registros,
+        'page_obj': registros,
+        'acoes': Acao.choices,
+        'acao': acao,
+    })

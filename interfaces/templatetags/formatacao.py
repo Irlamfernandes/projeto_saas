@@ -1,23 +1,10 @@
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation
 from django import template
+from application.formatacao import moeda
 
 register = template.Library()
 
-_CENTAVOS = Decimal('0.01')
-
-
-@register.filter
-def moeda(valor):
-    """Valor em reais no formato pt-BR, com separador de milhar: 1234.5 -> '1.234,50'.
-
-    Arredonda como o `floatformat` (meio para cima), mas sem a maquinaria de localização dele,
-    que pesa em listas longas.
-    """
-    try:
-        numero = Decimal(str(valor or 0)).quantize(_CENTAVOS, rounding=ROUND_HALF_UP)
-    except (InvalidOperation, ValueError):
-        return ''
-    return f"{numero + 0:,.2f}".replace(',', '_').replace('.', ',').replace('_', '.')
+register.filter('moeda', moeda)
 
 
 @register.filter

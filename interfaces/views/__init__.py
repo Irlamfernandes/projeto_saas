@@ -7,8 +7,10 @@ from .clientes_view import clientes_view
 from .cliente_editar_view import cliente_editar_view
 from .vendas_view import vendas_view
 from .extrato_cliente_view import extrato_cliente_view
-from .vendas_editar_view import venda_editar_view
+from .vendas_editar_view import venda_editar_view, venda_cancelar_view
 from .relatorio_view import relatorio_view
 from .extrato_pdf_view import extrato_pdf_view
 from .relatorios_export_views import exportar_pdf_modular_view, exportar_excel_modular_view
-from .relatorios_analises_views import relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view
+from .relatorios_analises_views import (
+    relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view, relatorios_alteracoes_view,
+)

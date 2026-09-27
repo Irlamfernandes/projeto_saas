@@ -1,5 +1,5 @@
 from django import forms
-from infrastructure.models import Cliente
+from infrastructure.models import Cliente, FormaDePagamento
 
 
 class ClienteForm(forms.ModelForm):
@@ -36,9 +36,14 @@ class PagamentoForm(forms.Form):
             'max_decimal_places': "Use no máximo duas casas decimais.",
         },
     )
+    forma_pagamento = forms.ChoiceField(choices=FormaDePagamento.choices, error_messages={
+        'required': "Informe como foi pago.",
+        'invalid_choice': "Forma de pagamento inválida.",
+    })
     observacao = forms.CharField(required=False, max_length=255, error_messages={
         'max_length': "A observação excede o limite máximo de 255 caracteres.",
     })
 
     def parametros(self):
-        return {'valor': self.cleaned_data['valor'], 'observacao': self.cleaned_data['observacao']}
+        dados = self.cleaned_data
+        return {'valor': dados['valor'], 'forma_pagamento': dados['forma_pagamento'], 'observacao': dados['observacao']}

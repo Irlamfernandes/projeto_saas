@@ -36,7 +36,7 @@
 </div>
 
 {% url 'relatorios_vendas' as limpar %}
-{% include 'interfaces/_filtro_periodo.html' with limpar=limpar ajuda='O período vale para o ranking de mais vendidos. Sem datas, mostramos os últimos 30 dias.' %}
+{% include 'interfaces/_filtro_periodo.html' with limpar=limpar ajuda='O período vale para os mais vendidos e as formas de pagamento. Sem datas, mostramos os últimos 30 dias.' %}
 
 <section class="cartao cartao-corpo" aria-labelledby="t-top">
     <div class="cartao-cabecalho">
@@ -59,6 +59,32 @@
     </div>
     {% else %}
         {% include 'interfaces/_vazio.html' with icone='i-estrela' titulo='Nenhuma venda nesse período' texto='Escolha outras datas no filtro acima.' %}
+    {% endif %}
+</section>
+
+<section class="cartao cartao-corpo" aria-labelledby="t-formas">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-formas" class="titulo-cartao">Formas de pagamento</h2><p class="subtitulo">Dinheiro que entrou no período: vendas de balcão e pagamentos da caderneta</p></div>
+        <p class="text-right"><span class="block text-xs font-semibold text-tinta-suave">Total recebido</span><span class="font-titulo text-xl font-bold tabular-nums">R$ {{ total_recebido|moeda }}</span></p>
+    </div>
+    {% if formas_de_pagamento %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {% include 'interfaces/_grafico.html' with id='dados-formas' tipo='barras-horizontais' dados=grafico_formas descricao='Valor recebido por forma de pagamento' %}
+        <div class="relative overflow-x-auto">
+            <table class="tabela">
+                <caption class="sr-only">Valor recebido por forma de pagamento</caption>
+                <thead><tr><th scope="col">Forma</th><th scope="col" class="text-right">Recebido</th></tr></thead>
+                <tbody>
+                    {% for f in formas_de_pagamento %}
+                    <tr><td class="font-medium">{{ f.forma }}<span class="block text-xs font-normal text-tinta-fraca">{{ f.participacao }}% do total</span></td><td class="numero font-semibold">R$ {{ f.valor|moeda }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="ajuda mt-3">"Não informada": vendas e pagamentos lançados antes de o sistema perguntar a forma de pagamento.</p>
+    {% else %}
+        {% include 'interfaces/_vazio.html' with icone='i-carteira' titulo='Nada recebido nesse período' texto='Escolha outras datas no filtro acima.' %}
     {% endif %}
 </section>
 {% endblock %}

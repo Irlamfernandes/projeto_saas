@@ -16,7 +16,7 @@ def clientes_view(request):
         form = ClienteForm(request.POST, instance=Cliente(loja=request.user.loja))
         executar_formulario(
             request, form,
-            acao=lambda: cadastrar_cliente(form.instance),
+            acao=lambda: cadastrar_cliente(form.instance, usuario=request.user),
             mensagem_sucesso="Cliente cadastrado com sucesso!",
         )
         return redirect('clientes')

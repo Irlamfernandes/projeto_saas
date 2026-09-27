@@ -1,5 +1,5 @@
 {% extends 'interfaces/base.html' %}
-{% load formatacao %}
+{% load static formatacao %}
 
 {% block title %}Editar venda #{{ venda.id }} · Gestão da Loja{% endblock %}
 {% block voltar %}<a href="{% url 'vendas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Vendas</a>{% endblock %}
@@ -7,47 +7,78 @@
 {% block subtitulo %}Registrada em {{ venda.data_venda|date:"d/m/Y \à\s H:i" }} · total atual R$ {{ venda.valor_total|moeda }}{% endblock %}
 
 {% block content %}
-<section class="cartao cartao-corpo max-w-2xl" aria-label="Dados da venda">
+<div class="grid gap-5 max-w-2xl">
+<section class="cartao cartao-corpo" aria-label="Dados da venda">
     <form method="POST" class="grid gap-4">
         {% csrf_token %}
         <div class="campo">
             <label for="id_cliente_venda" class="rotulo">Cliente</label>
-            <select id="id_cliente_venda" name="cliente" required class="entrada">
-                <option value="">Escolha o cliente…</option>
+            <select id="id_cliente_venda" name="cliente" class="entrada">
+                <option value="">Balcão (sem cliente)</option>
                 {% for cliente in clientes %}
-                    <option value="{{ cliente.id }}" {% if venda.cliente and venda.cliente.id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
+                    <option value="{{ cliente.id }}" {% if venda.cliente_id == cliente.id %}selected{% endif %}>{{ cliente.nome }}</option>
                 {% endfor %}
             </select>
+            <p class="ajuda">
+                {% if pago_no_ato %}Foram pagos R$ {{ pago_no_ato|moeda }} no ato: esse pagamento acompanha a venda se você trocar o cliente. Em venda de balcão, tudo conta como pago na hora.
+                {% else %}Venda de balcão conta como paga na hora; com cliente, o valor vai para a caderneta dele.{% endif %}
+            </p>
         </div>
 
-        <div class="campo">
-            <label for="id_produto_venda" class="rotulo">Produto</label>
-            <div class="entrada-grupo">
-                <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
-                <input type="text" id="id_produto_venda" name="produto" list="lista-produtos" required autocomplete="off" value="{% if item_atual.produto.codigo_interno %}{{ item_atual.produto.codigo_interno }}{% else %}{{ item_atual.produto.nome }}{% endif %}" placeholder="Digite o nome ou o código">
-            </div>
-            <datalist id="lista-produtos">
-                {% for prod in produtos %}
-                    <option value="{% if prod.codigo_interno %}{{ prod.codigo_interno }}{% else %}{{ prod.nome }}{% endif %}">{{ prod.nome }} · R$ {{ prod.preco_venda|moeda }} · {{ prod.quantidade_estoque }} em estoque</option>
-                {% endfor %}
-            </datalist>
-            <p class="ajuda">Ao trocar o produto ou a quantidade, o estoque é corrigido automaticamente.</p>
-        </div>
+        {% include 'interfaces/_carrinho.html' %}
+        <p class="ajuda -mt-2">Produtos que já estavam na venda mantêm o preço da época. O estoque é corrigido automaticamente.</p>
 
-        <div class="campo max-w-xs">
-            <label for="id_quantidade_venda" class="rotulo">Quantidade</label>
-            <div class="entrada-grupo"><input type="number" id="id_quantidade_venda" name="quantidade" value="{{ item_atual.quantidade|default:1 }}" min="1" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
-        </div>
+        {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada=venda.forma_pagamento %}
 
         <div class="campo">
             <label for="id_observacoes_venda" class="rotulo">Observações <span class="rotulo-opcional">opcional</span></label>
-            <textarea id="id_observacoes_venda" name="observacoes" rows="2" class="entrada">{{ venda.observacoes|default:'' }}</textarea>
+            <textarea id="id_observacoes_venda" name="observacoes" rows="2" maxlength="500" class="entrada">{{ venda.observacoes|default:'' }}</textarea>
         </div>
 
         <div class="flex flex-wrap justify-end gap-2 pt-2">
-            <a href="{% url 'vendas' %}" class="btn-secundario">Cancelar</a>
+            <a href="{% url 'vendas' %}" class="btn-secundario">Voltar sem salvar</a>
             <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar alterações</button>
         </div>
     </form>
 </section>
+
+<section class="cartao cartao-corpo border-critico/30" aria-labelledby="t-cancelar">
+    <div class="cartao-cabecalho mb-0">
+        <div>
+            <h2 id="t-cancelar" class="titulo-cartao">Cancelar esta venda</h2>
+            <p class="subtitulo">Devolve os produtos ao estoque e desfaz o pagamento feito no ato. Fica registrado quem cancelou e por quê.</p>
+        </div>
+        <button type="button" class="btn-perigo" onclick="document.getElementById('modal-cancelar-venda').showModal()">
+            <svg class="ico"><use href="#i-x"/></svg>Cancelar venda
+        </button>
+    </div>
+</section>
+</div>
+
+<dialog id="modal-cancelar-venda" class="w-full max-w-md rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-tinta/40" aria-labelledby="t-modal-cancelar">
+    <form method="POST" action="{% url 'venda_cancelar' venda.id %}" class="grid gap-4 p-6">
+        {% csrf_token %}
+        <div>
+            <h2 id="t-modal-cancelar" class="text-lg font-bold">Cancelar a venda #{{ venda.id }}?</h2>
+            <p class="text-sm text-tinta-suave mt-1">R$ {{ venda.valor_total|moeda }} · {% if venda.cliente %}{{ venda.cliente.nome }}{% else %}Balcão{% endif %}. Isso não pode ser desfeito.</p>
+        </div>
+        <div class="campo">
+            <label for="id_motivo_cancelamento" class="rotulo">Motivo</label>
+            <input type="text" id="id_motivo_cancelamento" name="motivo" required maxlength="200" placeholder="Ex.: lançada em dobro, cliente desistiu…" class="entrada">
+        </div>
+        <div class="campo">
+            <label for="id_senha_cancelamento" class="rotulo">Sua senha</label>
+            <input type="password" id="id_senha_cancelamento" name="senha" required autocomplete="current-password" class="entrada">
+            <p class="ajuda">A mesma senha que você usa para entrar no sistema.</p>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" class="btn-secundario" onclick="this.closest('dialog').close()">Voltar</button>
+            <button type="submit" class="btn-perigo bg-critico text-white hover:bg-critico-texto"><svg class="ico"><use href="#i-x"/></svg>Confirmar cancelamento</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/venda.js' %}"></script>
 {% endblock %}

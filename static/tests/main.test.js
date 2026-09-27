@@ -152,6 +152,9 @@ describe('Testes de Cobertura Total - main.js', () => {
         document.dispatchEvent(new Event('DOMContentLoaded'));
         const inputNova = document.getElementById('input-nova-categoria');
         expect(inputNova.classList.contains('hidden')).toBeFalsy();
+        // Regressão: loja sem categorias não conseguia salvar produto (campo virava obrigatório)
+        expect(inputNova.required).toBeFalsy();
+        expect(document.activeElement).not.toBe(inputNova);
     });
 
     test('5. Deve testar funções unitárias (tratarMudancaCategoria, marcarParaRemover, modais)', () => {
@@ -179,6 +182,8 @@ describe('Testes de Cobertura Total - main.js', () => {
         tratarMudancaCategoria(select);
         expect(select.hasAttribute('name')).toBeFalsy();
         expect(inputNova.getAttribute('name')).toBe('categoria');
+        expect(inputNova.required).toBeFalsy();
+        expect(document.activeElement).toBe(inputNova);
 
         jest.useFakeTimers();
         const inputRemover = document.createElement('input');
@@ -340,5 +345,65 @@ describe('Testes de Cobertura Total - main.js', () => {
         document.body.innerHTML = '';
         expect(() => abrirModalGaleria(['img1.jpg'])).not.toThrow();
         expect(() => fecharModalDireto()).not.toThrow();
+    });
+
+    describe('limitarFotos', () => {
+        const montar = (fotosAtuais, removidas = '') => {
+            document.body.innerHTML = `
+                <input id="remover_imagens" value="${removidas}">
+                <div id="container-imagens-atuais">${fotosAtuais.map((id) => `<div data-id="${id}"></div>`).join('')}</div>
+                <input type="file" id="fotos" data-maximo-fotos="5">`;
+            const input = document.getElementById('fotos');
+            input.reportValidity = jest.fn();
+            return input;
+        };
+        const escolher = (input, quantidade) => Object.defineProperty(input, 'files', { value: { length: quantidade }, configurable: true });
+
+        test('aceita escolher até completar 5 fotos', () => {
+            const { limitarFotos } = require('../js/main.js');
+            const input = montar(['1', '2']);
+            escolher(input, 3);
+            limitarFotos(input);
+            expect(input.validationMessage).toBe('');
+            expect(input.reportValidity).not.toHaveBeenCalled();
+        });
+
+        test('avisa quantas ainda cabem quando passa do limite', () => {
+            const { limitarFotos } = require('../js/main.js');
+            const input = montar(['1', '2']);
+            escolher(input, 4);
+            limitarFotos(input);
+            expect(input.validationMessage).toBe('Cada produto pode ter no máximo 5 fotos. Dá para adicionar mais 3.');
+            expect(input.reportValidity).toHaveBeenCalled();
+        });
+
+        test('produto cheio pede para remover antes', () => {
+            const { limitarFotos } = require('../js/main.js');
+            const input = montar(['1', '2', '3', '4', '5']);
+            escolher(input, 1);
+            limitarFotos(input);
+            expect(input.validationMessage).toBe('Cada produto pode ter no máximo 5 fotos. Remova alguma antes de adicionar outra.');
+        });
+
+        test('fotos marcadas para remover liberam espaço, inclusive depois de escolher', () => {
+            const { limitarFotos, marcarParaRemover } = require('../js/main.js');
+            const input = montar(['1', '2', '3', '4', '5']);
+            escolher(input, 1);
+            limitarFotos(input);
+            expect(input.validationMessage).not.toBe('');
+
+            marcarParaRemover('3', document.querySelector('[data-id="3"]'));
+            expect(input.validationMessage).toBe('');
+        });
+
+        test('no cadastro (sem fotos atuais) o limite é 5', () => {
+            const { limitarFotos } = require('../js/main.js');
+            document.body.innerHTML = '<input type="file" id="fotos" data-maximo-fotos="5">';
+            const input = document.getElementById('fotos');
+            input.reportValidity = jest.fn();
+            escolher(input, 6);
+            limitarFotos(input);
+            expect(input.validationMessage).toBe('Cada produto pode ter no máximo 5 fotos. Dá para adicionar mais 5.');
+        });
     });
 });

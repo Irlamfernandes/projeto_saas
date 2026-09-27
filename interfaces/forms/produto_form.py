@@ -6,12 +6,14 @@ from application.produtos.selectors import ORDEM_PADRAO, ORDENACOES_PERMITIDAS
 from infrastructure.models import Produto
 
 EXTENSOES_DE_IMAGEM = ['jpg', 'jpeg', 'png', 'webp']
-TAMANHO_MAXIMO_IMAGEM = 5 * 1024 * 1024
+# Limite do arquivo enviado. O que fica guardado é bem menor: a foto é reduzida e regravada em WebP.
+TAMANHO_MAXIMO_MB = 15
+TAMANHO_MAXIMO_IMAGEM = TAMANHO_MAXIMO_MB * 1024 * 1024
 
 
 def validar_tamanho_da_imagem(arquivo):
     if arquivo.size > TAMANHO_MAXIMO_IMAGEM:
-        raise ValidationError(f"A imagem '{arquivo.name}' excede o limite de 5 MB.")
+        raise ValidationError(f"A imagem '{arquivo.name}' excede o limite de {TAMANHO_MAXIMO_MB} MB.")
 
 
 class _EnvioMultiplo(forms.ClearableFileInput):

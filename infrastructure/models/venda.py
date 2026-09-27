@@ -7,6 +7,14 @@ from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.produto import Produto
 
+class FormaDePagamento(models.TextChoices):
+    DINHEIRO = 'dinheiro', 'Dinheiro'
+    PIX = 'pix', 'Pix'
+    DEBITO = 'debito', 'Cartão de débito'
+    CREDITO = 'credito', 'Cartão de crédito'
+    OUTRO = 'outro', 'Outro'
+
+
 class Venda(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='vendas', db_index=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, related_name='vendas', db_index=True)
@@ -19,6 +27,8 @@ class Venda(models.Model):
         validators=[MinValueValidator(Decimal('0.00'))]
     )
     observacoes = models.TextField(blank=True, default='')
+    # Como foi pago o que se pagou na hora (venda de balcão: o total; com cliente: o "pago agora").
+    forma_pagamento = models.CharField(max_length=10, choices=FormaDePagamento.choices, blank=True, default='')
 
     class Meta:
         db_table = 'vendas'
@@ -93,6 +103,11 @@ class PagamentoCliente(models.Model):
     )
     data_pagamento = models.DateTimeField(auto_now_add=True, db_index=True)
     observacao = models.CharField(max_length=255, blank=True, default='')
+    forma_pagamento = models.CharField(max_length=10, choices=FormaDePagamento.choices, blank=True, default='')
+    # Preenchido quando o pagamento foi feito no ato de uma venda: acompanha a venda se ela mudar de cliente.
+    venda = models.ForeignKey(
+        Venda, on_delete=models.CASCADE, null=True, blank=True, related_name='pagamentos_no_ato',
+    )
 
     class Meta:
         db_table = 'pagamentos_cliente'

@@ -79,8 +79,9 @@
         <div class="campo">
             <label for="edit-imagens" class="rotulo">Adicionar fotos <span class="rotulo-opcional">opcional</span></label>
             <input type="file" id="edit-imagens" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+                   data-maximo-fotos="{{ maximo_de_fotos }}" onchange="limitarFotos(this)"
                    class="block w-full text-sm text-tinta-suave file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200 cursor-pointer">
-            <p class="ajuda">JPG, PNG ou WEBP de até 5 MB.</p>
+            <p class="ajuda">Cada produto pode ter até {{ maximo_de_fotos }} fotos: {% if fotos_disponiveis %}dá para adicionar mais {{ fotos_disponiveis }}{% else %}remova alguma para adicionar outra{% endif %}. JPG, PNG ou WEBP (máx. 15 MB cada); reduzimos cada foto para ocupar pouco espaço.</p>
         </div>
 
         <div class="flex flex-wrap justify-end gap-2 pt-2">

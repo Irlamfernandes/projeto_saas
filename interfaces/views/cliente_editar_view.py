@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect
 from application.clientes.selectors import clientes_do_usuario
+from application.clientes.services import atualizar_cliente
 from interfaces.decorators import loja_required
 from interfaces.forms import ClienteForm
 from interfaces.views.comum import executar_formulario
@@ -12,6 +13,10 @@ def cliente_editar_view(request, pk):
 
     if request.method == 'POST':
         form = ClienteForm(request.POST, instance=cliente)
-        executar_formulario(request, form, acao=form.save, mensagem_sucesso="Cliente atualizado com sucesso!")
+        executar_formulario(
+            request, form,
+            acao=lambda: atualizar_cliente(form.instance, usuario=request.user),
+            mensagem_sucesso="Cliente atualizado com sucesso!",
+        )
 
     return redirect('clientes')
