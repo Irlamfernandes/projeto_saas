@@ -27,7 +27,7 @@
             </nav>
 
             <div class="mt-auto grid gap-0.5 border-t border-linha pt-3 text-sm">
-                {% include 'interfaces/_menu_item.html' with rota='configuracoes' icone='i-config' rotulo='Configurações' ativo_se='configuracoes' %}
+                {% include 'interfaces/_menu_item.html' with rota='configuracoes' icone='i-config' rotulo='Configurações' ativo_se='configuracoes planos cobranca' %}
                 <form action="{% url 'logout' %}" method="POST">
                     {% csrf_token %}
                     <button type="submit" class="btn-fantasma w-full justify-start px-2.5">
@@ -43,7 +43,7 @@
                     {% include 'interfaces/_marca_loja.html' with classes='w-8 h-8 rounded-lg text-sm' %}
                     <b class="text-sm truncate">{% if request.user.loja %}{{ request.user.loja.nome_loja }}{% else %}Painel global{% endif %}</b>
                 </span>
-                <a href="{% url 'configuracoes' %}" class="btn-fantasma btn-pequeno shrink-0" {% if request.resolver_match.url_name == 'configuracoes' %}aria-current="page"{% endif %}><svg class="ico"><use href="#i-config"/></svg>Configurações</a>
+                {% menu_ativo 'configuracoes planos cobranca' as em_configuracoes %}<a href="{% url 'configuracoes' %}" class="btn-fantasma btn-pequeno shrink-0" {% if em_configuracoes %}aria-current="page"{% endif %}><svg class="ico"><use href="#i-config"/></svg>Configurações</a>
             </div>
 
             <header class="flex flex-wrap items-end justify-between gap-4 px-4 sm:px-8 pt-6 pb-2">

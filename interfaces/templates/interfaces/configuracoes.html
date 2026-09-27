@@ -71,9 +71,11 @@
                 {% elif plano.dias_restantes == 0 %}Vence hoje.
                 {% elif plano.dias_restantes == 1 %}Vence amanhã.
                 {% else %}Faltam {{ plano.dias_restantes }} dias.{% endif %}
+                {% if em_teste_gratis %}<span class="block">Período de teste grátis.</span>{% endif %}
             </dd>
         </div>
     </dl>
+    <a href="{% url 'planos' %}" class="btn-primario mt-4 w-full sm:w-auto"><svg class="ico"><use href="#i-calendario"/></svg>Ver planos e renovar</a>
 </section>
 {% endif %}
 

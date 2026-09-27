@@ -50,3 +50,17 @@ class IconeDaAcaoTest(SimpleTestCase):
         for acao, icone in casos.items():
             with self.subTest(acao=acao):
                 self.assertEqual(icone_da_acao(acao), icone)
+
+
+class RenovacaoDoPlanoLegivelTest(SimpleTestCase):
+
+    def test_mostra_o_vencimento_antes_e_depois(self):
+        linhas = detalhes_legiveis({'vencimento': ['2026-09-29', '2026-10-29'], 'pagamento_id': '123'})
+        self.assertEqual(linhas, ["Vencimento: 29/09/2026 → 29/10/2026"])
+
+    def test_data_estranha_aparece_como_veio(self):
+        self.assertEqual(detalhes_legiveis({'vencimento': ['?', None]}), ["Vencimento: ? → None"])
+
+    def test_icone(self):
+        from interfaces.templatetags.auditoria import icone_da_acao
+        self.assertEqual(icone_da_acao('plano_renovado'), 'i-calendario')

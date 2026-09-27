@@ -1,0 +1,58 @@
+{% extends 'interfaces/base.html' %}
+{% load static formatacao %}
+
+{% block title %}Pix do plano · Gestão da Loja{% endblock %}
+{% block voltar %}<a href="{% url 'configuracoes' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Configurações</a>{% endblock %}
+{% block header_title %}Plano {{ cobranca.plano_nome }}{% endblock %}
+{% block subtitulo %}R$ {{ cobranca.valor|moeda }} por Pix{% endblock %}
+
+{% block content %}
+<section class="cartao cartao-corpo max-w-xl" aria-labelledby="t-pix">
+{% if cobranca.status == 'paga' %}
+    <div class="grid justify-items-center gap-3 py-4 text-center" role="status">
+        <span class="grid place-items-center w-14 h-14 rounded-full bg-bom-suave text-bom-texto" aria-hidden="true"><svg class="ico w-7 h-7"><use href="#i-check"/></svg></span>
+        <h2 id="t-pix" class="text-xl font-bold">Pagamento confirmado!</h2>
+        <p class="text-sm text-tinta-suave">Seu plano agora vai até <b class="text-tinta">{{ cobranca.vencimento_novo|date:"d/m/Y" }}</b>. Obrigado!</p>
+        <a href="{% url 'dashboard' %}" class="btn-primario mt-2">Voltar ao início</a>
+    </div>
+{% elif cobranca.status == 'expirada' %}
+    <div class="grid justify-items-center gap-3 py-4 text-center" role="status">
+        <span class="grid place-items-center w-14 h-14 rounded-full bg-alerta-suave text-alerta-texto" aria-hidden="true"><svg class="ico w-7 h-7"><use href="#i-tempo"/></svg></span>
+        <h2 id="t-pix" class="text-xl font-bold">Este Pix expirou</h2>
+        <p class="text-sm text-tinta-suave">Nenhum valor foi cobrado. Gere um novo Pix para renovar.</p>
+        <a href="{% url 'planos' %}" class="btn-primario mt-2">Gerar novo Pix</a>
+    </div>
+{% else %}
+    <div class="grid gap-5" data-acompanhar-cobranca data-url-situacao="{% url 'cobranca_situacao' cobranca.pk %}">
+        <div>
+            <h2 id="t-pix" class="titulo-cartao">Pague com o Pix</h2>
+            <p class="subtitulo">Abra o app do seu banco e escaneie o QR code ou use o Pix copia e cola.</p>
+        </div>
+
+        {% if pix_de_teste %}
+        <p class="flex items-start gap-2 rounded-controle bg-alerta-suave px-3.5 py-2.5 text-sm font-medium text-alerta-texto">
+            <svg class="ico mt-px shrink-0"><use href="#i-alerta"/></svg>Pix de teste (token TEST do Mercado Pago): ele não pode ser pago de verdade.
+        </p>
+        {% endif %}
+
+        <img src="data:image/png;base64,{{ cobranca.pix_qr_code }}" alt="QR code do Pix de R$ {{ cobranca.valor|moeda }}" width="240" height="240" class="mx-auto w-60 h-60 rounded-controle border border-linha bg-white p-2">
+
+        <div class="campo">
+            <label for="pix-copia-e-cola" class="rotulo">Pix copia e cola</label>
+            <textarea id="pix-copia-e-cola" rows="3" readonly class="entrada font-mono text-xs break-all">{{ cobranca.pix_copia_e_cola }}</textarea>
+            <button type="button" class="btn-secundario" data-copiar="pix-copia-e-cola" onclick="copiarPix(this)"><svg class="ico"><use href="#i-check"/></svg><span>Copiar código</span></button>
+        </div>
+
+        <p class="flex items-center gap-2 rounded-controle bg-marca-50 px-3.5 py-2.5 text-sm font-semibold text-marca-700" role="status" aria-live="polite">
+            <svg class="ico shrink-0 animate-spin motion-reduce:animate-none"><use href="#i-reposicao"/></svg>
+            Aguardando o pagamento. Esta tela atualiza sozinha quando o Mercado Pago confirmar.
+        </p>
+        <p class="ajuda">Válido até {{ cobranca.expira_em|date:"H:i" }}. Se já pagou e nada mudou, <a href="{% url 'cobranca' cobranca.pk %}" class="font-semibold text-marca-700 hover:underline">confira de novo</a>.</p>
+    </div>
+{% endif %}
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/cobranca.js' %}"></script>
+{% endblock %}

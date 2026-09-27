@@ -21,6 +21,8 @@ class LojaModel(models.Model):
     criado_em = models.DateTimeField(auto_now_add=True)
     # Até quando a loja pode usar o sistema por completo. Só muda com pagamento confirmado (ou pelo admin).
     vencimento = models.DateField(default=vencimento_do_teste_gratis)
+    # E-mail para o comprovante do Pix, guardado exatamente como a loja digitou.
+    email_cobranca = models.CharField(max_length=254, blank=True, default='')
 
     def __str__(self):
         return self.nome_loja

@@ -32,7 +32,7 @@ class AvisosTest(PlanoNasTelasTestCase):
         self.vencer_em(3)
         response = self.client.get(reverse('dashboard'))
         self.assertContains(response, "Seu plano vence em 3 dias")
-        self.assertContains(response, f'href="{reverse("configuracoes")}#plano"')
+        self.assertContains(response, f'href="{reverse("planos")}"')
 
     def test_aviso_antes_de_vencer_aparece_so_no_inicio(self):
         self.vencer_em(3)

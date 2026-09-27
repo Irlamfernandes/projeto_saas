@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
+from application.assinatura.selectors import em_teste_gratis
 from application.exceptions import RegraDeNegocioError
 from application.lojas.services import remover_marca, trocar_marca
 from interfaces.decorators import loja_required
@@ -13,7 +14,11 @@ TEMPLATE_CONFIGURACOES = 'interfaces/configuracoes.html'
 
 @loja_required(trava_plano_vencido=False)
 def configuracoes_view(request):
-    return render(request, TEMPLATE_CONFIGURACOES, {'tamanho_maximo_mb': TAMANHO_MAXIMO_MB})
+    loja = request.user.loja
+    return render(request, TEMPLATE_CONFIGURACOES, {
+        'tamanho_maximo_mb': TAMANHO_MAXIMO_MB,
+        'em_teste_gratis': loja is not None and em_teste_gratis(loja),
+    })
 
 
 @require_POST

@@ -105,6 +105,8 @@
   /* Escolha em botões (rádio escondido + rótulo) */
   .opcao { @apply cursor-pointer; }
   .opcao-rotulo { @apply inline-flex items-center rounded-full border border-linha bg-white px-3.5 py-2 text-sm font-semibold text-tinta-suave transition hover:border-tinta-fraca peer-checked:border-marca-600 peer-checked:bg-marca-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-marca-600 peer-focus-visible:ring-offset-2; }
+  /* Cartões de escolha do plano (rádio escondido; o cartão inteiro é clicável) */
+  .opcao-plano { @apply flex cursor-pointer items-center justify-between gap-3 rounded-controle border border-linha bg-white px-4 py-3 transition hover:border-tinta-fraca has-[:checked]:border-marca-600 has-[:checked]:bg-marca-50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-marca-600 has-[:focus-visible]:ring-offset-2; }
 
   /* Gráficos */
   .area-grafico { @apply relative w-full min-w-0 h-64 overflow-hidden; }

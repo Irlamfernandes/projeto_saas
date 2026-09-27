@@ -15,3 +15,4 @@ from .relatorios_analises_views import (
     relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view, relatorios_alteracoes_view,
 )
 from .configuracoes_view import configuracoes_view, marca_enviar_view, marca_remover_view
+from .planos_view import planos_view, cobranca_view, cobranca_situacao_view

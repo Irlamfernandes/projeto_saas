@@ -73,6 +73,7 @@ a trocá-la.
 | `DATABASE_URL` | não | Postgres. Vazio usa SQLite (`db.sqlite3`). |
 | `DATABASE_SSL_REQUIRE` | não | Padrão `True` quando há `DATABASE_URL`. |
 | `SUPABASE_URL`, `SUPABASE_KEY` | para upload | Bucket `imagens` do Supabase Storage. Até 5 fotos por produto, reduzidas para 1024 px e regravadas em WebP (qualidade 70, ~25 KB cada) antes do envio (`infrastructure/utils/otimizacao_de_imagem.py`). |
+| `MERCADO_PAGO_ACCESS_TOKEN` | para renovar o plano | Token da conta do Mercado Pago que recebe o Pix. `TEST-...` gera Pix de teste (não pode ser pago); `APP_USR-...` cobra de verdade. |
 | `DJANGO_SECURE_SSL_REDIRECT` | não | Padrão `True` em produção; `False` só para rodar sem HTTPS. |
 | `DJANGO_HSTS_SECONDS` | não | Padrão `3600`. Aumente para `31536000` depois de validar o HTTPS. |
 | `WEB_CONCURRENCY` | não | Processos do Gunicorn (padrão `2` no Docker e no `render.yaml`). |
@@ -139,6 +140,13 @@ make test        # pytest com cobertura + jest
 - **Modo só consulta:** com o plano vencido, `@loja_required` recusa qualquer envio de formulário (POST) e
   volta para a tela anterior com aviso. Consultar e exportar continuam. Telas que precisam funcionar mesmo
   assim usam `@loja_required(trava_plano_vencido=False)` (Configurações e a renovação).
+- **Renovação por Pix** (Configurações › Ver planos e renovar): planos 30 dias, 90 dias, 6 meses e 12 meses
+  (preços editáveis no admin; começam em R$ 0,01 para teste). O Pix (QR code e copia e cola) é gerado pelo
+  Mercado Pago (`infrastructure/pagamentos/mercado_pago.py`) e a tela consulta sozinha a cada 5 s.
+- **Só confirma com certeza** (`application/assinatura/services.py`): o vencimento só avança depois de o
+  próprio Mercado Pago responder aprovado, com o valor da cobrança, em reais e com a referência dela. A soma
+  parte do maior entre hoje e o vencimento atual (planos em meses somam meses de calendário) e nunca é feita
+  duas vezes para a mesma cobrança. O e-mail do comprovante é guardado exatamente como foi digitado.
 
 ## CSS (Tailwind)
 
