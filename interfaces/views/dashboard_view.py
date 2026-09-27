@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.shortcuts import render
 from application.a_receber.selectors import clientes_a_cobrar
+from application.gastos.selectors import Mes, resultado_do_mes
 from application.relatorios.indicadores import indicadores_do_painel
 from application.relatorios.periodos import hoje_local
 from application.relatorios.produtos import previsao_de_reposicao
@@ -37,5 +38,7 @@ def dashboard_view(request):
         'mapa': mapa_de_horarios(user),
         'reposicao': previsao_de_reposicao(user, horizonte=DIAS_PARA_REPOR)[:ITENS_NO_RANKING],
         'cobrancas': cobrancas_na_tela(clientes_a_cobrar(user, hoje_local())),
+        'mes_atual': Mes.de(hoje_local()),
+        'resultado_do_mes': resultado_do_mes(user, Mes.de(hoje_local())),
     }
     return render(request, 'interfaces/dashboard.html', context)

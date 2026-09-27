@@ -40,6 +40,10 @@ class DetalhesLegiveisTest(SimpleTestCase):
         venda = {**VENDA, 'itens': [{'produto': 'Queijo', 'quantidade': '0.35', 'unidade': 'kg', 'preco_unitario': '39.90'}]}
         self.assertEqual(detalhes_legiveis({'venda': venda}), ["Balcão · 0,35 kg Queijo (R$ 39,90) · total R$ 20,00 · Pix"])
 
+    def test_itens_da_compra(self):
+        self.assertEqual(detalhes_legiveis({'itens': ["3× Bolo a R$ 12,00", "2,5 kg Queijo a R$ 39,90"]}),
+                         ["Itens: 3× Bolo a R$ 12,00, 2,5 kg Queijo a R$ 39,90"])
+
     def test_fotos_e_observacao(self):
         self.assertEqual(detalhes_legiveis({'fotos': {'adicionadas': 2, 'removidas': 1}, 'observacao': 'acerto'}),
                          ["Fotos: 2 adicionada(s), 1 removida(s)", "Observação: acerto"])
@@ -58,7 +62,8 @@ class IconeDaAcaoTest(SimpleTestCase):
         casos = {
             'venda_cancelada': 'i-x', 'venda_editada': 'i-venda', 'pagamento_registrado': 'i-carteira',
             'produto_cadastrado': 'i-produto', 'cliente_editado': 'i-clientes', 'marca_alterada': 'i-foto',
-            'lembrete_enviado': 'i-mensagem',
+            'lembrete_enviado': 'i-mensagem', 'compra_excluida': 'i-produto', 'despesa_registrada': 'i-carteira',
+            'perda_registrada': 'i-lixeira',
             'algo_novo': 'i-historico',
         }
         for acao, icone in casos.items():

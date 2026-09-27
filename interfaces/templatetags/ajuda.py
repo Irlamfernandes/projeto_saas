@@ -18,6 +18,7 @@ AJUDA_POR_ROTA = {
     'relatorios_produtos': 'relatorios_produtos',
     'relatorios_clientes': 'relatorios_clientes',
     'relatorios_alteracoes': 'relatorios_alteracoes',
+    'gastos': 'gastos',
     'configuracoes': 'configuracoes',
     'planos': 'planos',
     'cobranca': 'cobranca',

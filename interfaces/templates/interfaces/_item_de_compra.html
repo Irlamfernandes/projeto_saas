@@ -1,0 +1,15 @@
+{% load formatacao %}{% comment %}
+Uma linha de produto da compra. Repetida pelo static/js/gastos.js a partir do <template> ("Outro produto").
+O custo vem preenchido com o preço de custo atual do produto escolhido.
+{% endcomment %}
+<li class="grid grid-cols-[1fr_auto] gap-2 rounded-controle border border-linha p-3" data-item-compra>
+    <select name="item_produto" class="entrada col-span-2" aria-label="Produto" data-produto-compra>
+        <option value="">Escolha o produto</option>
+        {% for produto in produtos %}<option value="{{ produto.id }}" data-custo="{{ produto.preco_custo|numero_simples }}" data-sigla="{{ produto.sigla }}" data-casas="{{ produto.casas_decimais }}">{{ produto.nome }}</option>{% endfor %}
+    </select>
+    <div class="grid grid-cols-2 gap-2">
+        <div class="entrada-grupo"><input type="number" name="item_quantidade" step="any" min="0.001" placeholder="Qtd." inputmode="decimal" aria-label="Quantidade comprada" class="tabular-nums"><span class="afixo-fim" data-sigla-compra>un.</span></div>
+        <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" name="item_custo" step="0.01" min="0" placeholder="Custo" inputmode="decimal" aria-label="Custo de cada um" class="tabular-nums"></div>
+    </div>
+    <button type="button" class="btn-fantasma btn-pequeno px-2 text-critico-texto self-center" data-remover-item-compra><svg class="ico ico-sm"><use href="#i-lixeira"/></svg><span class="sr-only">Tirar este produto</span></button>
+</li>

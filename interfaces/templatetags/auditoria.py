@@ -18,6 +18,7 @@ VAZIO = '(vazio)'
 ICONES_POR_ACAO = {'venda_cancelada': 'i-x', 'marca_alterada': 'i-foto', 'plano_renovado': 'i-calendario'}
 ICONES_POR_ASSUNTO = {
     'venda': 'i-venda', 'pagamento': 'i-carteira', 'produto': 'i-produto', 'cliente': 'i-clientes', 'lembrete': 'i-mensagem',
+    'compra': 'i-produto', 'despesa': 'i-carteira', 'perda': 'i-lixeira',
 }
 
 
@@ -37,6 +38,8 @@ def detalhes_legiveis(detalhes):
         linhas += [f"Antes: {_resumo_da_venda(detalhes['antes'])}", f"Depois: {_resumo_da_venda(detalhes['depois'])}"]
     if 'venda' in detalhes:
         linhas.append(_resumo_da_venda(detalhes['venda']))
+    if detalhes.get('itens'):
+        linhas.append(f"Itens: {', '.join(detalhes['itens'])}")
     if detalhes.get('motivo'):
         linhas.append(f"Motivo: {detalhes['motivo']}")
     if 'fotos' in detalhes:

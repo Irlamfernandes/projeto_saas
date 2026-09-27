@@ -50,13 +50,13 @@ def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), 
 
 @transaction.atomic
 def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes='', vencimentos=(), usuario=None):
-    """Troca itens, cliente e observações. Produtos que já estavam na venda mantêm o preço da época."""
+    """Troca itens, cliente e observações. Produtos que já estavam na venda mantêm o preço e o custo da época."""
     antes = fotografar_venda(venda)
-    precos_da_epoca = {item.produto_id: item.preco_unitario for item in venda.itens.all()}
+    da_epoca = {item.produto_id: (item.preco_unitario, item.custo_unitario) for item in venda.itens.all()}
     _devolver_estoque(venda)
     venda.itens.all().delete()
 
-    linhas = _reservar_estoque(venda.loja, itens, precos_da_epoca)
+    linhas = _reservar_estoque(venda.loja, itens, da_epoca)
     venda.cliente = cliente
     venda.valor_total = _total(linhas)
     venda.forma_pagamento = forma_pagamento
@@ -112,8 +112,10 @@ def fotografar_venda(venda):
     }
 
 
-def _reservar_estoque(loja, itens, precos=None):
-    """Trava os produtos, confere e baixa o estoque. Retorna [(produto, quantidade, preço unitário)].
+def _reservar_estoque(loja, itens, da_epoca=None):
+    """Trava os produtos, confere e baixa o estoque. Retorna [(produto, quantidade, preço, custo)].
+
+    `da_epoca`: {id do produto: (preço, custo)} dos itens que já estavam na venda em edição.
 
     Produto sem controle de estoque é vendido sem conferir nem baixar a quantidade.
     """
@@ -128,7 +130,7 @@ def _reservar_estoque(loja, itens, precos=None):
     if len(produtos) != len(quantidades):
         raise ProdutoNaoEncontrado()
 
-    precos = precos or {}
+    da_epoca = da_epoca or {}
     linhas = []
     for produto in produtos:
         quantidade = quantidades[produto.pk]
@@ -136,7 +138,8 @@ def _reservar_estoque(loja, itens, precos=None):
             raise QuantidadeFracionada(produto)
         if produto.controla_estoque:
             _baixar_estoque(produto, quantidade)
-        linhas.append((produto, quantidade, precos.get(produto.pk, produto.preco_venda)))
+        preco, custo = da_epoca.get(produto.pk, (produto.preco_venda, produto.preco_custo))
+        linhas.append((produto, quantidade, preco, custo))
     return linhas
 
 
@@ -155,8 +158,10 @@ def _devolver_estoque(venda):
 
 
 def _criar_itens(venda, linhas):
-    for produto, quantidade, preco in linhas:
-        ItemVenda.objects.create(venda=venda, produto=produto, quantidade=quantidade, preco_unitario=preco)
+    for produto, quantidade, preco, custo in linhas:
+        ItemVenda.objects.create(
+            venda=venda, produto=produto, quantidade=quantidade, preco_unitario=preco, custo_unitario=custo,
+        )
 
 
 def _acompanhar_pagamento_no_ato(venda):
@@ -177,7 +182,7 @@ def _definir_vencimentos(venda, vencimentos):
 
 
 def _total(linhas):
-    return sum((subtotal(quantidade, preco) for _, quantidade, preco in linhas), Decimal('0'))
+    return sum((subtotal(quantidade, preco) for _, quantidade, preco, _custo in linhas), Decimal('0'))
 
 
 def _para_quem(venda):

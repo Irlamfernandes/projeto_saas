@@ -9,6 +9,7 @@ from interfaces.views import (
     exportar_pdf_modular_view, relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view,
     relatorios_alteracoes_view, venda_cancelar_view, configuracoes_view, marca_enviar_view, marca_remover_view,
     planos_view, cobranca_view, cobranca_situacao_view, tema_view, lembrete_view,
+    gastos_view, registrar_gasto_view, excluir_gasto_view,
 )
 
 urlpatterns = [
@@ -32,6 +33,10 @@ urlpatterns = [
     path('clientes/<int:cliente_id>/lembrete/', lembrete_view, name='lembrete_de_pagamento'),
     path('vendas/<int:venda_id>/editar/', venda_editar_view, name='venda_editar'),
     path('vendas/<int:venda_id>/cancelar/', venda_cancelar_view, name='venda_cancelar'),
+
+    path('gastos/', gastos_view, name='gastos'),
+    path('gastos/<str:tipo>/', registrar_gasto_view, name='registrar_gasto'),
+    path('gastos/<str:tipo>/<int:pk>/excluir/', excluir_gasto_view, name='excluir_gasto'),
 
     path('configuracoes/', configuracoes_view, name='configuracoes'),
     path('configuracoes/marca/', marca_enviar_view, name='marca_enviar'),

@@ -15,6 +15,12 @@ class Acao(models.TextChoices):
     MARCA_ALTERADA = 'marca_alterada', 'Marca da loja alterada'
     PLANO_RENOVADO = 'plano_renovado', 'Plano renovado'
     LEMBRETE_ENVIADO = 'lembrete_enviado', 'Lembrete de pagamento enviado'
+    COMPRA_REGISTRADA = 'compra_registrada', 'Compra registrada'
+    COMPRA_EXCLUIDA = 'compra_excluida', 'Compra excluída'
+    DESPESA_REGISTRADA = 'despesa_registrada', 'Despesa registrada'
+    DESPESA_EXCLUIDA = 'despesa_excluida', 'Despesa excluída'
+    PERDA_REGISTRADA = 'perda_registrada', 'Perda registrada'
+    PERDA_EXCLUIDA = 'perda_excluida', 'Perda excluída'
 
 
 class RegistroDeAlteracao(models.Model):

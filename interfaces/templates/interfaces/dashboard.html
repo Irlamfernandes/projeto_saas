@@ -6,6 +6,7 @@
 {% block subtitulo %}{{ hoje_por_extenso }} · Veja como a loja está indo.{% endblock %}
 {% block acoes %}
     <a href="{% url 'clientes' %}" class="btn-secundario"><svg class="ico"><use href="#i-caderneta"/></svg>Receber pagamento</a>
+    <a href="{% url 'gastos' %}" class="btn-secundario"><svg class="ico"><use href="#i-carteira"/></svg>Lançar gasto</a>
     <a href="{% url 'vendas' %}" class="btn-primario"><svg class="ico"><use href="#i-mais"/></svg>Nova venda</a>
 {% endblock %}
 
@@ -38,6 +39,8 @@
         </p>
     </a>
 </section>
+
+{% include 'interfaces/_resultado_do_mes.html' with resultado=resultado_do_mes mes=mes_atual %}
 
 {% include 'interfaces/_cobrancas.html' %}
 

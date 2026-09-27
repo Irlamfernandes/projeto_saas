@@ -1,0 +1,181 @@
+{% extends 'interfaces/base.html' %}
+{% load static formatacao %}
+
+{% block title %}Gastos e resultado · Gestão da Loja{% endblock %}
+{% block header_title %}Gastos e resultado{% endblock %}
+{% block subtitulo %}Compras, despesas e perdas, e quanto sobrou no mês.{% endblock %}
+{% block acoes %}
+    <form method="GET" class="flex items-center gap-2" data-enviar-ao-mudar>
+        <input type="hidden" name="aba" value="{{ aba }}">
+        <label for="id_mes" class="text-sm font-semibold text-tinta-suave">Mês</label>
+        <select id="id_mes" name="mes" class="entrada w-auto">
+            {% for opcao in meses %}<option value="{{ opcao.chave }}"{% if opcao == mes %} selected{% endif %}>{{ opcao.inicio|date:"F \d\e Y"|capfirst }}</option>{% endfor %}
+        </select>
+        <noscript><button type="submit" class="btn-secundario btn-pequeno">Ver</button></noscript>
+    </form>
+{% endblock %}
+
+{% block content %}
+{% include 'interfaces/_abas_relatorios.html' with aba_relatorio='gastos' %}
+{% with r=resultado %}
+<section class="cartao cartao-corpo" aria-labelledby="t-resultado">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-resultado" class="titulo-cartao">Resultado de {{ mes.inicio|date:"F \d\e Y"|lower }}</h2><p class="subtitulo">Vendas menos o custo do que foi vendido, as despesas e as perdas</p></div>
+    </div>
+    <dl class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <div class="rounded-controle bg-fundo p-4"><dt class="text-xs font-semibold text-tinta-suave">Vendas</dt><dd class="mt-1 text-lg font-bold tabular-nums whitespace-nowrap">R$ {{ r.vendas|moeda }}</dd></div>
+        <div class="rounded-controle bg-fundo p-4"><dt class="text-xs font-semibold text-tinta-suave">Custo do que foi vendido</dt><dd class="mt-1 text-lg font-bold tabular-nums whitespace-nowrap">− R$ {{ r.custo_do_vendido|moeda }}</dd></div>
+        <div class="rounded-controle bg-fundo p-4"><dt class="text-xs font-semibold text-tinta-suave">Despesas</dt><dd class="mt-1 text-lg font-bold tabular-nums whitespace-nowrap">− R$ {{ r.despesas|moeda }}</dd></div>
+        <div class="rounded-controle bg-fundo p-4"><dt class="text-xs font-semibold text-tinta-suave">Perdas</dt><dd class="mt-1 text-lg font-bold tabular-nums whitespace-nowrap">− R$ {{ r.perdas|moeda }}</dd></div>
+        <div class="col-span-2 lg:col-span-1 rounded-controle p-4 {% if r.resultado < 0 %}bg-critico-suave text-critico-texto{% else %}bg-bom-suave text-bom-texto{% endif %}">
+            <dt class="text-xs font-semibold">{% if r.resultado < 0 %}Prejuízo{% else %}Sobrou{% endif %}</dt>
+            <dd class="mt-1 text-xl font-bold tabular-nums whitespace-nowrap">R$ {{ r.resultado|moeda_absoluta }}</dd>
+        </div>
+    </dl>
+    <p class="ajuda mt-3">
+        Compras de mercadoria no mês: <b class="tabular-nums">R$ {{ r.compras|moeda }}</b>. Elas não entram na conta de uma vez: viram custo quando o produto é vendido.
+        {% if r.itens_sem_custo %}<b class="text-alerta-texto">{{ r.itens_sem_custo }} item{{ r.itens_sem_custo|pluralize:"ns" }} vendido{{ r.itens_sem_custo|pluralize }} sem preço de custo</b>: o resultado aparece maior do que é. Cadastre o custo nos produtos.{% endif %}
+    </p>
+</section>
+{% endwith %}
+
+<div class="grid grid-cols-1 xl:grid-cols-[28rem_1fr] gap-5 items-start">
+    <section class="cartao cartao-corpo" aria-labelledby="t-lancar">
+        <div class="cartao-cabecalho"><div><h2 id="t-lancar" class="titulo-cartao">Lançar</h2><p class="subtitulo">Escolha o que aconteceu</p></div></div>
+        <nav class="grid grid-cols-3 gap-1 rounded-controle bg-fundo p-1 mb-4 text-sm font-semibold" aria-label="Tipo de gasto">
+            {% for valor, rotulo in abas %}
+            <a href="?aba={{ valor }}&amp;mes={{ mes.chave }}" class="rounded-lg px-2 py-2 text-center {% if aba == valor %}bg-superficie shadow text-marca-700{% else %}text-tinta-suave hover:text-tinta{% endif %}"{% if aba == valor %} aria-current="page"{% endif %}>{{ rotulo }}</a>
+            {% endfor %}
+        </nav>
+
+        {% if aba == 'despesa' %}
+        <form method="POST" action="{% url 'registrar_gasto' 'despesa' %}" class="grid gap-4">
+            {% csrf_token %}
+            <p class="ajuda -mt-1">Aluguel, luz, embalagem, transporte… tudo que não vira estoque.</p>
+            <div class="campo">
+                <label for="id_categoria" class="rotulo">Categoria <span class="obrigatorio" aria-hidden="true">*</span></label>
+                <input type="text" id="id_categoria" name="categoria" list="categorias-de-despesa" required maxlength="60" placeholder="Ex.: Aluguel" class="entrada">
+                <datalist id="categorias-de-despesa">{% for categoria in categorias %}<option value="{{ categoria }}">{% endfor %}</datalist>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="campo">
+                    <label for="id_valor_despesa" class="rotulo">Valor <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="id_valor_despesa" name="valor" required placeholder="0,00" inputmode="decimal" class="tabular-nums"></div>
+                </div>
+                <div class="campo">
+                    <label for="id_data_despesa" class="rotulo">Data</label>
+                    <input type="date" id="id_data_despesa" name="data" value="{{ hoje|date:'Y-m-d' }}" required class="entrada tabular-nums">
+                </div>
+            </div>
+            <div class="campo">
+                <label for="id_descricao_despesa" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
+                <input type="text" id="id_descricao_despesa" name="descricao" maxlength="255" placeholder="Ex.: conta de agosto" class="entrada">
+            </div>
+            <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Lançar despesa</button>
+        </form>
+
+        {% elif aba == 'compra' %}
+        <form method="POST" action="{% url 'registrar_gasto' 'compra' %}" class="grid gap-4" data-compra>
+            {% csrf_token %}
+            <p class="ajuda -mt-1">Mercadoria para revender: soma no estoque dos produtos.</p>
+            <fieldset class="grid gap-2">
+                <legend class="rotulo mb-1.5">Produtos <span class="obrigatorio" aria-hidden="true">*</span></legend>
+                <ol class="grid gap-3" data-itens-compra>{% include 'interfaces/_item_de_compra.html' %}</ol>
+                <template data-modelo-item-compra>{% include 'interfaces/_item_de_compra.html' %}</template>
+                <button type="button" class="btn-secundario btn-pequeno justify-self-start" data-adicionar-item-compra><svg class="ico ico-sm"><use href="#i-mais"/></svg>Outro produto</button>
+            </fieldset>
+            <p class="flex items-baseline justify-between border-t border-linha pt-3"><span class="text-sm font-semibold text-tinta-suave">Total da compra</span><strong class="font-titulo text-xl tabular-nums" data-total-compra>R$ 0,00</strong></p>
+            <label class="flex items-start gap-2.5 text-sm">
+                <input type="checkbox" name="atualizar_custo" value="1" checked class="mt-0.5 w-4 h-4 rounded border-linha text-marca-600 focus:ring-marca-500">
+                <span><b class="font-semibold">Usar este custo como o preço de custo dos produtos</b><span class="block text-xs text-tinta-suave">O lucro das próximas vendas passa a contar com ele.</span></span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="campo">
+                    <label for="id_fornecedor" class="rotulo">Fornecedor <span class="rotulo-opcional">opcional</span></label>
+                    <input type="text" id="id_fornecedor" name="fornecedor" maxlength="120" class="entrada">
+                </div>
+                <div class="campo">
+                    <label for="id_data_compra" class="rotulo">Data</label>
+                    <input type="date" id="id_data_compra" name="data" value="{{ hoje|date:'Y-m-d' }}" required class="entrada tabular-nums">
+                </div>
+            </div>
+            <div class="campo">
+                <label for="id_observacao_compra" class="rotulo">Observação <span class="rotulo-opcional">opcional</span></label>
+                <input type="text" id="id_observacao_compra" name="observacao" maxlength="255" placeholder="Ex.: nota 1234, pago no Pix" class="entrada">
+            </div>
+            <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Lançar compra</button>
+        </form>
+
+        {% else %}
+        <form method="POST" action="{% url 'registrar_gasto' 'perda' %}" class="grid gap-4">
+            {% csrf_token %}
+            <p class="ajuda -mt-1">Produto que saiu do estoque sem ser vendido. Vale pelo preço de custo.</p>
+            <div class="campo">
+                <label for="id_produto_perda" class="rotulo">Produto <span class="obrigatorio" aria-hidden="true">*</span></label>
+                <select id="id_produto_perda" name="produto" required class="entrada">
+                    <option value="">Escolha o produto</option>
+                    {% for produto in produtos %}<option value="{{ produto.id }}">{{ produto.nome }}{% if produto.controla_estoque %} · {{ produto.quantidade_estoque|quantidade:produto.unidade }}{% endif %}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="campo">
+                    <label for="id_quantidade_perda" class="rotulo">Quantidade <span class="obrigatorio" aria-hidden="true">*</span></label>
+                    <input type="number" step="any" min="0.001" id="id_quantidade_perda" name="quantidade" required value="1" inputmode="decimal" class="entrada tabular-nums">
+                </div>
+                <div class="campo">
+                    <label for="id_data_perda" class="rotulo">Data</label>
+                    <input type="date" id="id_data_perda" name="data" value="{{ hoje|date:'Y-m-d' }}" required class="entrada tabular-nums">
+                </div>
+            </div>
+            <div class="campo">
+                <label for="id_motivo_perda" class="rotulo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
+                <input type="text" id="id_motivo_perda" name="motivo" list="motivos-de-perda" required maxlength="120" placeholder="Ex.: Venceu" class="entrada">
+                <datalist id="motivos-de-perda">{% for motivo in motivos %}<option value="{{ motivo }}">{% endfor %}</datalist>
+            </div>
+            <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Lançar perda</button>
+        </form>
+        {% endif %}
+    </section>
+
+    <section class="cartao cartao-corpo min-w-0" aria-labelledby="t-lancamentos">
+        <div class="cartao-cabecalho"><div><h2 id="t-lancamentos" class="titulo-cartao">Lançamentos de {{ mes.inicio|date:"F"|lower }}</h2><p class="subtitulo">Mais recentes primeiro. A lixeira desfaz o lançamento (e corrige o estoque).</p></div></div>
+
+        <h3 class="text-sm font-bold text-tinta-suave mt-2">Despesas · R$ {{ resultado.despesas|moeda }}</h3>
+        <ul class="divide-y divide-grade">
+            {% for despesa in despesas %}
+            <li class="flex items-center gap-3 py-2.5">
+                <span class="flex-1 min-w-0"><span class="block font-semibold truncate">{{ despesa.categoria }}</span><span class="block text-xs text-tinta-fraca tabular-nums">{{ despesa.data|date:"d/m" }}{% if despesa.descricao %} · {{ despesa.descricao }}{% endif %}</span></span>
+                <span class="font-bold tabular-nums whitespace-nowrap">R$ {{ despesa.valor|moeda }}</span>
+                {% include 'interfaces/_excluir_gasto.html' with tipo='despesa' registro=despesa pergunta='Excluir esta despesa?' %}
+            </li>
+            {% empty %}<li class="py-3 text-sm text-tinta-fraca">Nenhuma despesa neste mês.</li>{% endfor %}
+        </ul>
+
+        <h3 class="text-sm font-bold text-tinta-suave mt-5">Compras · R$ {{ resultado.compras|moeda }}</h3>
+        <ul class="divide-y divide-grade">
+            {% for compra in compras %}
+            <li class="flex items-center gap-3 py-2.5">
+                <span class="flex-1 min-w-0"><span class="block font-semibold">{% for item in compra.itens.all %}{{ item|descricao_do_item }}{% if not forloop.last %}, {% endif %}{% endfor %}</span><span class="block text-xs text-tinta-fraca tabular-nums">{{ compra.data|date:"d/m" }}{% if compra.fornecedor %} · {{ compra.fornecedor }}{% endif %}{% if compra.observacao %} · {{ compra.observacao }}{% endif %}</span></span>
+                <span class="font-bold tabular-nums whitespace-nowrap">R$ {{ compra.valor_total|moeda }}</span>
+                {% include 'interfaces/_excluir_gasto.html' with tipo='compra' registro=compra pergunta='Excluir esta compra? O que ela colocou no estoque será retirado.' %}
+            </li>
+            {% empty %}<li class="py-3 text-sm text-tinta-fraca">Nenhuma compra neste mês.</li>{% endfor %}
+        </ul>
+
+        <h3 class="text-sm font-bold text-tinta-suave mt-5">Perdas · R$ {{ resultado.perdas|moeda }}</h3>
+        <ul class="divide-y divide-grade">
+            {% for perda in perdas %}
+            <li class="flex items-center gap-3 py-2.5">
+                <span class="flex-1 min-w-0"><span class="block font-semibold">{{ perda|descricao_do_item }}</span><span class="block text-xs text-tinta-fraca tabular-nums">{{ perda.data|date:"d/m" }} · {{ perda.motivo }}</span></span>
+                <span class="font-bold tabular-nums whitespace-nowrap">R$ {{ perda.valor|moeda }}</span>
+                {% include 'interfaces/_excluir_gasto.html' with tipo='perda' registro=perda pergunta='Excluir esta perda? A quantidade volta para o estoque.' %}
+            </li>
+            {% empty %}<li class="py-3 text-sm text-tinta-fraca">Nenhuma perda neste mês.</li>{% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/gastos.js' %}"></script>
+{% endblock %}
