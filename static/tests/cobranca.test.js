@@ -26,6 +26,16 @@ describe('copiar o Pix', () => {
         expect(botao.textContent).toBe('Código copiado!');
     });
 
+    test('botão sem texto separado: o aviso vai no próprio botão', async () => {
+        document.body.innerHTML = '<textarea id="pix">000201PIX</textarea><button data-copiar="pix">Copiar</button>';
+        Object.assign(navigator, { clipboard: { writeText: jest.fn(() => Promise.resolve()) } });
+        const botao = document.querySelector('button');
+
+        await copiarPix(botao);
+
+        expect(botao.textContent).toBe('Código copiado!');
+    });
+
     test('sem permissão para copiar, seleciona o texto', async () => {
         const { botao, campo } = montar();
         Object.assign(navigator, { clipboard: { writeText: () => Promise.reject(new Error('negado')) } });
@@ -84,6 +94,30 @@ describe('acompanhar a cobrança', () => {
         await esperarVolta();
 
         expect(recarregar).toHaveBeenCalledTimes(1);
+    });
+
+    test('conferência ainda em andamento: não pergunta de novo por cima', async () => {
+        const { area } = montar();
+        global.fetch = jest.fn(() => new Promise(() => {})); // servidor demorando
+        const parar = acompanharCobranca(area, { recarregar: jest.fn() });
+
+        await esperarVolta();
+        await esperarVolta();
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        parar();
+    });
+
+    test('sem recarregar informado, recarrega a própria página', async () => {
+        const { area } = montar();
+        global.fetch = jest.fn(() => respostaJson({ status: 'paga' }));
+        const erroDoJsdom = jest.spyOn(console, 'error').mockImplementation(() => {}); // o jsdom não navega de verdade
+
+        acompanharCobranca(area);
+        await esperarVolta();
+
+        expect(erroDoJsdom.mock.calls.some(([erro]) => String(erro?.message ?? erro).includes('navigation'))).toBe(true);
+        erroDoJsdom.mockRestore();
     });
 
     test('liga sozinho ao carregar a página', async () => {

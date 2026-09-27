@@ -240,6 +240,7 @@ function acompanharTemaDoAparelho(graficos, redesenhar = desenharGraficos) {
 
 document.addEventListener('DOMContentLoaded', () => acompanharTemaDoAparelho(desenharGraficos()));
 
+/* istanbul ignore else */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         formatarMoeda, formatarMoedaCurta, formatarUnidades, remEmPx, lerTokens, montarConfiguracao, desenharGraficos,

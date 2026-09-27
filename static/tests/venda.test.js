@@ -242,6 +242,17 @@ describe('resumo do pagamento', () => {
         expect(resumo()).toBe('Sobra R$ 3,00 de crédito para o cliente.');
     });
 
+    test('produto esgotado não entra no carrinho; outras teclas não mexem na busca', () => {
+        const { carrinho, busca } = montarPagina();
+        carrinho.adicionar(CATALOGO[3]);
+        expect(carrinho.itens).toEqual([]);
+
+        digitar(busca, 'pão');
+        const evento = tecla(busca, 'a');
+        expect(evento.defaultPrevented).toBe(false);
+        expect(carrinho.itens).toEqual([]);
+    });
+
     test('página sem os campos de pagamento não quebra', () => {
         document.body.innerHTML = '<form></form>';
         expect(() => iniciarResumoDePagamento(document.querySelector('form'))).not.toThrow();
@@ -253,6 +264,17 @@ describe('inicialização automática', () => {
         montarPagina({ comResumo: true });
         document.dispatchEvent(new Event('DOMContentLoaded'));
         expect(document.querySelector('[data-resumo-pagamento]').textContent).toBe('Venda de balcão: paga na hora.');
+    });
+
+    test('carrinho fora de um formulário liga só a busca', () => {
+        document.body.innerHTML = `
+            <div data-carrinho data-catalogo="catalogo">
+                <input id="busca-produto"><ul id="resultados-produto" class="hidden"></ul>
+                <ul data-itens-lista></ul><p data-carrinho-vazio></p><strong data-total></strong>
+            </div>
+            <script type="application/json" id="catalogo">${JSON.stringify(CATALOGO)}</script>`;
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        expect(document.getElementById('resultados-produto').getAttribute('role')).toBe('listbox');
     });
 });
 

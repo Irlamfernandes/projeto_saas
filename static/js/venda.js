@@ -295,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+/* istanbul ignore else */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,

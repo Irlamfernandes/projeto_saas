@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-acompanhar-cobranca]').forEach((elemento) => acompanharCobranca(elemento));
 });
 
+/* istanbul ignore else */
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { copiarPix, acompanharCobranca };
 }
