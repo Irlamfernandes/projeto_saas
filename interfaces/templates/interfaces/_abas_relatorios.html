@@ -2,6 +2,7 @@
     <a href="{% url 'relatorios' %}" class="aba {% if aba == 'geral' %}aba-ativa{% endif %}" {% if aba == 'geral' %}aria-current="page"{% endif %}>Visão geral</a>
     <a href="{% url 'relatorios_vendas' %}" class="aba {% if aba == 'vendas' %}aba-ativa{% endif %}" {% if aba == 'vendas' %}aria-current="page"{% endif %}>Vendas</a>
     <a href="{% url 'relatorios_produtos' %}" class="aba {% if aba == 'produtos' %}aba-ativa{% endif %}" {% if aba == 'produtos' %}aria-current="page"{% endif %}>Produtos</a>
+    <a href="{% url 'gastos' %}" class="aba {% if aba_relatorio == 'gastos' %}aba-ativa{% endif %}" {% if aba_relatorio == 'gastos' %}aria-current="page"{% endif %}>Gastos</a>
     <a href="{% url 'relatorios_clientes' %}" class="aba {% if aba == 'clientes' %}aba-ativa{% endif %}" {% if aba == 'clientes' %}aria-current="page"{% endif %}>Clientes</a>
     <a href="{% url 'relatorios_alteracoes' %}" class="aba {% if aba == 'alteracoes' %}aba-ativa{% endif %}" {% if aba == 'alteracoes' %}aria-current="page"{% endif %}>Alterações</a>
 </nav>

@@ -23,7 +23,7 @@
                 {% include 'interfaces/_menu_item.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
                 {% include 'interfaces/_menu_item.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}
                 {% include 'interfaces/_menu_item.html' with rota='clientes' icone='i-clientes' rotulo='Clientes' ativo_se='clientes extrato_cliente' %}
-                {% include 'interfaces/_menu_item.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes' %}
+                {% include 'interfaces/_menu_item.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes gastos' %}
             </nav>
 
             <div class="mt-auto grid gap-0.5 border-t border-linha pt-3 text-sm">
@@ -97,7 +97,7 @@
         {% include 'interfaces/_menu_movel.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
         {% include 'interfaces/_menu_movel.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}
         {% include 'interfaces/_menu_movel.html' with rota='clientes' icone='i-clientes' rotulo='Clientes' ativo_se='clientes extrato_cliente' %}
-        {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes' %}
+        {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes gastos' %}
     </nav>
 
     <script src="{% static 'js/registrar-sw.js' %}" data-sw="{% static 'sw.js' %}"></script>

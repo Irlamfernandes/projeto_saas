@@ -17,7 +17,7 @@ SEM_CATEGORIA = 'Sem categoria'
 QUANTIDADE = DecimalField(max_digits=15, decimal_places=3)
 LIMITE_CLASSE_A = Decimal('80')
 LIMITE_CLASSE_B = Decimal('95')
-CUSTO_DO_ITEM = ExpressionWrapper(F('quantidade') * F('produto__preco_custo'), output_field=DINHEIRO)
+CUSTO_DO_ITEM = ExpressionWrapper(F('quantidade') * F('custo_unitario'), output_field=DINHEIRO)
 
 
 def percentual(parte, todo):
@@ -54,10 +54,10 @@ class RelatorioDeLucro:
 
 
 def lucro_estimado(user, inicio=None, fim=None):
-    """Receita menos custo, pelo preço de custo ATUAL de cada produto (não há custo histórico)."""
+    """Receita menos custo, pelo preço de custo de cada produto no dia de cada venda."""
     itens = filtrar_por_intervalo(itens_do_usuario(user), inicio, fim, campo='venda__data_venda')
     agrupado = (
-        itens.values('produto_id', 'produto__nome', 'produto__categoria', 'produto__preco_custo')
+        itens.values('produto_id', 'produto__nome', 'produto__categoria')
         .annotate(unidades=Sum('quantidade'), receita=Sum(RECEITA_DO_ITEM), custo=Sum(CUSTO_DO_ITEM))
         .order_by()
     )
@@ -65,7 +65,7 @@ def lucro_estimado(user, inicio=None, fim=None):
     for linha in agrupado:
         lucro = LinhaDeLucro(
             linha['produto__nome'], linha['unidades'], linha['receita'], linha['custo'],
-            sem_custo=not linha['produto__preco_custo'],
+            sem_custo=not linha['custo'],
         )
         produtos.append(lucro)
         por_categoria[linha['produto__categoria'] or SEM_CATEGORIA].append(lucro)

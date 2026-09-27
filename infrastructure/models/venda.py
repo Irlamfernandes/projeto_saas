@@ -72,6 +72,8 @@ class ItemVenda(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
+    # Preço de custo do produto no dia da venda: o lucro do mês não muda quando o custo muda depois.
+    custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
         db_table = 'itens_venda'

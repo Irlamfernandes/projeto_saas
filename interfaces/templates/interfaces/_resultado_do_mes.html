@@ -1,0 +1,9 @@
+{% load formatacao %}{% comment %}Resumo do resultado do mês no Início; leva para Gastos e resultado. Parâmetros: resultado, mes.{% endcomment %}
+<a href="{% url 'gastos' %}" class="cartao cartao-corpo flex flex-wrap items-center justify-between gap-3 hover:border-marca-200 transition" aria-labelledby="t-resultado-mes">
+    <span class="min-w-0">
+        <span id="t-resultado-mes" class="block text-sm font-semibold text-tinta-suave">Resultado de {{ mes.inicio|date:"F"|lower }} até agora</span>
+        <span class="block mt-1 font-titulo text-2xl font-bold tabular-nums {% if resultado.resultado < 0 %}text-critico-texto{% else %}text-bom-texto{% endif %}">{% if resultado.resultado < 0 %}Prejuízo de{% else %}Sobrou{% endif %} R$ {{ resultado.resultado|moeda_absoluta }}</span>
+        <span class="block mt-1 text-xs text-tinta-fraca tabular-nums">Vendas R$ {{ resultado.vendas|moeda }} − custo R$ {{ resultado.custo_do_vendido|moeda }} − despesas R$ {{ resultado.despesas|moeda }} − perdas R$ {{ resultado.perdas|moeda }}</span>
+    </span>
+    <span class="btn-fantasma btn-pequeno">Ver gastos<svg class="ico ico-sm"><use href="#i-seta"/></svg></span>
+</a>

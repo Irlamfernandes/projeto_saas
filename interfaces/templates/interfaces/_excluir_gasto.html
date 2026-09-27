@@ -1,0 +1,5 @@
+{% comment %}Lixeira de um lançamento de gasto. Parâmetros: tipo (despesa|compra|perda), registro, pergunta.{% endcomment %}
+<form method="POST" action="{% url 'excluir_gasto' tipo registro.pk %}" data-confirmar="{{ pergunta }}">
+    {% csrf_token %}
+    <button type="submit" class="btn-fantasma btn-pequeno px-2 text-critico-texto" title="Excluir"><svg class="ico ico-sm"><use href="#i-lixeira"/></svg><span class="sr-only">Excluir</span></button>
+</form>

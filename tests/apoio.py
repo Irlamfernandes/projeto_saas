@@ -70,7 +70,9 @@ class CenarioDeLoja:
             valor_total=sum((q * preco for _, q, preco in linhas), Decimal('0.00')),
         )
         for produto, quantidade, preco in linhas:
-            ItemVenda.objects.create(venda=venda, produto=produto, quantidade=quantidade, preco_unitario=preco)
+            ItemVenda.objects.create(
+                venda=venda, produto=produto, quantidade=quantidade, preco_unitario=preco, custo_unitario=produto.preco_custo,
+            )
         return venda
 
     def pagamento(self, cliente, valor, quando):
