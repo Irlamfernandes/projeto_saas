@@ -63,7 +63,7 @@ class TelaDeConfiguracoesTest(ConfiguracoesTestCase):
         self.client.force_login(admin)
         response = self.client.get(reverse('configuracoes'))
         self.assertContains(response, "Painel global")
-        self.assertNotContains(response, "Marca da loja")
+        self.assertNotContains(response, "id=\"t-marca\"")  # a seção; a ajuda da tela ainda explica o que é
 
     def test_exige_login(self):
         self.client.logout()

@@ -41,7 +41,7 @@
         </div>
 
         <form method="GET" class="flex flex-col sm:flex-row gap-2 rounded-controle bg-fundo p-3.5 mb-4" role="search">
-            <div class="entrada-grupo bg-white flex-1">
+            <div class="entrada-grupo bg-superficie flex-1">
                 <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
                 <label for="id_busca" class="sr-only">Buscar cliente</label>
                 <input type="search" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Nome ou telefone">
@@ -84,7 +84,7 @@
     </section>
 </div>
 
-<dialog id="modal-edicao-cliente" class="w-full max-w-lg rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-tinta/40" aria-labelledby="modal-titulo">
+<dialog id="modal-edicao-cliente" class="w-full max-w-lg rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-veu/50" aria-labelledby="modal-titulo">
     <form id="form-edicao-cliente" method="POST" class="grid gap-4 p-6">
         {% csrf_token %}
         <div class="flex items-center justify-between">

@@ -406,4 +406,69 @@ describe('Testes de Cobertura Total - main.js', () => {
             expect(input.validationMessage).toBe('Cada produto pode ter no máximo 5 fotos. Dá para adicionar mais 5.');
         });
     });
+
+    describe('janelas de ajuda', () => {
+        const montar = () => {
+            document.body.innerHTML = `
+                <button id="abrir" data-abrir-dialogo="ajuda"></button>
+                <button id="abrir-sem-janela" data-abrir-dialogo="nao-existe"></button>
+                <dialog id="ajuda" data-fechar-fora><div id="conteudo"><button id="fechar" data-fechar-dialogo></button></div></dialog>`;
+            const dialogo = document.getElementById('ajuda');
+            dialogo.showModal = jest.fn();
+            dialogo.close = jest.fn();
+            require('../js/main.js').inicializarDialogos();
+            return dialogo;
+        };
+
+        test('o botão "?" abre a janela e o "fechar" fecha', () => {
+            const dialogo = montar();
+            document.getElementById('abrir').click();
+            expect(dialogo.showModal).toHaveBeenCalled();
+            document.getElementById('fechar').click();
+            expect(dialogo.close).toHaveBeenCalledTimes(1);
+        });
+
+        test('toque fora da janela fecha; toque no conteúdo não', () => {
+            const dialogo = montar();
+            document.getElementById('conteudo').click();
+            expect(dialogo.close).not.toHaveBeenCalled();
+            dialogo.click();
+            expect(dialogo.close).toHaveBeenCalledTimes(1);
+        });
+
+        test('botão apontando para janela que não existe não quebra a página', () => {
+            montar();
+            expect(() => document.getElementById('abrir-sem-janela').click()).not.toThrow();
+        });
+
+        test('é ligado sozinho quando a página carrega', () => {
+            const dialogo = montar();
+            jest.resetModules();
+            document.body.innerHTML = '';
+            document.body.appendChild(dialogo);
+            const botao = document.createElement('button');
+            botao.dataset.abrirDialogo = 'ajuda';
+            document.body.appendChild(botao);
+            require('../js/main.js');
+            document.dispatchEvent(new Event('DOMContentLoaded'));
+            botao.click();
+            expect(dialogo.showModal).toHaveBeenCalled();
+        });
+    });
+
+    describe('formulário que salva ao mudar (aparência)', () => {
+        test('escolher uma opção envia o formulário', () => {
+            document.body.innerHTML = `
+                <form data-enviar-ao-mudar><input type="radio" name="tema" value="escuro"></form>`;
+            const form = document.querySelector('form');
+            form.requestSubmit = jest.fn();
+            require('../js/main.js').inicializarEnvioAoMudar();
+
+            const opcao = form.querySelector('input');
+            opcao.checked = true;
+            opcao.dispatchEvent(new Event('change', { bubbles: true }));
+
+            expect(form.requestSubmit).toHaveBeenCalled();
+        });
+    });
 });

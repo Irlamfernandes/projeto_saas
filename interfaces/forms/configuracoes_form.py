@@ -1,5 +1,6 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
+from infrastructure.models import Tema
 from interfaces.forms.produto_form import EXTENSOES_DE_IMAGEM, validar_tamanho_da_imagem
 
 
@@ -14,3 +15,7 @@ class MarcaForm(forms.Form):
             'invalid_image': "Envie uma imagem válida (JPG, PNG ou WEBP).",
         },
     )
+
+
+class TemaForm(forms.Form):
+    tema = forms.ChoiceField(choices=Tema.choices, error_messages={'invalid_choice': "Escolha uma aparência da lista."})

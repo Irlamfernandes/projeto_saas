@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarCategoriaPadrao();
     inicializarFecharModalAoClicarFora();
     inicializarModalGaleria();
+    inicializarDialogos();
+    inicializarEnvioAoMudar();
 });
 
 function inicializarFocoInputs() {
@@ -240,6 +242,30 @@ function fecharModalDireto() {
     }
 }
 
+/* Janelas <dialog>: [data-abrir-dialogo="id"] abre, [data-fechar-dialogo] fecha, e com [data-fechar-fora]
+   um toque fora da janela também fecha (o Esc já fecha por padrão). */
+function inicializarDialogos(raiz = document) {
+    raiz.querySelectorAll('[data-abrir-dialogo]').forEach((botao) => {
+        botao.addEventListener('click', () => document.getElementById(botao.dataset.abrirDialogo)?.showModal?.());
+    });
+    raiz.querySelectorAll('[data-fechar-dialogo]').forEach((botao) => {
+        botao.addEventListener('click', () => botao.closest('dialog')?.close());
+    });
+    raiz.querySelectorAll('dialog[data-fechar-fora]').forEach((dialogo) => {
+        // O conteúdo ocupa a janela inteira: clique no próprio <dialog> só acontece no fundo escurecido.
+        dialogo.addEventListener('click', (evento) => {
+            if (evento.target === dialogo) dialogo.close();
+        });
+    });
+}
+
+/* Formulários de uma escolha só (ex.: aparência): salvam assim que a opção muda, sem botão. */
+function inicializarEnvioAoMudar(raiz = document) {
+    raiz.querySelectorAll('form[data-enviar-ao-mudar]').forEach((form) => {
+        form.addEventListener('change', () => form.requestSubmit());
+    });
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
@@ -250,6 +276,8 @@ if (typeof module !== 'undefined') {
         fecharModalEdicaoCliente,
         fecharModalDireto,
         abrirModalGaleria,
-        mudarImagem
+        mudarImagem,
+        inicializarDialogos,
+        inicializarEnvioAoMudar
     };
 }

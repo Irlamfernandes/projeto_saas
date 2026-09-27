@@ -56,8 +56,9 @@ function lerTokens(elemento) {
 function tooltip(tokens, formato, dados, mostrarSerie) {
     return {
         backgroundColor: tokens.tinta,
-        titleColor: '#fff',
-        bodyColor: '#fff',
+        // Balão no contraste do tema: escuro no claro, claro no escuro
+        titleColor: tokens.superficie,
+        bodyColor: tokens.superficie,
         padding: 10,
         cornerRadius: 10,
         displayColors: mostrarSerie,
@@ -226,11 +227,23 @@ function desenharGraficos(raiz = document, ChartClasse = globalThis.Chart) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => desenharGraficos());
+/* No tema "Automático", o aparelho pode trocar de claro para escuro com a tela aberta: redesenha com as cores novas. */
+function acompanharTemaDoAparelho(graficos, redesenhar = desenharGraficos) {
+    const escuro = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
+    if (!escuro?.addEventListener) return;
+    let atuais = graficos;
+    escuro.addEventListener('change', () => {
+        atuais.forEach((grafico) => grafico.destroy());
+        atuais = redesenhar();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => acompanharTemaDoAparelho(desenharGraficos()));
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         formatarMoeda, formatarMoedaCurta, formatarUnidades, remEmPx, lerTokens, montarConfiguracao, desenharGraficos,
+        acompanharTemaDoAparelho,
         pluginMira, pluginRotulosNoFim,
     };
 }

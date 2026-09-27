@@ -1,5 +1,5 @@
-{% load static navegacao %}<!DOCTYPE html>
-<html lang="pt-br">
+{% load static navegacao ajuda %}<!DOCTYPE html>
+<html lang="pt-br" data-tema="{{ tema|default:'auto' }}">
 <head>
     {% include 'interfaces/_cabeca.html' %}
     <title>{% block title %}Gestão da Loja{% endblock %}</title>
@@ -9,7 +9,7 @@
 
     <div class="md:grid md:grid-cols-[15rem_1fr] min-h-dvh">
 
-        <aside class="hidden md:flex flex-col gap-6 bg-white border-r border-linha px-3.5 py-5 sticky top-0 h-dvh" aria-label="Menu principal">
+        <aside class="hidden md:flex flex-col gap-6 bg-superficie border-r border-linha px-3.5 py-5 sticky top-0 h-dvh" aria-label="Menu principal">
             <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-1.5">
                 {% include 'interfaces/_marca_loja.html' with classes='w-10 h-10 rounded-xl' %}
                 <span class="min-w-0">
@@ -32,7 +32,7 @@
         </aside>
 
         <div class="min-w-0 flex flex-col pb-24 md:pb-0">
-            <div class="md:hidden flex items-center justify-between gap-3 bg-white border-b border-linha px-4 py-3">
+            <div class="md:hidden flex items-center justify-between gap-3 bg-superficie border-b border-linha px-4 py-3">
                 <span class="flex items-center gap-2.5 min-w-0">
                     {% include 'interfaces/_marca_loja.html' with classes='w-8 h-8 rounded-lg text-sm' %}
                     <b class="text-sm truncate">{% if request.user.loja %}{{ request.user.loja.nome_loja }}{% else %}Painel global{% endif %}</b>
@@ -43,7 +43,11 @@
             <header class="flex flex-wrap items-end justify-between gap-4 px-4 sm:px-8 pt-6 pb-2">
                 <div class="min-w-0">
                     {% block voltar %}{% endblock %}
-                    <h1 class="titulo-pagina">{% block header_title %}Início{% endblock %}</h1>
+                    {% ajuda_da_tela as texto_de_ajuda %}
+                    <div class="flex items-center gap-2">
+                        <h1 class="titulo-pagina">{% block header_title %}Início{% endblock %}</h1>
+                        {% if texto_de_ajuda %}<button type="button" class="btn-ajuda" data-abrir-dialogo="ajuda-da-tela" aria-haspopup="dialog" title="Ajuda desta tela"><svg class="ico"><use href="#i-ajuda"/></svg><span class="sr-only">Ajuda desta tela</span></button>{% endif %}
+                    </div>
                     <p class="text-sm text-tinta-suave mt-1">{% block subtitulo %}{% endblock %}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">{% block acoes %}{% endblock %}</div>
@@ -72,7 +76,23 @@
         </div>
     </div>
 
-    <nav class="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 bg-white border-t border-linha px-1 pt-1.5" style="padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0rem))" aria-label="Menu">
+    {% if texto_de_ajuda %}
+    <dialog id="ajuda-da-tela" class="janela max-w-lg" aria-labelledby="t-ajuda" data-fechar-fora>
+        <div class="cartao-corpo grid gap-4">
+            <div class="flex items-start justify-between gap-3">
+                <h2 id="t-ajuda" class="flex items-center gap-2 text-lg font-bold"><svg class="ico text-marca-600"><use href="#i-ajuda"/></svg>Como usar esta tela</h2>
+                <button type="button" class="btn-fantasma btn-pequeno px-2" data-fechar-dialogo><svg class="ico ico-sm"><use href="#i-fechar"/></svg><span class="sr-only">Fechar</span></button>
+            </div>
+            <div class="texto-ajuda">{% include texto_de_ajuda %}</div>
+            {% link_suporte as suporte %}{% if suporte %}
+            <p class="flex flex-wrap items-center justify-between gap-2 border-t border-linha pt-4 text-sm text-tinta-suave">Ainda com dúvida?
+                <a href="{{ suporte }}" target="_blank" rel="noopener" class="btn-secundario btn-pequeno"><svg class="ico ico-sm"><use href="#i-whatsapp"/></svg>Falar com o suporte</a>
+            </p>{% endif %}
+        </div>
+    </dialog>
+    {% endif %}
+
+    <nav class="md:hidden fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 bg-superficie border-t border-linha px-1 pt-1.5" style="padding-bottom: calc(0.4rem + env(safe-area-inset-bottom, 0rem))" aria-label="Menu">
         {% include 'interfaces/_menu_movel.html' with rota='dashboard' icone='i-inicio' rotulo='Início' ativo_se='dashboard' %}
         {% include 'interfaces/_menu_movel.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
         {% include 'interfaces/_menu_movel.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}

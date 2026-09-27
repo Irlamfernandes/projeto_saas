@@ -1,5 +1,5 @@
 {% load static %}<!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" data-tema="{{ tema|default:'auto' }}">
 <head>
     {% include 'interfaces/_cabeca.html' %}
     <title>Entrar · Gestão da Loja</title>
@@ -7,17 +7,17 @@
 <body class="flex min-h-dvh flex-col">
     {% include 'interfaces/_icones.html' %}
     <div class="grid flex-1 lg:grid-cols-[1.1fr_1fr]">
-        <aside class="order-last lg:order-none flex flex-col justify-between gap-6 bg-marca-700 px-6 py-8 sm:px-10 lg:p-12 text-white">
+        <aside class="order-last lg:order-none flex flex-col justify-between gap-6 bg-marca-profundo px-6 py-8 sm:px-10 lg:p-12 text-white">
             <p class="hidden lg:flex items-center gap-2.5 font-titulo text-lg font-bold"><svg class="ico w-7 h-7"><use href="#i-loja"/></svg>Gestão da Loja</p>
             <div class="max-w-md">
                 <h1 class="text-2xl lg:text-4xl font-bold leading-tight">Vendas, estoque e caderneta num lugar só.</h1>
-                <ul class="mt-6 lg:mt-8 grid gap-3 text-marca-100">
+                <ul class="mt-6 lg:mt-8 grid gap-3 text-white/85">
                     <li class="flex items-center gap-3"><svg class="ico"><use href="#i-venda"/></svg>Registre vendas em segundos, até pelo celular</li>
                     <li class="flex items-center gap-3"><svg class="ico"><use href="#i-caderneta"/></svg>Saiba quem deve e há quanto tempo</li>
                     <li class="flex items-center gap-3"><svg class="ico"><use href="#i-relatorio"/></svg>Veja o que mais vende e quando reforçar o estoque</li>
                 </ul>
             </div>
-            <p class="text-sm text-marca-200">Acesso só para lojas cadastradas pela {{ desenvolvedor.nome }}.</p>
+            <p class="text-sm text-white/70">Acesso só para lojas cadastradas pela {{ desenvolvedor.nome }}.</p>
         </aside>
 
         <main class="flex items-center justify-center px-4 py-12">

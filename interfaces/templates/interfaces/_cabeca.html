@@ -2,7 +2,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Gestão da loja: vendas, produtos, clientes, caderneta e relatórios.">
-<meta name="theme-color" content="#0f766e">
+{# Cor da barra do navegador no celular: acompanha o tema #}
+{% if tema == 'escuro' %}<meta name="theme-color" content="#0d1514">
+{% elif tema == 'claro' %}<meta name="theme-color" content="#0f766e">
+{% else %}<meta name="theme-color" content="#0f766e" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d1514" media="(prefers-color-scheme: dark)">{% endif %}
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="{% static 'manifest.json' %}">
 <link rel="icon" type="image/png" href="{% static 'images/icon-192.png' %}">

@@ -3,7 +3,7 @@
 
 {% block title %}Configurações · Gestão da Loja{% endblock %}
 {% block header_title %}Configurações{% endblock %}
-{% block subtitulo %}Sua conta, a marca da loja e o plano.{% endblock %}
+{% block subtitulo %}Sua conta, a aparência, a marca da loja e o plano.{% endblock %}
 
 {% block content %}
 <div class="grid gap-5 max-w-2xl">
@@ -51,6 +51,28 @@
     {% endif %}
 </section>
 {% endif %}
+
+<section class="cartao cartao-corpo" aria-labelledby="t-aparencia">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-aparencia" class="titulo-cartao">Aparência</h2><p class="subtitulo">Vale só para você, em qualquer aparelho em que entrar. Os PDFs continuam claros para imprimir.</p></div>
+    </div>
+    <form method="POST" action="{% url 'tema' %}" data-enviar-ao-mudar>
+        {% csrf_token %}
+        <fieldset>
+            <legend class="sr-only">Tema</legend>
+            <div class="flex flex-wrap gap-2">
+                {% for valor, rotulo in temas %}
+                <label class="opcao">
+                    <input type="radio" name="tema" value="{{ valor }}" class="sr-only peer" {% if valor == tema %}checked{% endif %}>
+                    <span class="opcao-rotulo gap-2"><svg class="ico ico-sm"><use href="#{% if valor == 'claro' %}i-sol{% elif valor == 'escuro' %}i-lua{% else %}i-auto{% endif %}"/></svg>{{ rotulo }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <p class="ajuda mt-3">Automático segue o celular ou o computador: se o aparelho estiver no modo escuro, o sistema também fica.</p>
+        <noscript><button type="submit" class="btn-primario mt-3"><svg class="ico"><use href="#i-check"/></svg>Salvar aparência</button></noscript>
+    </form>
+</section>
 
 {% if plano %}
 <section id="plano" class="cartao cartao-corpo scroll-mt-6" aria-labelledby="t-plano">
