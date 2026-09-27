@@ -1,4 +1,6 @@
 # Dependabot: avisa e abre PR quando sair correção de segurança ou versão nova das bibliotecas.
+# Atualizações pequenas (correção e melhoria) chegam juntas: um PR por semana para Python e outro para JS.
+# Correções de segurança continuam vindo em PR próprio, para não esperarem a semana.
 version: 2
 updates:
   - package-ecosystem: pip
@@ -6,11 +8,26 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      python:
+        applies-to: version-updates
+        update-types: [minor, patch]
+    ignore:
+      # Tem que ser a versão exata que o pydantic pede: sobe junto com ele, nunca sozinho.
+      - dependency-name: pydantic-core
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      javascript:
+        applies-to: version-updates
+        update-types: [minor, patch]
+    ignore:
+      # Tailwind 4 muda configuração e build: migração é um trabalho à parte.
+      - dependency-name: tailwindcss
+        update-types: [version-update:semver-major]
   - package-ecosystem: docker
     directory: /
     schedule:

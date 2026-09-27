@@ -17,7 +17,7 @@ hpack==4.2.0
 httpcore==1.0.9
 httpx==0.28.1
 hyperframe==6.1.0
-idna==3.19
+idna==3.20
 multidict==6.7.1
 openpyxl==3.1.5
 packaging==26.3
@@ -40,7 +40,7 @@ supabase-auth==2.31.0
 supabase-functions==2.31.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
-urllib3==2.7.0
+urllib3==2.8.0
 websockets==15.0.1
 whitenoise==6.12.0
 yarl==1.24.5
