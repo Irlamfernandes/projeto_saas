@@ -63,13 +63,14 @@ def situacao_financeira(saldo):
 
 def linhas_de_compras(cliente):
     vendas = (
-        cliente.vendas.prefetch_related('itens__produto')
+        cliente.vendas.prefetch_related('itens__produto', 'parcelas')
         .order_by('-data_venda')[:QUANTIDADE_DE_COMPRAS_NO_EXTRATO]
     )
     linhas = [
         [
             timezone.localtime(venda.data_venda).strftime('%d/%m/%Y %H:%M'),
-            ", ".join(f"{item.quantidade}x {item.produto.nome}" for item in venda.itens.all()),
+            ", ".join(f"{item.quantidade}x {item.produto.nome}" for item in venda.itens.all())
+            + "".join(f" · vence {parcela.vencimento:%d/%m/%Y}" for parcela in venda.parcelas.all()),
             reais(venda.valor_total),
         ]
         for venda in vendas

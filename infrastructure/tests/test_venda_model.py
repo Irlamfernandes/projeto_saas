@@ -1,10 +1,11 @@
+from datetime import date
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto
-from infrastructure.models.venda import ItemVenda, PagamentoCliente, Venda
+from infrastructure.models.venda import ItemVenda, PagamentoCliente, Parcela, Venda
 
 
 class VendaModelsTest(TestCase):
@@ -96,3 +97,7 @@ class VendaModelsTest(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             pagamento.full_clean()
         self.assertIn('cliente', ctx.exception.error_dict)
+    def test_parcela_str(self):
+        venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente_loja1, valor_total=Decimal('10.00'))
+        parcela = Parcela.objects.create(venda=venda, vencimento=date(2026, 10, 15))
+        self.assertEqual(str(parcela), f"Venda #{venda.pk} · vence 15/10/2026")

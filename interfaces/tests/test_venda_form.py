@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from django.http import QueryDict
 from django.test import TestCase
@@ -33,8 +34,13 @@ class NovaVendaFormTest(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.parametros(), {
             'cliente': self.cliente, 'itens': [(1, 2), (5, 1)], 'forma_pagamento': 'pix',
-            'observacoes': 'obs', 'valor_pago': Decimal('10.50'),
+            'observacoes': 'obs', 'valor_pago': Decimal('10.50'), 'vencimentos': [],
         })
+
+    def test_vencimento_vira_lista_de_vencimentos(self):
+        form = self._form(cliente=self.cliente.pk, vencimento='2026-10-15')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual(form.parametros()['vencimentos'], [date(2026, 10, 15)])
 
     def test_cliente_vazio_e_venda_de_balcao(self):
         form = self._form(cliente='', forma_pagamento='dinheiro')
@@ -67,6 +73,7 @@ class NovaVendaFormTest(TestCase):
             'valor negativo': ({'cliente': 'CLIENTE', 'valor_pago': '-1'}, "O valor pago não pode ser negativo."),
             'valor texto': ({'cliente': 'CLIENTE', 'valor_pago': 'abc'}, "Valor pago inicial inválido."),
             'cliente de fora': ({'cliente': '999999'}, "Cliente selecionado não foi encontrado."),
+            'vencimento inválido': ({'cliente': 'CLIENTE', 'vencimento': '31/31/2026'}, "Data de vencimento inválida."),
         }
         for nome, (dados, mensagem) in casos.items():
             with self.subTest(nome):

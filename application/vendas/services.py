@@ -2,6 +2,7 @@
 
 Regra da caderneta: venda de balcão (sem cliente) é paga na hora. Venda com cliente vai para a caderneta,
 menos o que ele pagou no ato — e esse pagamento fica ligado à venda, acompanhando-a se ela mudar de cliente.
+O que ficou na caderneta pode ter data para pagar (vencimentos); sem data, fica "sem prazo".
 """
 from collections import Counter
 from decimal import Decimal
@@ -11,14 +12,15 @@ from application.auditoria.services import registrar_alteracao
 from application.vendas.exceptions import (
     EstoqueInsuficiente, ProdutoNaoEncontrado, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
+from application.vendas.pendencias import a_prazo
 from application.vendas.selectors import produtos_da_loja
-from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Produto, Venda
+from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Parcela, Produto, Venda
 from infrastructure.utils.formatacao import reais
 
 
 @transaction.atomic
 def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), forma_pagamento='',
-                    observacoes='', usuario=None):
+                    observacoes='', vencimentos=(), usuario=None):
     """`itens`: pares (id do produto, quantidade). A loja vem do cliente; no balcão, da loja informada."""
     loja = cliente.loja if cliente else loja
     if loja is None:
@@ -35,6 +37,7 @@ def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), 
             loja=loja, cliente=cliente, venda=venda, valor=valor_pago, forma_pagamento=forma_pagamento,
             observacao=f"Pagamento no ato da Venda #{venda.pk}",
         )
+    _definir_vencimentos(venda, vencimentos)
     registrar_alteracao(
         loja=loja, usuario=usuario, acao=Acao.VENDA_REGISTRADA,
         descricao=f"Venda #{venda.pk} · {_para_quem(venda)} · {reais(venda.valor_total)}",
@@ -44,7 +47,7 @@ def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), 
 
 
 @transaction.atomic
-def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes='', usuario=None):
+def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes='', vencimentos=(), usuario=None):
     """Troca itens, cliente e observações. Produtos que já estavam na venda mantêm o preço da época."""
     antes = fotografar_venda(venda)
     precos_da_epoca = {item.produto_id: item.preco_unitario for item in venda.itens.all()}
@@ -59,6 +62,7 @@ def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes=
     venda.save()
     _criar_itens(venda, linhas)
     _acompanhar_pagamento_no_ato(venda)
+    _definir_vencimentos(venda, vencimentos)
 
     registrar_alteracao(
         loja=venda.loja, usuario=usuario, acao=Acao.VENDA_EDITADA,
@@ -99,6 +103,7 @@ def fotografar_venda(venda):
             for item in venda.itens.select_related('produto')
         ],
         'pago_no_ato': [str(pagamento.valor) for pagamento in venda.pagamentos_no_ato.all()],
+        'vencimentos': [parcela.vencimento.isoformat() for parcela in venda.parcelas.all()],
     }
 
 
@@ -144,6 +149,14 @@ def _acompanhar_pagamento_no_ato(venda):
         pagamentos.delete()
     else:
         pagamentos.update(cliente=venda.cliente, forma_pagamento=venda.forma_pagamento)
+
+
+def _definir_vencimentos(venda, vencimentos):
+    """Só há o que vencer se a venda tem cliente e ficou algo na caderneta; senão as datas são descartadas."""
+    venda.parcelas.all().delete()
+    if venda.cliente is None or a_prazo(venda) <= 0:
+        return
+    Parcela.objects.bulk_create(Parcela(venda=venda, vencimento=vencimento) for vencimento in sorted(vencimentos))
 
 
 def _total(linhas):

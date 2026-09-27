@@ -3,7 +3,7 @@ from infrastructure.models import Produto, Venda
 
 
 def vendas_do_usuario(user):
-    vendas = Venda.objects.select_related('cliente').prefetch_related('itens__produto')
+    vendas = Venda.objects.select_related('cliente').prefetch_related('itens__produto', 'parcelas')
     return filtrar_por_loja(vendas, user).order_by('-data_venda')
 
 

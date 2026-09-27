@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from django.db.models import Q
 from application.tenancy import filtrar_por_loja
+from application.vendas.pendencias import pendencias_do_cliente
 from infrastructure.models import Cliente
 
 
@@ -15,6 +16,7 @@ class Movimento:
     valor: Decimal
     itens: tuple = ()
     observacao: str = ''
+    pendencias: tuple = ()  # compra: o que falta de cada parcela (vazio = paga no ato)
 
 
 def clientes_do_usuario(user):
@@ -33,6 +35,9 @@ def buscar_clientes(clientes, termo=''):
 
 def linha_do_tempo(cliente):
     """Compras e pagamentos do cliente, do mais recente para o mais antigo."""
+    por_venda = {}
+    for pendencia in pendencias_do_cliente(cliente):
+        por_venda.setdefault(pendencia.venda.pk, []).append(pendencia)
     compras = [
         Movimento(
             tipo='compra',
@@ -41,6 +46,7 @@ def linha_do_tempo(cliente):
             valor=venda.valor_total,
             itens=tuple(venda.itens.all()),
             observacao=venda.observacoes,
+            pendencias=tuple(por_venda.get(venda.pk, ())),
         )
         for venda in cliente.vendas.prefetch_related('itens__produto')
     ]

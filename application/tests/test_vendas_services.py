@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -6,8 +7,16 @@ from application.vendas.exceptions import (
 )
 from application.vendas.services import cancelar_venda, editar_venda, registrar_venda
 from infrastructure.models import (
-    Acao, Cliente, FormaDePagamento, ItemVenda, LojaModel, PagamentoCliente, Produto, RegistroDeAlteracao, Venda,
+    Acao, Cliente, FormaDePagamento, ItemVenda, LojaModel, PagamentoCliente, Parcela, Produto, RegistroDeAlteracao, Venda,
 )
+
+
+DIA_15 = date(2026, 10, 15)
+DIA_30 = date(2026, 10, 30)
+
+
+def vencimentos(venda):
+    return list(venda.parcelas.values_list('vencimento', flat=True))
 
 
 def saldo(cliente):
@@ -105,6 +114,53 @@ class RegistrarVendaTest(ServicoDeVendaTestCase):
         self.assertEqual((registro.acao, registro.usuario, registro.loja), (Acao.VENDA_REGISTRADA, self.usuario, self.loja))
         self.assertEqual(registro.descricao, f"Venda #{venda.pk} · Ana · R$ 40,00")
         self.assertEqual(registro.detalhes['venda']['itens'], [{'produto': 'Arroz', 'quantidade': 2, 'preco_unitario': '20.00'}])
+
+
+class VencimentoTest(ServicoDeVendaTestCase):
+
+    def test_venda_a_prazo_guarda_o_vencimento_e_vai_para_o_historico(self):
+        venda = self.vender([(self.arroz.pk, 2)], valor_pago=Decimal('10.00'), forma_pagamento=FormaDePagamento.PIX,
+                            vencimentos=[DIA_15])
+
+        self.assertEqual(vencimentos(venda), [DIA_15])
+        self.assertEqual(RegistroDeAlteracao.objects.get().detalhes['venda']['vencimentos'], ['2026-10-15'])
+
+    def test_varios_vencimentos_ficam_em_ordem(self):
+        venda = self.vender([(self.arroz.pk, 2)], vencimentos=[DIA_30, DIA_15])
+        self.assertEqual(vencimentos(venda), [DIA_15, DIA_30])
+
+    def test_sem_data_fica_sem_prazo(self):
+        self.assertEqual(vencimentos(self.vender([(self.arroz.pk, 2)])), [])
+
+    def test_balcao_e_venda_paga_no_ato_descartam_a_data(self):
+        balcao = self.vender([(self.arroz.pk, 1)], cliente=None, loja=self.loja, vencimentos=[DIA_15])
+        paga = self.vender([(self.arroz.pk, 1)], valor_pago=Decimal('20.00'), vencimentos=[DIA_15])
+
+        self.assertFalse(Parcela.objects.filter(venda__in=[balcao, paga]).exists())
+
+    def test_editar_troca_o_vencimento(self):
+        venda = self.vender([(self.arroz.pk, 2)], vencimentos=[DIA_15])
+
+        editar_venda(venda, itens=[(self.arroz.pk, 2)], cliente=self.ana, vencimentos=[DIA_30], usuario=self.usuario)
+
+        self.assertEqual(vencimentos(venda), [DIA_30])
+        registro = RegistroDeAlteracao.objects.get(acao=Acao.VENDA_EDITADA)
+        self.assertEqual((registro.detalhes['antes']['vencimentos'], registro.detalhes['depois']['vencimentos']),
+                         (['2026-10-15'], ['2026-10-30']))
+
+    def test_editar_sem_data_tira_o_prazo_e_passar_para_balcao_tambem(self):
+        venda = self.vender([(self.arroz.pk, 2)], vencimentos=[DIA_15])
+        editar_venda(venda, itens=[(self.arroz.pk, 2)], cliente=self.ana, usuario=self.usuario)
+        self.assertEqual(vencimentos(venda), [])
+
+        Parcela.objects.create(venda=venda, vencimento=DIA_15)
+        editar_venda(venda, itens=[(self.arroz.pk, 2)], cliente=None, vencimentos=[DIA_30], usuario=self.usuario)
+        self.assertEqual(vencimentos(venda), [])
+
+    def test_cancelar_apaga_os_vencimentos(self):
+        venda = self.vender([(self.arroz.pk, 2)], vencimentos=[DIA_15])
+        cancelar_venda(venda, usuario=self.usuario, senha="senha-certa", motivo="erro")
+        self.assertFalse(Parcela.objects.exists())
 
 
 class EditarVendaTest(ServicoDeVendaTestCase):

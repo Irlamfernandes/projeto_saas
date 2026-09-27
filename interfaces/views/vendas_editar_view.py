@@ -29,6 +29,7 @@ def venda_editar_view(request, venda_id):
             'formas_de_pagamento': FormaDePagamento.choices,
             'pago_no_ato': pago_no_ato,
             'forma_obrigatoria': venda.cliente_id is None or pago_no_ato > 0,
+            'vencimento': next((parcela.vencimento for parcela in venda.parcelas.all()), None),
         }
         return render(request, TEMPLATE_VENDA_EDITAR, context)
 

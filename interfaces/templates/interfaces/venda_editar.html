@@ -9,7 +9,7 @@
 {% block content %}
 <div class="grid gap-5 max-w-2xl">
 <section class="cartao cartao-corpo" aria-label="Dados da venda">
-    <form method="POST" class="grid gap-4"{% if pago_no_ato %} data-pagou-no-ato{% endif %}>
+    <form method="POST" class="grid gap-4"{% if pago_no_ato %} data-pagou-no-ato="{{ pago_no_ato|stringformat:'s' }}"{% endif %}>
         {% csrf_token %}
         <div class="campo">
             <label for="id_cliente_venda" class="rotulo">Cliente</label>
@@ -29,6 +29,8 @@
         <p class="ajuda -mt-2">Produtos que já estavam na venda mantêm o preço da época. O estoque é corrigido automaticamente.</p>
 
         {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada=venda.forma_pagamento obrigatoria=forma_obrigatoria %}
+
+        {% include 'interfaces/_vencimento.html' with valor=vencimento %}
 
         <div class="campo">
             <label for="id_observacoes_venda" class="rotulo">Observações <span class="rotulo-opcional">opcional</span></label>

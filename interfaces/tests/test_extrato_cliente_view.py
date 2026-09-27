@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.contrib.messages import get_messages
 from decimal import Decimal
 from unittest.mock import patch
@@ -8,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
-from infrastructure.models.venda import Venda, PagamentoCliente
+from infrastructure.models.venda import Venda, PagamentoCliente, Parcela
 from interfaces.views.extrato_cliente_view import TEMPLATE_EXTRATO_CLIENTE  # Importa a constante da view
 
 User = get_user_model()
@@ -173,3 +174,43 @@ class ExtratoClienteViewTest(TestCase):
 
         self.assertContains(response, 'R%24%2020%2C00%20de%20cr%C3%A9dito')
         self.assertContains(response, 'Crédito: pagou a mais')
+
+
+class SituacaoDasComprasTest(TestCase):
+
+    def test_cada_compra_mostra_se_esta_paga_quanto_falta_e_quando_vence(self):
+        loja = LojaModel.objects.create(nome_loja="Loja", ativo=True)
+        usuario = User.objects.create_user(deve_trocar_senha=False, username="u", password="x", loja=loja)
+        cliente = Cliente.objects.create(loja=loja, nome="Ana")
+        hoje = timezone.localdate()
+        agora = timezone.now()
+
+        def venda(total, dias_atras, vencimento=None, pago_no_ato=None):
+            nova = Venda.objects.create(loja=loja, cliente=cliente, valor_total=Decimal(total),
+                                        data_venda=agora - timedelta(days=dias_atras))
+            if vencimento:
+                Parcela.objects.create(venda=nova, vencimento=vencimento)
+            if pago_no_ato:
+                PagamentoCliente.objects.create(loja=loja, cliente=cliente, venda=nova, valor=Decimal(pago_no_ato))
+
+        venda('10.00', 6, vencimento=hoje - timedelta(days=9))   # quitada pelo pagamento abaixo
+        venda('20.00', 5, vencimento=hoje - timedelta(days=2))   # atrasada
+        venda('30.00', 4, vencimento=hoje)                        # vence hoje
+        venda('40.00', 3, vencimento=hoje + timedelta(days=5))   # a vencer
+        venda('50.00', 2)                                         # sem prazo
+        venda('60.00', 1, pago_no_ato='60.00')                    # paga no ato
+        PagamentoCliente.objects.create(loja=loja, cliente=cliente, valor=Decimal('15.00'))
+        self.client.force_login(usuario)
+
+        response = self.client.get(reverse('extrato_cliente', args=[cliente.pk]))
+
+        for trecho in [
+            f"Paga · vencia {(hoje - timedelta(days=9)):%d/%m/%Y}",
+            f"Venceu {(hoje - timedelta(days=2)):%d/%m/%Y} · falta R$ 15,00",
+            "Vence hoje · falta R$ 30,00",
+            f"Vence {(hoje + timedelta(days=5)):%d/%m/%Y} · falta R$ 40,00",
+            "Sem prazo · falta R$ 50,00",
+            "Paga no ato",
+        ]:
+            with self.subTest(trecho):
+                self.assertContains(response, trecho)

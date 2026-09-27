@@ -6,7 +6,7 @@ from django.utils import timezone
 from application.clientes.selectors import (
     Movimento, buscar_clientes, clientes_da_loja, clientes_do_usuario, linha_do_tempo,
 )
-from infrastructure.models import Cliente, ItemVenda, LojaModel, PagamentoCliente, Produto, Venda
+from infrastructure.models import Cliente, ItemVenda, LojaModel, PagamentoCliente, Parcela, Produto, Venda
 
 
 class ConsultasDeClientesTest(TestCase):
@@ -60,6 +60,20 @@ class LinhaDoTempoTest(TestCase):
         ))
         self.assertEqual(movimentos[2].itens, (item,))
         self.assertEqual(movimentos[2].observacao, "fiado")
+
+    def test_cada_compra_traz_o_que_falta_de_cada_parcela(self):
+        loja = LojaModel.objects.create(nome_loja="Loja A")
+        cliente = Cliente.objects.create(loja=loja, nome="Ana")
+        a_prazo = Venda.objects.create(loja=loja, cliente=cliente, valor_total=Decimal('30.00'))
+        Parcela.objects.create(venda=a_prazo, vencimento=timezone.localdate())
+        paga_no_ato = Venda.objects.create(loja=loja, cliente=cliente, valor_total=Decimal('10.00'))
+        PagamentoCliente.objects.create(loja=loja, cliente=cliente, venda=paga_no_ato, valor=Decimal('10.00'))
+        PagamentoCliente.objects.create(loja=loja, cliente=cliente, valor=Decimal('12.00'))
+
+        compras = {m.descricao: m.pendencias for m in linha_do_tempo(cliente) if m.tipo == 'compra'}
+
+        self.assertEqual([p.pendente for p in compras[f"Compra de Produtos (Venda #{a_prazo.pk})"]], [Decimal('18.00')])
+        self.assertEqual(compras[f"Compra de Produtos (Venda #{paga_no_ato.pk})"], ())
 
     def test_cliente_sem_movimentos(self):
         loja = LojaModel.objects.create(nome_loja="Loja A")

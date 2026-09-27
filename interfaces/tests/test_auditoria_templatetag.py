@@ -21,10 +21,11 @@ class DetalhesLegiveisTest(SimpleTestCase):
         ])
 
     def test_venda_editada_mostra_antes_e_depois(self):
-        depois = {**VENDA, 'cliente': 'Ana', 'forma_pagamento': '', 'pago_no_ato': ['5.00'], 'itens': []}
+        depois = {**VENDA, 'cliente': 'Ana', 'forma_pagamento': '', 'pago_no_ato': ['5.00'], 'itens': [],
+                  'vencimentos': ['2026-10-15']}
         self.assertEqual(detalhes_legiveis({'antes': VENDA, 'depois': depois}), [
             "Antes: Balcão · 2× Pão (R$ 10,00) · total R$ 20,00 · Pix",
-            "Depois: Ana · sem itens · total R$ 20,00 · pago no ato R$ 5,00",
+            "Depois: Ana · sem itens · total R$ 20,00 · pago no ato R$ 5,00 · vence 15/10/2026",
         ])
 
     def test_fotos_e_observacao(self):

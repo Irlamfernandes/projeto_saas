@@ -1,6 +1,6 @@
 from infrastructure.utils.pdf_generator import COR_CREDITO, COR_DEVENDO, COR_NEUTRA, linhas_de_compras, situacao_financeira
 from django.utils import timezone
-from datetime import datetime, timezone as dt_timezone
+from datetime import date, datetime, timezone as dt_timezone
 import io
 import os
 import tempfile
@@ -10,7 +10,7 @@ from django.test import TestCase
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.produto import Produto
-from infrastructure.models.venda import Venda, ItemVenda, PagamentoCliente
+from infrastructure.models.venda import Venda, ItemVenda, PagamentoCliente, Parcela
 from infrastructure.utils.pdf_generator import gerar_extrato_pdf_cliente
 
 
@@ -111,6 +111,13 @@ class PdfGeneratorTest(TestCase):
         ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=2, preco_unitario=Decimal('25.00'))
 
         self.assertEqual(linhas_de_compras(self.cliente), [["10/01/2026 09:00", "2x Caderno 10 Matérias", "R$ 50,00"]])
+
+    def test_compra_com_vencimento_mostra_a_data(self):
+        venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal('50.00'))
+        ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=2, preco_unitario=Decimal('25.00'))
+        Parcela.objects.create(venda=venda, vencimento=date(2026, 10, 15))
+
+        self.assertEqual(linhas_de_compras(self.cliente)[0][1], "2x Caderno 10 Matérias · vence 15/10/2026")
 
     def test_extrato_lista_so_as_cinco_compras_mais_recentes(self):
         for dia in range(1, 8):

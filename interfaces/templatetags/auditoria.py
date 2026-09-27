@@ -78,6 +78,9 @@ def _resumo_da_venda(venda):
     pago = venda.get('pago_no_ato') or []
     if pago:
         partes.append(f"pago no ato {', '.join(_reais(v) for v in pago)}")
+    vencimentos = venda.get('vencimentos') or []
+    if vencimentos:
+        partes.append(f"vence {', '.join(_data(v) for v in vencimentos)}")
     return ' · '.join(partes)
 
 

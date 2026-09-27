@@ -67,6 +67,7 @@
                         <span class="font-bold tabular-nums whitespace-nowrap {% if item.tipo == 'compra' %}text-tinta{% else %}text-bom-texto{% endif %}">{% if item.tipo == 'compra' %}+{% else %}−{% endif %} R$ {{ item.valor|moeda }}</span>
                     </p>
                     <p class="text-xs text-tinta-fraca">{{ item.data|date:"d/m/Y \à\s H:i" }}{% if item.tipo == 'compra' %} · aumenta a dívida{% else %} · abate da dívida{% endif %}</p>
+                    {% if item.tipo == 'compra' %}{% include 'interfaces/_situacao_da_compra.html' with pendencias=item.pendencias %}{% endif %}
                     {% if item.itens %}<p class="mt-1 text-sm text-tinta-suave">{% for det in item.itens %}{{ det.quantidade }}× {{ det.produto.nome }} (R$ {{ det.preco_unitario|moeda }}){% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
                     {% if item.observacao %}<p class="mt-0.5 text-xs italic text-tinta-fraca">{{ item.observacao }}</p>{% endif %}
                 </div>

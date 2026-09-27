@@ -1,0 +1,15 @@
+{% comment %}
+Data combinada para o cliente pagar o que ficou na caderneta. Parâmetro: valor (data atual, na edição).
+O static/js/venda.js esconde o campo no balcão e quando a venda foi paga por completo no ato.
+{% endcomment %}
+<div class="campo" data-vencimento>
+    <label for="id_vencimento_venda" class="rotulo">Vence em <span class="rotulo-opcional">opcional</span></label>
+    <input type="date" id="id_vencimento_venda" name="vencimento" value="{{ valor|date:'Y-m-d' }}" class="entrada tabular-nums">
+    <div class="flex flex-wrap gap-1.5" role="group" aria-label="Prazos rápidos">
+        <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="7">Em 7 dias</button>
+        <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="15">Em 15 dias</button>
+        <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="30">Em 30 dias</button>
+        <button type="button" class="btn-fantasma btn-pequeno" data-prazo-dias="">Sem prazo</button>
+    </div>
+    <p class="ajuda">Quando o cliente combinou de pagar o que ficou na caderneta. Em branco, fica sem prazo.</p>
+</div>
