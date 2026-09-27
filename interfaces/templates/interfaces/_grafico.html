@@ -1,7 +1,7 @@
 {# Uso: include com id, tipo (linha|barras|barras-agrupadas|barras-horizontais), dados, formato (moeda|unidades), descricao e altura opcional #}
 {{ dados|json_script:id }}
-{# O desenho é só visual; quem usa leitor de tela ouve a descrição na legenda. #}
+{# O desenho é só visual (canvas sem conteúdo); quem usa leitor de tela ouve a descrição na legenda. #}
 <figure class="area-grafico {{ altura|default:'h-64' }}">
-    <canvas data-grafico="{{ tipo }}" data-dados="{{ id }}" data-formato="{{ formato|default:'moeda' }}" aria-hidden="true"></canvas>
+    <canvas data-grafico="{{ tipo }}" data-dados="{{ id }}" data-formato="{{ formato|default:'moeda' }}"></canvas>
     <figcaption class="sr-only">{{ descricao }}</figcaption>
 </figure>

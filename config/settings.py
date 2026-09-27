@@ -18,7 +18,7 @@ if not SECRET_KEY:
     if not DEBUG:
         raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY no ambiente (obrigatória com DJANGO_DEBUG desligado).")
     # Desenvolvimento sem chave: uma aleatória a cada início (as sessões locais caem ao reiniciar).
-    SECRET_KEY = 'django-insecure-' + get_random_secret_key()
+    SECRET_KEY = get_random_secret_key()
 
 # Trata hosts permitidos
 raw_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')

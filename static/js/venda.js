@@ -180,7 +180,7 @@ function iniciarCarrinho(raiz) {
     function marcarAtivo() {
         Array.from(resultados.children).forEach((opcao, indice) => opcao.setAttribute('aria-selected', String(indice === ativo)));
         const opcao = resultados.children[ativo];
-        if (opcao && opcao.id) {
+        if (opcao?.id) {
             busca.setAttribute('aria-activedescendant', opcao.id);
             opcao.scrollIntoView?.({ block: 'nearest' });
         } else {
@@ -242,10 +242,13 @@ function iniciarResumoDePagamento(formulario) {
             return;
         }
         const pago = Number(pagoAgora?.value) || 0;
-        const fica = total - pago;
-        resumo.textContent = fica > 0
-            ? `Vai para a caderneta: ${formatarReais(fica)}.`
-            : (fica < 0 ? `Sobra ${formatarReais(-fica)} de crédito para o cliente.` : 'Pago por completo agora.');
+        resumo.textContent = resumoComCliente(total - pago);
+    }
+
+    function resumoComCliente(fica) {
+        if (fica > 0) return `Vai para a caderneta: ${formatarReais(fica)}.`;
+        if (fica < 0) return `Sobra ${formatarReais(-fica)} de crédito para o cliente.`;
+        return 'Pago por completo agora.';
     }
 
     formulario.addEventListener('carrinho:total', (evento) => { total = evento.detail.total; atualizar(); });

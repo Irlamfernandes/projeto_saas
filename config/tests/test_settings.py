@@ -35,8 +35,7 @@ def test_desenvolvimento_sem_secret_key_usa_chave_aleatoria(recarregar):
     """Nenhuma chave fica escrita no código: cada início gera outra."""
     primeira = recarregar(DJANGO_DEBUG='True').SECRET_KEY
     segunda = recarregar(DJANGO_DEBUG='True').SECRET_KEY
-    assert primeira.startswith('django-insecure-')
-    assert len(primeira) > 50
+    assert len(primeira) >= 50
     assert primeira != segunda
 
 

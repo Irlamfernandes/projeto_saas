@@ -39,7 +39,8 @@ function inicializarCalculadoraPrecos() {
     vendaInput.addEventListener('input', () => atualizarMargemLucro(custoInput, margemInput, vendaInput));
 
     // Na edição, o lucro guardado pode estar vazio/zerado: mostra o lucro real do custo e preço atuais.
-    if (margemInput && !(Number.parseFloat(margemInput.value) > 0)) {
+    const margemAtual = Number.parseFloat(margemInput?.value);
+    if (margemInput && (Number.isNaN(margemAtual) || margemAtual <= 0)) {
         atualizarMargemLucro(custoInput, margemInput, vendaInput);
     }
 }
@@ -91,9 +92,9 @@ function tratarMudancaCategoria(select, focar = true) {
 /* Avisa antes do envio se as fotos escolhidas passam do limite do produto (o servidor também confere). */
 function limitarFotos(input) {
     const maximo = Number(input.dataset.maximoFotos);
-    const removidas = (document.getElementById('remover_imagens')?.value || '').split(',');
+    const removidas = new Set((document.getElementById('remover_imagens')?.value || '').split(','));
     const atuais = [...document.querySelectorAll('#container-imagens-atuais [data-id]')]
-        .filter((foto) => !removidas.includes(foto.dataset.id)).length;
+        .filter((foto) => !removidas.has(foto.dataset.id)).length;
     const disponiveis = Math.max(0, maximo - atuais);
 
     let mensagem = '';
