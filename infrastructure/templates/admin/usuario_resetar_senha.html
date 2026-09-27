@@ -1,0 +1,14 @@
+{% comment %}
+Abaixo do formulário do usuário (fora dele): gera uma nova senha temporária. Formulário próprio, com CSRF.
+{% endcomment %}
+{% if original %}
+<div class="border border-base-200 rounded-default mt-6 p-6 dark:border-base-800">
+    <h2 class="font-semibold text-important">Resetar senha</h2>
+    <p class="text-sm text-subtle mt-1">Gera uma nova senha temporária e obriga o usuário a trocá-la no próximo acesso. A senha aparece no aviso do topo.</p>
+    <form method="post" action="{% url 'admin:usuario_resetar_senha' original.pk %}" class="mt-4"
+          onsubmit="return confirm('Gerar uma nova senha temporária para {{ original.username|escapejs }}?')">
+        {% csrf_token %}
+        <button type="submit" class="bg-red-600 font-medium px-3 py-2 rounded-default text-sm text-white hover:bg-red-700">Gerar nova senha temporária</button>
+    </form>
+</div>
+{% endif %}

@@ -48,7 +48,8 @@ class LojaAdminTest(TestCase):
     # ---------------------------------------------------------
     def test_admin_configuration(self):
         """Verifica se as configurações básicas do Django Admin estão corretas."""
-        self.assertEqual(self.loja_admin.list_display, ('id', 'nome_loja', 'ativo', 'vencimento', 'criado_em'))
+        self.assertEqual(self.loja_admin.list_display,
+                         ('marca', 'nome_loja', 'situacao_do_plano', 'vencimento', 'usuarios', 'ativo', 'criado_em'))
         self.assertEqual(self.loja_admin.search_fields, ('nome_loja',))
         self.assertEqual(self.loja_admin.list_filter, ('ativo', 'vencimento', 'criado_em'))
 
