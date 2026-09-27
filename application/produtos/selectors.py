@@ -10,6 +10,7 @@ ORDENACOES_PERMITIDAS = frozenset({
     'data_criacao', '-data_criacao',
 })
 LIMITE_ESTOQUE_BAIXO = 5
+MAXIMO_DE_FOTOS = 5
 
 
 def produtos_do_usuario(user):
@@ -33,3 +34,8 @@ def categorias_em_uso(produtos):
         .values_list('categoria', flat=True)
         .distinct()
     )
+
+
+def fotos_disponiveis(produto):
+    """Quantas fotos ainda cabem no produto."""
+    return max(0, MAXIMO_DE_FOTOS - produto.imagens.count())

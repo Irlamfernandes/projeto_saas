@@ -13,23 +13,3 @@ def produtos_em_estoque_do_usuario(user):
 
 def produtos_da_loja(loja):
     return Produto.objects.filter(loja=loja)
-
-
-def buscar_produto(loja, termo):
-    """Resolve o texto digitado no campo de produto, nesta ordem: código interno, nome exato, id."""
-    termo = termo.strip()
-    if not termo:
-        return None
-
-    produtos = produtos_da_loja(loja).order_by('pk')
-    return (
-        produtos.filter(codigo_interno__iexact=termo).first()
-        or produtos.filter(nome__iexact=termo).first()
-        or _buscar_por_id(produtos, termo)
-    )
-
-
-def _buscar_por_id(produtos, termo):
-    if not termo.isdigit():
-        return None
-    return produtos.filter(pk=int(termo)).first()

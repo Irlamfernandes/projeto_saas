@@ -50,6 +50,7 @@ def linha_do_tempo(cliente):
             data=pagamento.data_pagamento,
             descricao=f"Pagamento Recebido ({pagamento.observacao or 'Caderneta'})",
             valor=pagamento.valor,
+            observacao=pagamento.get_forma_pagamento_display(),
         )
         for pagamento in cliente.pagamentos.all()
     ]

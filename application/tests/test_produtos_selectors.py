@@ -1,8 +1,9 @@
 from decimal import Decimal
 from types import SimpleNamespace
 from django.test import TestCase
-from application.produtos.selectors import categorias_em_uso, filtrar_produtos, produtos_do_usuario
+from application.produtos.selectors import categorias_em_uso, filtrar_produtos, fotos_disponiveis, produtos_do_usuario
 from infrastructure.models import LojaModel, Produto
+from infrastructure.models.produto import ProdutoImagem
 
 
 class ProdutosSelectorsTest(TestCase):
@@ -46,3 +47,22 @@ class ProdutosSelectorsTest(TestCase):
     def test_categorias_em_uso_sem_vazias_nem_repetidas(self):
         self._produto("Meia", "MEI01", "Roupas", estoque=1, preco='5')
         self.assertEqual(categorias_em_uso(self.produtos), ["Acessórios", "Roupas"])
+
+
+class FotosDisponiveisTest(TestCase):
+
+    def setUp(self):
+        loja = LojaModel.objects.create(nome_loja="Loja A")
+        self.produto = Produto.objects.create(loja=loja, nome="Bolo", preco_venda=Decimal('30'))
+
+    def _fotos(self, quantidade):
+        for _ in range(quantidade):
+            ProdutoImagem.objects.create(produto=self.produto, imagem_url="https://x.co/f.webp")
+
+    def test_desconta_as_fotos_que_o_produto_ja_tem(self):
+        self._fotos(2)
+        self.assertEqual(fotos_disponiveis(self.produto), 3)
+
+    def test_nunca_fica_negativo(self):
+        self._fotos(7)  # cadastradas antes do limite existir
+        self.assertEqual(fotos_disponiveis(self.produto), 0)

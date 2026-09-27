@@ -87,6 +87,7 @@ class ExtratoClienteViewTest(TestCase):
         self.client.force_login(self.user_loja1)
         response = self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {
             'valor': '75,50',
+            'forma_pagamento': 'pix',
             'observacao': 'Pagamento parcial via Pix'
         })
         self.assertRedirects(response, self._get_url_extrato(self.cliente_loja1.pk))
@@ -95,6 +96,7 @@ class ExtratoClienteViewTest(TestCase):
         self.assertIsNotNone(pagamento_criado)
         self.assertEqual(pagamento_criado.observacao, 'Pagamento parcial via Pix')
         self.assertEqual(pagamento_criado.loja, self.loja1)
+        self.assertEqual(pagamento_criado.forma_pagamento, 'pix')
 
     def test_registrar_pagamento_valor_invalido_redireciona(self):
         """Enviar valor mal formatado ou texto não numérico exibe mensagem de erro e redireciona."""
@@ -146,7 +148,7 @@ class ExtratoClienteViewTest(TestCase):
 
     def test_pagamento_sem_observacao_usa_texto_padrao(self):
         self.client.force_login(self.user_loja1)
-        self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {'valor': '5', 'observacao': ''})
+        self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {'valor': '5', 'forma_pagamento': 'dinheiro', 'observacao': ''})
         novo = PagamentoCliente.objects.filter(cliente=self.cliente_loja1).exclude(pk=self.pagamento_l1.pk).get()
         self.assertEqual(novo.observacao, "Pagamento na caderneta")
 

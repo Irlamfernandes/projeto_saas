@@ -22,12 +22,12 @@
             <form method="POST" autocomplete="off" class="mt-6 grid gap-4">
                 {% csrf_token %}
                 <div class="campo">
-                    <label for="nova_senha" class="rotulo">Nova senha</label>
+                    <label for="nova_senha" class="rotulo">Nova senha <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <input type="password" id="nova_senha" name="nova_senha" required minlength="8" autocomplete="new-password" class="entrada">
                     <p class="ajuda">Pelo menos 8 caracteres. Evite senhas óbvias, só números ou parecidas com seu usuário.</p>
                 </div>
                 <div class="campo">
-                    <label for="confirmacao_senha" class="rotulo">Repita a nova senha</label>
+                    <label for="confirmacao_senha" class="rotulo">Repita a nova senha <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <input type="password" id="confirmacao_senha" name="confirmacao_senha" required minlength="8" autocomplete="new-password" class="entrada">
                 </div>
                 <button type="submit" class="btn-primario w-full py-3">Salvar senha e entrar<svg class="ico"><use href="#i-seta"/></svg></button>

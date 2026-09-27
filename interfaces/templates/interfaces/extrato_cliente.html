@@ -37,13 +37,14 @@
             <form method="POST" class="grid gap-4">
                 {% csrf_token %}
                 <div class="campo">
-                    <label for="id_valor_pagamento" class="rotulo">Valor recebido</label>
+                    <label for="id_valor_pagamento" class="rotulo">Valor recebido <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="id_valor_pagamento" name="valor" required placeholder="0,00" inputmode="decimal" class="tabular-nums font-semibold"></div>
                     {% if cliente.saldo_geral > 0 %}<p class="ajuda">Para quitar tudo, receba R$ {{ cliente.saldo_geral|moeda }}.</p>{% endif %}
                 </div>
+                {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada='dinheiro' obrigatoria=True %}
                 <div class="campo">
-                    <label for="id_observacao_pagamento" class="rotulo">Como pagou <span class="rotulo-opcional">opcional</span></label>
-                    <input type="text" id="id_observacao_pagamento" name="observacao" maxlength="255" placeholder="Ex.: Pix, dinheiro, parcela da semana…" class="entrada">
+                    <label for="id_observacao_pagamento" class="rotulo">Observação <span class="rotulo-opcional">opcional</span></label>
+                    <input type="text" id="id_observacao_pagamento" name="observacao" maxlength="255" placeholder="Ex.: parcela da semana, acerto do mês…" class="entrada">
                 </div>
                 <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Confirmar pagamento</button>
             </form>

@@ -54,6 +54,21 @@ class ProdutoEditarViewTest(TestCase):
 
         self.assertTemplateUsed(response, 'interfaces/produto_editar.html')
         self.assertEqual(response.context['produto'], self.produto)
+        self.assertContains(response, "Cada produto pode ter até 5 fotos: dá para adicionar mais 5")
+        self.assertContains(response, 'data-maximo-fotos="5"')
+
+    def test_produto_com_5_fotos_pede_para_remover_antes(self):
+        for _ in range(5):
+            ProdutoImagem.objects.create(produto=self.produto, imagem_url=f"{URL_PUBLICA}/1/f.webp")
+        self.client.force_login(self.user_loja1)
+
+        self.assertContains(self.client.get(self.url), "remova alguma para adicionar outra")
+
+    def test_passar_do_limite_de_fotos_mostra_o_erro(self):
+        response = self._editar(imagens=[imagem_de_teste() for _ in range(6)])
+
+        self.assertRedirects(response, self.url, fetch_redirect_response=False)
+        self.assertIn("Cada produto pode ter no máximo 5 fotos. Dá para adicionar mais 5.", self._mensagens(response))
 
     def test_edita_produto_da_propria_loja(self):
         response = self._editar()
@@ -91,7 +106,7 @@ class ProdutoEditarViewTest(TestCase):
         self.assertRedirects(response, self.url_produtos)
         self.assertEqual(
             list(self.produto.imagens.values_list('imagem_url', flat=True)),
-            [f"{URL_PUBLICA}/{self.produto.pk}/nova.png"],
+            [f"{URL_PUBLICA}/{self.produto.pk}/nova.webp"],
         )
         self.assertEqual(self.storage.removidos, [antiga.imagem_url])
 

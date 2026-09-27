@@ -25,7 +25,7 @@
                 {% include 'interfaces/_menu_item.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
                 {% include 'interfaces/_menu_item.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}
                 {% include 'interfaces/_menu_item.html' with rota='clientes' icone='i-clientes' rotulo='Clientes' ativo_se='clientes extrato_cliente' %}
-                {% include 'interfaces/_menu_item.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes' %}
+                {% include 'interfaces/_menu_item.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes' %}
             </nav>
 
             <form action="{% url 'logout' %}" method="POST" class="mt-auto border-t border-linha pt-3">
@@ -83,7 +83,7 @@
         {% include 'interfaces/_menu_movel.html' with rota='vendas' icone='i-venda' rotulo='Vendas' ativo_se='vendas venda_editar' %}
         {% include 'interfaces/_menu_movel.html' with rota='produtos' icone='i-produto' rotulo='Produtos' ativo_se='produtos editar_produto' %}
         {% include 'interfaces/_menu_movel.html' with rota='clientes' icone='i-clientes' rotulo='Clientes' ativo_se='clientes extrato_cliente' %}
-        {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes' %}
+        {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes' %}
     </nav>
 
     <script>

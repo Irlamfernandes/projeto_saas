@@ -15,7 +15,7 @@
         <form method="POST" enctype="multipart/form-data" class="grid gap-4">
             {% csrf_token %}
             <div class="campo">
-                <label for="id_nome_produto" class="rotulo">Nome do produto</label>
+                <label for="id_nome_produto" class="rotulo">Nome do produto <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <input type="text" id="id_nome_produto" name="nome" required maxlength="150" placeholder="Ex.: Bolo de cenoura com chocolate" class="entrada">
                 <p class="ajuda">É assim que ele aparece na hora da venda e no extrato do cliente.</p>
             </div>
@@ -51,14 +51,14 @@
                     </div>
                 </div>
                 <div class="campo">
-                    <label for="id_preco_venda" class="rotulo">Quanto você cobra</label>
+                    <label for="id_preco_venda" class="rotulo">Quanto você cobra <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0,00" inputmode="decimal" class="tabular-nums font-semibold"></div>
                     <p class="ajuda">Preencha o custo e o lucro desejado que calculamos o preço. Ou digite o preço e calculamos o lucro.</p>
                 </div>
             </fieldset>
 
             <div class="campo">
-                <label for="id_quantidade_estoque" class="rotulo">Quantidade em estoque</label>
+                <label for="id_quantidade_estoque" class="rotulo">Quantidade em estoque <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <div class="entrada-grupo"><input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
                 <p class="ajuda">Avisamos no início quando estiver acabando.</p>
             </div>
@@ -71,8 +71,9 @@
             <div class="campo">
                 <label for="id_imagens_produto" class="rotulo">Fotos <span class="rotulo-opcional">opcional</span></label>
                 <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+                       data-maximo-fotos="{{ maximo_de_fotos }}" onchange="limitarFotos(this)"
                        class="block w-full text-sm text-tinta-suave file:mr-3 file:rounded-lg file:border-0 file:bg-marca-100 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-marca-700 hover:file:bg-marca-200 cursor-pointer">
-                <p class="ajuda">JPG, PNG ou WEBP de até 5 MB. Pode escolher várias de uma vez.</p>
+                <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG ou WEBP (máx. 15 MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
             </div>
 
             <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Salvar produto</button>

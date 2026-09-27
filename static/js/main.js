@@ -60,12 +60,13 @@ function atualizarMargemLucro(custoInput, margemInput, vendaInput) {
 function inicializarCategoriaPadrao() {
     const selectCategoria = document.getElementById('select-categoria');
     if (selectCategoria && selectCategoria.options.length <= 2) {
+        // Loja sem categorias: já mostra o campo de nova categoria, mas sem roubar o foco do nome.
         selectCategoria.value = '__novo__';
-        tratarMudancaCategoria(selectCategoria);
+        tratarMudancaCategoria(selectCategoria, false);
     }
 }
 
-function tratarMudancaCategoria(select) {
+function tratarMudancaCategoria(select, focar = true) {
     const inputNova = document.getElementById('input-nova-categoria');
     if (!inputNova) return;
     // Só um dos dois campos pode se chamar "categoria": com os dois, o Django fica com o último
@@ -73,16 +74,32 @@ function tratarMudancaCategoria(select) {
     if (select.value === '__novo__') {
         select.removeAttribute('name');
         inputNova.setAttribute('name', 'categoria');
+        // Categoria é opcional: nova categoria em branco = produto sem categoria.
         inputNova.classList.remove('hidden');
-        inputNova.setAttribute('required', 'true');
-        inputNova.focus();
+        if (focar) inputNova.focus();
     } else {
         select.setAttribute('name', 'categoria');
         inputNova.removeAttribute('name');
-        inputNova.removeAttribute('required');
         inputNova.classList.add('hidden');
         inputNova.value = '';
     }
+}
+
+/* Avisa antes do envio se as fotos escolhidas passam do limite do produto (o servidor também confere). */
+function limitarFotos(input) {
+    const maximo = Number(input.dataset.maximoFotos);
+    const removidas = (document.getElementById('remover_imagens')?.value || '').split(',');
+    const atuais = [...document.querySelectorAll('#container-imagens-atuais [data-id]')]
+        .filter((foto) => !removidas.includes(foto.dataset.id)).length;
+    const disponiveis = Math.max(0, maximo - atuais);
+
+    let mensagem = '';
+    if (input.files.length > disponiveis) {
+        const detalhe = disponiveis ? `Dá para adicionar mais ${disponiveis}.` : 'Remova alguma antes de adicionar outra.';
+        mensagem = `Cada produto pode ter no máximo ${maximo} fotos. ${detalhe}`;
+    }
+    input.setCustomValidity(mensagem);
+    if (mensagem) input.reportValidity();
 }
 
 function marcarParaRemover(id, wrapper) {
@@ -93,6 +110,9 @@ function marcarParaRemover(id, wrapper) {
         idsAtuais.push(id);
         inputRemover.value = idsAtuais.join(',');
     }
+    // Remover uma foto libera espaço: confere de novo as fotos já escolhidas para enviar.
+    const inputFotos = document.querySelector('[data-maximo-fotos]');
+    if (inputFotos) limitarFotos(inputFotos);
 
     wrapper.style.transition = "all 0.3s ease";
     wrapper.style.opacity = "0";
@@ -225,6 +245,7 @@ if (typeof module !== 'undefined') {
     module.exports = { 
         tratarMudancaCategoria, 
         marcarParaRemover, 
+        limitarFotos,
         abrirModalEdicaoCliente, 
         fecharModalEdicaoCliente,
         fecharModalDireto,

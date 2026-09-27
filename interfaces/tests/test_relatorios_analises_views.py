@@ -58,3 +58,36 @@ class PaginasDeRelatoriosTest(TestCase):
         for rota in ('relatorios_vendas', 'relatorios_produtos', 'relatorios_clientes'):
             with self.subTest(rota):
                 self.assertEqual(self.client.get(reverse(rota)).status_code, 302)
+
+
+class FormasDePagamentoEAlteracoesTest(TestCase):
+
+    def setUp(self):
+        from application.vendas.services import registrar_venda
+        self.c = CenarioDeLoja()
+        self.user = get_user_model().objects.create_user(username="op", password="x", loja=self.c.loja, deve_trocar_senha=False)
+        self.client.force_login(self.user)
+        pao = self.c.produto("Pão", preco_venda='10', estoque=10)
+        registrar_venda(itens=[(pao.pk, 2)], loja=self.c.loja, forma_pagamento='pix', usuario=self.user)
+
+    def test_relatorio_de_vendas_mostra_o_recebido_por_forma(self):
+        response = self.client.get(reverse('relatorios_vendas'))
+
+        self.assertEqual(response.context['total_recebido'], Decimal('20.00'))
+        self.assertEqual([f.forma for f in response.context['formas_de_pagamento']], ['Pix'])
+        self.assertContains(response, "Formas de pagamento")
+
+    def test_aba_de_alteracoes_lista_e_filtra(self):
+        response = self.client.get(reverse('relatorios_alteracoes'))
+
+        self.assertContains(response, "Venda registrada")
+        self.assertContains(response, 'aria-current="page">Alterações')
+        self.assertContains(response, "Balcão · 2× Pão (R$ 10,00) · total R$ 20,00 · Pix")
+
+        filtrado = self.client.get(reverse('relatorios_alteracoes'), {'acao': 'venda_cancelada'})
+        self.assertContains(filtrado, "Nenhuma alteração registrada ainda")
+
+    def test_acao_desconhecida_no_filtro_mostra_tudo(self):
+        response = self.client.get(reverse('relatorios_alteracoes'), {'acao': 'invalida'})
+        self.assertEqual(response.context['acao'], '')
+        self.assertEqual(len(response.context['registros']), 1)

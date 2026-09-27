@@ -35,12 +35,12 @@
                         </div>
                     {% endif %}
                     <div class="campo">
-                        <label for="{{ form.username.id_for_label }}" class="rotulo">Usuário</label>
+                        <label for="{{ form.username.id_for_label }}" class="rotulo">Usuário <span class="obrigatorio" aria-hidden="true">*</span></label>
                         {{ form.username }}
                         {% for erro in form.username.errors %}<p class="text-xs font-semibold text-critico-texto" role="alert">{{ erro }}</p>{% endfor %}
                     </div>
                     <div class="campo">
-                        <label for="{{ form.password.id_for_label }}" class="rotulo">Senha</label>
+                        <label for="{{ form.password.id_for_label }}" class="rotulo">Senha <span class="obrigatorio" aria-hidden="true">*</span></label>
                         {{ form.password }}
                         {% for erro in form.password.errors %}<p class="text-xs font-semibold text-critico-texto" role="alert">{{ erro }}</p>{% endfor %}
                         <p class="ajuda">Esqueceu a senha? Peça ao administrador para gerar uma nova.</p>

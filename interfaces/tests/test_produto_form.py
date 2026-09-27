@@ -74,7 +74,7 @@ class ProdutoFormTest(TestCase):
 
     def test_recusa_imagem_grande_demais(self):
         with patch('interfaces.forms.produto_form.TAMANHO_MAXIMO_IMAGEM', 10):
-            self.assertErro(self._form(arquivos={'imagens': [imagem_de_teste('g.png')]}), "A imagem 'g.png' excede o limite de 5 MB.")
+            self.assertErro(self._form(arquivos={'imagens': [imagem_de_teste('g.png')]}), "A imagem 'g.png' excede o limite de 15 MB.")
 
 
 class EditarProdutoFormTest(TestCase):

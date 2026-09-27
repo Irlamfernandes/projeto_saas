@@ -72,7 +72,7 @@ a trocá-la.
 | `DJANGO_ALLOWED_HOSTS` | não | Hosts separados por vírgula (padrão: `localhost,127.0.0.1`). |
 | `DATABASE_URL` | não | Postgres. Vazio usa SQLite (`db.sqlite3`). |
 | `DATABASE_SSL_REQUIRE` | não | Padrão `True` quando há `DATABASE_URL`. |
-| `SUPABASE_URL`, `SUPABASE_KEY` | para upload | Bucket `imagens` do Supabase Storage. |
+| `SUPABASE_URL`, `SUPABASE_KEY` | para upload | Bucket `imagens` do Supabase Storage. Até 5 fotos por produto, reduzidas para 1024 px e regravadas em WebP (qualidade 70, ~25 KB cada) antes do envio (`infrastructure/utils/otimizacao_de_imagem.py`). |
 | `DJANGO_SECURE_SSL_REDIRECT` | não | Padrão `True` em produção; `False` só para rodar sem HTTPS. |
 | `DJANGO_HSTS_SECONDS` | não | Padrão `3600`. Aumente para `31536000` depois de validar o HTTPS. |
 | `WEB_CONCURRENCY` | não | Processos do Gunicorn (padrão `2` no Docker e no `render.yaml`). |
@@ -104,9 +104,23 @@ make test        # pytest com cobertura + jest
   template inclui `interfaces/_grafico.html` (canvas + `json_script`). Quem desenha é
   `static/js/graficos.js` com o Chart.js versionado em `static/vendor/` (sem CDN). As duas cores de
   séries (marca x destaque) foram validadas para daltonismo.
-- **Relatórios**: `application/relatorios/` tem `vendas.py`, `produtos.py`, `clientes.py` e
-  `indicadores.py`; as páginas ficam em `/relatorios/` (visão geral, vendas, produtos, clientes).
-  O lucro estimado usa o preço de custo **atual** dos produtos (não há custo histórico).
+- **Relatórios**: `application/relatorios/` tem `vendas.py`, `produtos.py`, `clientes.py`,
+  `indicadores.py` e `pagamentos.py`; as páginas ficam em `/relatorios/` (visão geral, vendas, produtos,
+  clientes, alterações). O lucro estimado usa o preço de custo **atual** dos produtos (não há custo histórico).
+
+## Vendas, caderneta e histórico
+
+- **Venda com vários produtos**: o carrinho (`_carrinho.html` + `static/js/venda.js`) busca pelo nome ou
+  código no navegador e envia listas paralelas `item_produto` / `item_quantidade`. Sem cliente = **balcão**,
+  paga na hora; com cliente, vai para a caderneta menos o "pago agora".
+- **Pagamento no ato ligado à venda** (`PagamentoCliente.venda`): se a venda muda de cliente, o pagamento vai
+  junto; se vira balcão, deixa de existir. Na edição, produtos que já estavam na venda mantêm o preço da época.
+- **Cancelar venda** exige a senha de quem cancela e um motivo; devolve o estoque, apaga a venda com o
+  pagamento feito no ato e guarda uma cópia completa no histórico.
+- **Formas de pagamento** (dinheiro, Pix, débito, crédito, outro) na venda e no pagamento da caderneta, com o
+  relatório "Formas de pagamento" em Relatórios › Vendas.
+- **Registro de alterações** (`RegistroDeAlteracao`, `application/auditoria/`): vendas, pagamentos, produtos e
+  clientes, com antes → depois. Aparece em Relatórios › Alterações e no admin (só leitura).
 
 ## CSS (Tailwind)
 

@@ -1,0 +1,50 @@
+{% extends 'interfaces/base.html' %}
+{% load auditoria %}
+
+{% block title %}Alterações · Gestão da Loja{% endblock %}
+{% block header_title %}Relatórios{% endblock %}
+{% block subtitulo %}Quem fez o quê e quando: vendas, pagamentos, produtos e clientes.{% endblock %}
+
+{% block content %}
+{% include 'interfaces/_abas_relatorios.html' %}
+
+<section class="cartao cartao-corpo" aria-labelledby="t-alteracoes">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-alteracoes" class="titulo-cartao">Registro de alterações</h2><p class="subtitulo">Do mais recente para o mais antigo. Nada aqui pode ser editado ou apagado.</p></div>
+        <form method="GET" class="flex items-center gap-2">
+            <label for="id_acao" class="text-xs font-semibold text-tinta-suave whitespace-nowrap">Mostrar</label>
+            <select id="id_acao" name="acao" onchange="this.form.submit()" class="entrada py-1.5 text-sm w-auto">
+                <option value="">Tudo</option>
+                {% for valor, rotulo in acoes %}<option value="{{ valor }}" {% if valor == acao %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+            </select>
+            <noscript><button type="submit" class="btn-secundario btn-pequeno">Filtrar</button></noscript>
+        </form>
+    </div>
+
+    {% if registros %}
+    <ol class="grid">
+        {% for registro in registros %}
+        <li class="flex gap-3 border-b border-grade py-3.5 last:border-b-0">
+            <span class="grid place-items-center w-9 h-9 shrink-0 rounded-full {% if registro.acao == 'venda_cancelada' %}bg-critico-suave text-critico-texto{% else %}bg-marca-50 text-marca-700{% endif %}" aria-hidden="true">
+                <svg class="ico ico-sm"><use href="#{% if registro.acao == 'venda_cancelada' %}i-x{% elif 'venda' in registro.acao %}i-venda{% elif 'pagamento' in registro.acao %}i-carteira{% elif 'produto' in registro.acao %}i-produto{% else %}i-clientes{% endif %}"/></svg>
+            </span>
+            <div class="min-w-0 flex-1">
+                <p class="text-sm"><b>{{ registro.get_acao_display }}</b> · {{ registro.descricao }}</p>
+                <p class="text-xs text-tinta-fraca tabular-nums">{{ registro.data|date:"d/m/Y \à\s H:i" }} · {{ registro.usuario.username|default:"usuário removido" }}</p>
+                {% with linhas=registro.detalhes|detalhes_legiveis %}
+                {% if linhas %}
+                <ul class="mt-1.5 grid gap-0.5 text-xs text-tinta-suave">
+                    {% for linha in linhas %}<li class="break-words">{{ linha }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </li>
+        {% endfor %}
+    </ol>
+    {% include 'interfaces/_paginacao.html' %}
+    {% else %}
+        {% include 'interfaces/_vazio.html' with icone='i-historico' titulo='Nenhuma alteração registrada ainda' texto='A partir de agora, vendas, pagamentos, produtos e clientes ficam registrados aqui.' %}
+    {% endif %}
+</section>
+{% endblock %}

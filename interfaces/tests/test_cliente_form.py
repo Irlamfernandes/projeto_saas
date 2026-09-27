@@ -36,10 +36,10 @@ class ClienteFormTest(TestCase):
 class PagamentoFormTest(SimpleTestCase):
 
     def test_aceita_virgula_como_separador_decimal(self):
-        form = PagamentoForm({'valor': '75,50', 'observacao': ' Pix '})
+        form = PagamentoForm({'valor': '75,50', 'forma_pagamento': 'pix', 'observacao': ' parcela '})
 
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.parametros(), {'valor': Decimal('75.50'), 'observacao': 'Pix'})
+        self.assertEqual(form.parametros(), {'valor': Decimal('75.50'), 'forma_pagamento': 'pix', 'observacao': 'parcela'})
 
     def test_mensagens_de_erro(self):
         casos = {
@@ -49,7 +49,9 @@ class PagamentoFormTest(SimpleTestCase):
             'negativo': ({'valor': '-10'}, "O valor do pagamento deve ser maior que zero."),
             'centavos demais': ({'valor': '1.999'}, "Use no máximo duas casas decimais."),
             'alto demais': ({'valor': '123456789'}, "O valor do pagamento é alto demais."),
-            'observação longa': ({'valor': '1', 'observacao': 'a' * 256}, "A observação excede o limite máximo de 255 caracteres."),
+            'observação longa': ({'valor': '1', 'forma_pagamento': 'pix', 'observacao': 'a' * 256}, "A observação excede o limite máximo de 255 caracteres."),
+            'sem forma': ({'valor': '1'}, "Informe como foi pago."),
+            'forma inválida': ({'valor': '1', 'forma_pagamento': 'cheque'}, "Forma de pagamento inválida."),
         }
         for caso, (dados, mensagem) in casos.items():
             with self.subTest(caso):

@@ -49,6 +49,7 @@
   .campo { @apply grid gap-1.5 content-start min-w-0; }
   .rotulo { @apply text-sm font-semibold text-tinta; }
   .rotulo-opcional { @apply ml-1 text-xs font-medium text-tinta-fraca; }
+  .obrigatorio { @apply font-bold text-critico; }
   .ajuda { @apply text-xs text-tinta-fraca leading-relaxed; }
   .entrada { @apply w-full rounded-controle border border-linha bg-white px-3 py-2.5 text-[0.95rem] text-tinta placeholder:text-tinta-fraca transition focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100; }
   /* Seta própria: a nativa fica por cima do texto e muda de navegador para navegador */
@@ -56,6 +57,8 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c8a87' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); }
   .entrada-grupo { @apply flex w-full min-w-0 items-center rounded-controle border border-linha bg-white transition focus-within:border-marca-500 focus-within:ring-4 focus-within:ring-marca-100; }
   .entrada-grupo > input, .entrada-grupo > select { @apply w-full min-w-0 flex-1 border-0 bg-transparent px-3 py-2.5 text-[0.95rem] text-tinta focus:outline-none focus:ring-0; }
+  /* O grupo inteiro já mostra o foco (focus-within); sem isto o campo ganhava um segundo contorno por dentro. */
+  .entrada-grupo > input:focus-visible, .entrada-grupo > select:focus-visible { @apply ring-0 ring-offset-0; }
   .afixo { @apply pl-3 text-sm font-semibold text-tinta-fraca select-none; }
   .afixo-fim { @apply pr-3 text-sm font-semibold text-tinta-fraca select-none; }
 
@@ -87,6 +90,20 @@
   .abas { @apply grid grid-cols-2 gap-1 rounded-controle bg-white border border-linha p-1 sm:flex sm:w-fit; }
   .aba { @apply rounded-lg px-3.5 py-2 text-center text-sm font-semibold text-tinta-suave whitespace-nowrap transition hover:text-tinta hover:bg-fundo; }
   .aba-ativa { @apply bg-marca-100 text-marca-700 hover:bg-marca-100 hover:text-marca-700; }
+
+  /* Busca de produtos (combobox) e carrinho da venda */
+  .lista-busca { @apply absolute inset-x-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-controle border border-linha bg-white py-1 shadow-lg; }
+  .opcao-busca { @apply flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-sm; }
+  .opcao-busca[aria-selected="true"] { @apply bg-marca-50; }
+  .opcao-busca[aria-disabled="true"] { @apply cursor-not-allowed opacity-50; }
+  .item-carrinho { @apply flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-controle border border-linha px-3 py-2.5 text-sm; }
+  .quantidade { @apply inline-flex items-center rounded-controle border border-linha; }
+  .quantidade-botao { @apply grid h-9 w-9 place-items-center text-tinta-suave transition hover:text-tinta disabled:opacity-30 disabled:cursor-not-allowed; }
+  .quantidade-campo { @apply h-9 w-12 border-x border-linha bg-transparent text-center text-sm font-semibold tabular-nums focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none; }
+
+  /* Escolha em botões (rádio escondido + rótulo) */
+  .opcao { @apply cursor-pointer; }
+  .opcao-rotulo { @apply inline-flex items-center rounded-full border border-linha bg-white px-3.5 py-2 text-sm font-semibold text-tinta-suave transition hover:border-tinta-fraca peer-checked:border-marca-600 peer-checked:bg-marca-600 peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-marca-600 peer-focus-visible:ring-offset-2; }
 
   /* Gráficos */
   .area-grafico { @apply relative w-full min-w-0 h-64 overflow-hidden; }

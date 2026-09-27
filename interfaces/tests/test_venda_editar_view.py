@@ -1,223 +1,136 @@
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
-from infrastructure.models.loja_model import LojaModel
-from infrastructure.models.cliente import Cliente
-from infrastructure.models.produto import Produto
-from infrastructure.models.venda import Venda, ItemVenda
+from application.vendas.services import registrar_venda
+from infrastructure.models import Acao, Cliente, LojaModel, Produto, RegistroDeAlteracao, Venda
 
 User = get_user_model()
 
 
-class VendaEditarViewTest(TestCase):
+class VendaEditarViewTestCase(TestCase):
 
     def setUp(self):
         self.loja1 = LojaModel.objects.create(nome_loja="Loja Alpha", ativo=True)
         self.loja2 = LojaModel.objects.create(nome_loja="Loja Beta", ativo=True)
-
-        self.superuser = User.objects.create_superuser(
-            deve_trocar_senha=False,
-            username="admin", password="password"
-        )
-        self.user_loja1 = User.objects.create_user(
-            deve_trocar_senha=False,
-            username="user_loja1", password="password", loja=self.loja1
-        )
-        
+        self.superuser = User.objects.create_superuser(deve_trocar_senha=False, username="admin", password="password")
+        self.user_loja1 = User.objects.create_user(deve_trocar_senha=False, username="user_loja1", password="senha-certa", loja=self.loja1)
+        self.user_loja2 = User.objects.create_user(deve_trocar_senha=False, username="user_loja2", password="password", loja=self.loja2)
         with patch('django.db.models.Model.full_clean'):
-            self.user_sem_loja = User.objects.create_user(
-                deve_trocar_senha=False,
-                username="user_sem_loja", password="password", loja=None
-            )
+            self.user_sem_loja = User.objects.create_user(deve_trocar_senha=False, username="user_sem_loja", password="password", loja=None)
 
-        self.cliente = Cliente.objects.create(loja=self.loja1, nome="Cliente Teste")
-        
-        self.produto1 = Produto.objects.create(
-            loja=self.loja1, nome="Produto A", codigo_interno="PA001", 
-            preco_venda=Decimal('50.00'), quantidade_estoque=10
-        )
-        self.produto2 = Produto.objects.create(
-            loja=self.loja1, nome="Produto B", codigo_interno="PB002", 
-            preco_venda=Decimal('100.00'), quantidade_estoque=2
-        )
+        self.cliente = Cliente.objects.create(loja=self.loja1, nome="Cliente Alpha")
+        self.outro_cliente = Cliente.objects.create(loja=self.loja1, nome="Outro")
+        self.arroz = Produto.objects.create(loja=self.loja1, nome="Arroz", codigo_interno="AR", preco_venda=Decimal('20.00'), quantidade_estoque=10)
+        self.cafe = Produto.objects.create(loja=self.loja1, nome="Café", preco_venda=Decimal('5.00'), quantidade_estoque=0)
+        self.venda = registrar_venda(cliente=self.cliente, itens=[(self.arroz.pk, 2)], valor_pago=Decimal('40'), forma_pagamento='pix')
+        self.url = reverse('venda_editar', args=[self.venda.pk])
 
-        self.venda = Venda.objects.create(
-            loja=self.loja1, cliente=self.cliente, valor_total=Decimal('100.00')
-        )
-        self.item_venda = ItemVenda.objects.create(
-            venda=self.venda, produto=self.produto1, quantidade=2, preco_unitario=Decimal('50.00')
-        )
+    def _mensagens(self, response):
+        return [str(m) for m in get_messages(response.wsgi_request)]
 
-        self.url = reverse('venda_editar', args=[self.venda.id])
+
+class VendaEditarViewTest(VendaEditarViewTestCase):
+
+    def _editar(self, itens, usuario=None, **campos):
+        self.client.force_login(usuario or self.user_loja1)
+        dados = {'cliente': self.cliente.pk, 'forma_pagamento': 'pix', **campos}
+        dados['item_produto'] = [produto.pk for produto, _ in itens]
+        dados['item_quantidade'] = [quantidade for _, quantidade in itens]
+        return self.client.post(self.url, dados)
 
     def test_usuario_sem_loja_recebe_permission_denied(self):
-        """Usuário sem loja associada recebe 403 ao acessar a edição de venda."""
         with patch('django.db.models.Model.full_clean'):
             self.client.force_login(self.user_sem_loja)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 403)
-
-    def test_usuario_comum_nao_edita_venda_de_outra_loja(self):
-        """Usuário comum recebe 404 ao tentar editar venda de outra loja."""
-        venda_outra_loja = Venda.objects.create(
-            loja=self.loja2, valor_total=Decimal('200.00')
-        )
-        self.client.force_login(self.user_loja1)
-        url = reverse('venda_editar', args=[venda_outra_loja.id])
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 404)
-
-    def test_get_carrega_pagina_com_sucesso(self):
-        """GET na view de edição renderiza corretamente o template e o contexto."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'interfaces/venda_editar.html')
-        self.assertEqual(response.context['venda'], self.venda)
-
-    def test_post_quantidade_invalida(self):
-        """Enviar quantidade <= 0 ou inválida exibe erro e redireciona."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id,
-            'produto': str(self.produto1.id),
-            'quantidade': 0,
-            'observacoes': 'Teste'
-        })
-        self.assertRedirects(response, self.url)
-
-    def test_post_produto_inexistente(self):
-        """Enviar produto inexistente (pesquisado por nome/código inválido) exibe mensagem de erro e redireciona."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id,
-            'produto': '999999',
-            'quantidade': 1,
-            'observacoes': ''
-        })
-        self.assertRedirects(response, self.url)
-
-    def test_post_estoque_insuficiente(self):
-        """Tentar comprar quantidade maior que o estoque disponível gera erro e faz rollback."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id,
-            'produto': str(self.produto2.id),
-            'quantidade': 5,
-            'observacoes': ''
-        })
-        self.assertRedirects(response, self.url)
-
-    def test_post_edicao_venda_com_sucesso(self):
-        """Edita com sucesso o produto, quantidade e recalcula o total, ajustando estoques."""
-        self.client.force_login(self.user_loja1)
-        
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id,
-            'produto': str(self.produto2.id),
-            'quantidade': 2,
-            'observacoes': 'Venda atualizada com sucesso'
-        }, follow=True)
-
-        self.assertRedirects(response, reverse('vendas'))
-        
-        self.venda.refresh_from_db()
-        self.produto1.refresh_from_db()
-        self.produto2.refresh_from_db()
-
-        self.assertEqual(self.produto1.quantidade_estoque, 12)
-        self.assertEqual(self.produto2.quantidade_estoque, 0)
-        self.assertEqual(self.venda.valor_total, Decimal('200.00'))
-        self.assertEqual(self.venda.observacoes, 'Venda atualizada com sucesso')
-
-    def test_superuser_edita_venda_com_sucesso(self):
-        """Superusuário consegue carregar e editar venda utilizando querysets globais (.all)."""
-        self.client.force_login(self.superuser)
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id,
-            'produto': str(self.produto1.id),
-            'quantidade': 1,
-            'observacoes': 'Editado por superuser'
-        })
-        self.assertRedirects(response, reverse('vendas'))
-
-    def test_post_cliente_inexistente_exibe_erro(self):
-        """Enviar um ID de cliente que não existe no banco exibe erro e redireciona."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': '999999',
-            'produto': str(self.produto1.id),
-            'quantidade': 1
-        })
-        self.assertRedirects(response, self.url)
-
-    def test_editar_venda_sem_item_anterior(self):
-        """Edita com sucesso uma venda que não possuía nenhum item pré-vinculado."""
-        self.item_venda.delete()
-
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id,
-            'produto': str(self.produto1.id),
-            'quantidade': 3,
-            'observacoes': 'Adicionando item do zero'
-        })
-        self.assertRedirects(response, reverse('vendas'))
-        
-        self.venda.refresh_from_db()
-        self.assertEqual(self.venda.valor_total, Decimal('150.00'))
-
-    def test_superuser_cliente_inexistente_exibe_erro(self):
-        """Superusuário que informa um ID de cliente inexistente recebe erro e redireciona."""
-        self.client.force_login(self.superuser)
-        response = self.client.post(self.url, {
-            'cliente': '99999',
-            'produto': str(self.produto1.id),
-            'quantidade': 1
-        })
-        self.assertRedirects(response, self.url)
-
-    def test_post_sem_cliente_atribui_como_none(self):
-        """Edita uma venda sem informar cliente (campo vazio), definindo cliente como None."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': '',
-            'produto': str(self.produto1.id),
-            'quantidade': 1,
-            'observacoes': 'Sem cliente'
-        })
-        self.assertRedirects(response, reverse('vendas'))
-        
-        self.venda.refresh_from_db()
-        self.assertIsNone(self.venda.cliente)
-
-    def test_edicao_pelo_codigo_interno(self):
-        """Regressão: o campo vem preenchido com o código interno e isso gerava HTTP 500."""
-        self.client.force_login(self.user_loja1)
-        response = self.client.post(self.url, {
-            'cliente': self.cliente.id, 'produto': 'PB002', 'quantidade': 1,
-        })
-
-        self.assertRedirects(response, reverse('vendas'))
-        self.assertEqual(self.venda.itens.get().produto, self.produto2)
-
-    def test_superuser_nao_move_venda_para_cliente_de_outra_loja(self):
-        """Antes o superusuário podia escolher cliente de outra loja e a validação do model dava HTTP 500."""
-        cliente_loja2 = Cliente.objects.create(loja=self.loja2, nome="Cliente Beta")
-        self.client.force_login(self.superuser)
-        response = self.client.post(self.url, {
-            'cliente': cliente_loja2.id, 'produto': 'PA001', 'quantidade': 1,
-        })
-
-        self.assertRedirects(response, self.url)
-        self.venda.refresh_from_db()
-        self.assertEqual(self.venda.cliente, self.cliente)
+        self.assertEqual(self.client.get(self.url).status_code, 403)
 
     def test_usuario_de_loja_inativa_recebe_permission_denied(self):
         self.loja1.ativo = False
         self.loja1.save()
         self.client.force_login(self.user_loja1)
-
         self.assertEqual(self.client.get(self.url).status_code, 403)
+
+    def test_nao_edita_venda_de_outra_loja(self):
+        self.client.force_login(self.user_loja2)
+        self.assertEqual(self.client.get(self.url).status_code, 404)
+
+    def test_get_traz_os_itens_atuais_e_o_estoque_reservado_de_volta(self):
+        self.client.force_login(self.user_loja1)
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.context['itens_iniciais'], [{'id': self.arroz.pk, 'quantidade': 2, 'preco': '20.00'}])
+        arroz = next(p for p in response.context['catalogo'] if p['id'] == self.arroz.pk)
+        self.assertEqual(arroz['estoque'], 10, "as 2 unidades desta venda voltam a ficar disponíveis para ela")
+        self.assertEqual(response.context['pago_no_ato'], Decimal('40'))
+        self.assertContains(response, 'id="modal-cancelar-venda"')
+
+    def test_salva_varios_itens(self):
+        Produto.objects.filter(pk=self.cafe.pk).update(quantidade_estoque=5)
+        response = self._editar([(self.arroz, 1), (self.cafe, 2)])
+
+        self.assertRedirects(response, reverse('vendas'))
+        self.venda.refresh_from_db()
+        self.assertEqual(self.venda.valor_total, Decimal('30.00'))
+        self.assertEqual(RegistroDeAlteracao.objects.get(acao=Acao.VENDA_EDITADA).usuario, self.user_loja1)
+
+    def test_trocar_cliente_leva_o_pagamento_junto(self):
+        self._editar([(self.arroz, 2)], cliente=self.outro_cliente.pk)
+        self.assertEqual(self.venda.pagamentos_no_ato.get().cliente, self.outro_cliente)
+
+    def test_erro_volta_para_a_edicao_sem_alterar(self):
+        response = self._editar([(self.cafe, 1)])
+
+        self.assertRedirects(response, self.url)
+        self.assertIn("Estoque insuficiente para 'Café'. Disponível: 0.", self._mensagens(response))
+        self.assertEqual(self.venda.itens.get().produto, self.arroz)
+
+    def test_superuser_nao_move_venda_para_cliente_de_outra_loja(self):
+        de_fora = Cliente.objects.create(loja=self.loja2, nome="Cliente Beta")
+        self._editar([(self.arroz, 2)], usuario=self.superuser, cliente=de_fora.pk)
+
+        self.venda.refresh_from_db()
+        self.assertEqual(self.venda.cliente, self.cliente)
+
+
+class VendaCancelarViewTest(VendaEditarViewTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.url_cancelar = reverse('venda_cancelar', args=[self.venda.pk])
+
+    def _cancelar(self, usuario=None, **dados):
+        self.client.force_login(usuario or self.user_loja1)
+        return self.client.post(self.url_cancelar, {'senha': 'senha-certa', 'motivo': 'lançada em dobro', **dados})
+
+    def test_com_a_senha_certa_cancela_e_volta_para_vendas(self):
+        numero = self.venda.pk
+        response = self._cancelar()
+
+        self.assertRedirects(response, reverse('vendas'))
+        self.assertIn(f"Venda #{numero} cancelada. O estoque foi devolvido.", self._mensagens(response))
+        self.assertFalse(Venda.objects.exists())
+        self.arroz.refresh_from_db()
+        self.assertEqual(self.arroz.quantidade_estoque, 10)
+
+    def test_senha_errada_nao_cancela(self):
+        response = self._cancelar(senha='chute')
+
+        self.assertRedirects(response, self.url)
+        self.assertIn("Senha incorreta. A venda não foi cancelada.", self._mensagens(response))
+        self.assertTrue(Venda.objects.exists())
+
+    def test_sem_motivo_nao_cancela(self):
+        response = self._cancelar(motivo='')
+        self.assertIn("Conte o motivo do cancelamento.", self._mensagens(response))
+        self.assertTrue(Venda.objects.exists())
+
+    def test_so_aceita_post(self):
+        self.client.force_login(self.user_loja1)
+        self.assertEqual(self.client.get(self.url_cancelar).status_code, 405)
+
+    def test_nao_cancela_venda_de_outra_loja(self):
+        response = self._cancelar(usuario=self.user_loja2, senha='password')
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Venda.objects.exists())
