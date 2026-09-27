@@ -12,6 +12,7 @@ class Acao(models.TextChoices):
     PRODUTO_EDITADO = 'produto_editado', 'Produto editado'
     CLIENTE_CADASTRADO = 'cliente_cadastrado', 'Cliente cadastrado'
     CLIENTE_EDITADO = 'cliente_editado', 'Cliente editado'
+    MARCA_ALTERADA = 'marca_alterada', 'Marca da loja alterada'
 
 
 class RegistroDeAlteracao(models.Model):

@@ -12,6 +12,16 @@ ROTULOS = {
 }
 CAMPOS_EM_REAIS = {'preco_custo', 'preco_venda'}
 VAZIO = '(vazio)'
+ICONES_POR_ACAO = {'venda_cancelada': 'i-x', 'marca_alterada': 'i-foto'}
+ICONES_POR_ASSUNTO = {'venda': 'i-venda', 'pagamento': 'i-carteira', 'produto': 'i-produto', 'cliente': 'i-clientes'}
+
+
+@register.filter
+def icone_da_acao(acao):
+    """Ícone do registro: primeiro a ação exata, depois o assunto ('venda_editada' -> venda)."""
+    if acao in ICONES_POR_ACAO:
+        return ICONES_POR_ACAO[acao]
+    return ICONES_POR_ASSUNTO.get(acao.split('_')[0], 'i-historico')
 
 
 @register.filter

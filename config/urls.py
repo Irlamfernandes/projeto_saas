@@ -7,7 +7,7 @@ from interfaces.views import (
     produto_editar_view, clientes_view, cliente_editar_view, vendas_view, 
     extrato_cliente_view, venda_editar_view, relatorio_view, exportar_excel_modular_view,
     exportar_pdf_modular_view, relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view,
-    relatorios_alteracoes_view, venda_cancelar_view,
+    relatorios_alteracoes_view, venda_cancelar_view, configuracoes_view, marca_enviar_view, marca_remover_view,
 )
 
 urlpatterns = [
@@ -30,6 +30,10 @@ urlpatterns = [
     path('clientes/<int:cliente_id>/pdf/', extrato_pdf_view, name='extrato_pdf'),
     path('vendas/<int:venda_id>/editar/', venda_editar_view, name='venda_editar'),
     path('vendas/<int:venda_id>/cancelar/', venda_cancelar_view, name='venda_cancelar'),
+
+    path('configuracoes/', configuracoes_view, name='configuracoes'),
+    path('configuracoes/marca/', marca_enviar_view, name='marca_enviar'),
+    path('configuracoes/marca/remover/', marca_remover_view, name='marca_remover'),
 
     path('relatorios/', relatorio_view, name='relatorios'),
     path('relatorios/vendas/', relatorios_vendas_view, name='relatorios_vendas'),

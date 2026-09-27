@@ -29,6 +29,10 @@ def _exportar(request, tipo, formato):
     gerar, content_type, extensao = FORMATOS[formato]
     inicio, fim = PeriodoForm(request.GET).intervalo()
     arquivo = io.BytesIO()
-    gerar(tipo, montar_relatorio(request.user, inicio, fim), arquivo)
+    relatorio = montar_relatorio(request.user, inicio, fim)
+    if formato == 'pdf':
+        gerar(tipo, relatorio, arquivo, loja=request.user.loja)
+    else:
+        gerar(tipo, relatorio, arquivo)
     arquivo.seek(0)
     return FileResponse(arquivo, content_type=content_type, as_attachment=True, filename=f"relatorio_{tipo}.{extensao}")

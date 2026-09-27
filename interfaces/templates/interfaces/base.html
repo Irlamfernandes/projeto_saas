@@ -11,9 +11,7 @@
 
         <aside class="hidden md:flex flex-col gap-6 bg-white border-r border-linha px-3.5 py-5 sticky top-0 h-screen" aria-label="Menu principal">
             <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-1.5">
-                <span class="grid place-items-center w-10 h-10 rounded-xl bg-marca-600 text-white font-titulo font-bold" aria-hidden="true">
-                    {% if request.user.loja %}{{ request.user.loja.nome_loja|iniciais }}{% else %}<svg class="ico"><use href="#i-loja"/></svg>{% endif %}
-                </span>
+                {% include 'interfaces/_marca_loja.html' with classes='w-10 h-10 rounded-xl' %}
                 <span class="min-w-0">
                     <b class="block text-sm leading-tight truncate">{% if request.user.loja %}{{ request.user.loja.nome_loja }}{% else %}Painel global{% endif %}</b>
                     <span class="block text-xs text-tinta-fraca truncate">{{ request.user.username }}</span>
@@ -28,24 +26,24 @@
                 {% include 'interfaces/_menu_item.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes' %}
             </nav>
 
-            <form action="{% url 'logout' %}" method="POST" class="mt-auto border-t border-linha pt-3">
-                {% csrf_token %}
-                <button type="submit" class="btn-fantasma w-full justify-start px-2.5">
-                    <svg class="ico"><use href="#i-sair"/></svg>Sair
-                </button>
-            </form>
+            <div class="mt-auto grid gap-0.5 border-t border-linha pt-3 text-sm">
+                {% include 'interfaces/_menu_item.html' with rota='configuracoes' icone='i-config' rotulo='Configurações' ativo_se='configuracoes' %}
+                <form action="{% url 'logout' %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-fantasma w-full justify-start px-2.5">
+                        <svg class="ico"><use href="#i-sair"/></svg>Sair
+                    </button>
+                </form>
+            </div>
         </aside>
 
         <div class="min-w-0 flex flex-col pb-24 md:pb-0">
             <div class="md:hidden flex items-center justify-between gap-3 bg-white border-b border-linha px-4 py-3">
                 <span class="flex items-center gap-2.5 min-w-0">
-                    <span class="grid place-items-center w-8 h-8 rounded-lg bg-marca-600 text-white text-sm font-titulo font-bold" aria-hidden="true">{{ request.user.loja.nome_loja|default:"G"|iniciais }}</span>
+                    {% include 'interfaces/_marca_loja.html' with classes='w-8 h-8 rounded-lg text-sm' %}
                     <b class="text-sm truncate">{% if request.user.loja %}{{ request.user.loja.nome_loja }}{% else %}Painel global{% endif %}</b>
                 </span>
-                <form action="{% url 'logout' %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-fantasma btn-pequeno" aria-label="Sair da conta"><svg class="ico"><use href="#i-sair"/></svg>Sair</button>
-                </form>
+                <a href="{% url 'configuracoes' %}" class="btn-fantasma btn-pequeno shrink-0" {% if request.resolver_match.url_name == 'configuracoes' %}aria-current="page"{% endif %}><svg class="ico"><use href="#i-config"/></svg>Configurações</a>
             </div>
 
             <header class="flex flex-wrap items-end justify-between gap-4 px-4 sm:px-8 pt-6 pb-2">

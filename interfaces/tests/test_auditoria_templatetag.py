@@ -36,3 +36,17 @@ class DetalhesLegiveisTest(SimpleTestCase):
         self.assertEqual(detalhes_legiveis({'alteracoes': {'outro': ['a', 'b'], 'preco_custo': ['x', None]}}),
                          ["outro: a → b", "Preço de custo: x → (vazio)"])
         self.assertEqual(detalhes_legiveis(None), [])
+
+
+class IconeDaAcaoTest(SimpleTestCase):
+
+    def test_icone_por_acao_e_por_assunto(self):
+        from interfaces.templatetags.auditoria import icone_da_acao
+        casos = {
+            'venda_cancelada': 'i-x', 'venda_editada': 'i-venda', 'pagamento_registrado': 'i-carteira',
+            'produto_cadastrado': 'i-produto', 'cliente_editado': 'i-clientes', 'marca_alterada': 'i-foto',
+            'algo_novo': 'i-historico',
+        }
+        for acao, icone in casos.items():
+            with self.subTest(acao=acao):
+                self.assertEqual(icone_da_acao(acao), icone)

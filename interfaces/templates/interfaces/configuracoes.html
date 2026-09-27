@@ -1,0 +1,65 @@
+{% extends 'interfaces/base.html' %}
+
+{% block title %}Configurações · Gestão da Loja{% endblock %}
+{% block header_title %}Configurações{% endblock %}
+{% block subtitulo %}Sua conta e a marca da loja.{% endblock %}
+
+{% block content %}
+<div class="grid gap-5 max-w-2xl">
+
+<section class="cartao cartao-corpo" aria-labelledby="t-conta">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-conta" class="titulo-cartao">Conta</h2><p class="subtitulo">Só o administrador do sistema pode alterar estes dados.</p></div>
+    </div>
+    <dl class="grid gap-3 sm:grid-cols-2">
+        <div class="campo">
+            <dt class="rotulo">Usuário</dt>
+            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.username }}</span><svg class="ico ico-sm shrink-0" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
+        </div>
+        <div class="campo">
+            <dt class="rotulo">Loja</dt>
+            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.loja.nome_loja|default:"Painel global" }}</span><svg class="ico ico-sm shrink-0" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
+        </div>
+    </dl>
+</section>
+
+{% if request.user.loja %}
+<section class="cartao cartao-corpo" aria-labelledby="t-marca">
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-marca" class="titulo-cartao">Marca da loja</h2><p class="subtitulo">Aparece no topo do sistema e nos PDFs (extrato do cliente e relatórios).</p></div>
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+        {% include 'interfaces/_marca_loja.html' with classes='w-20 h-20 rounded-2xl text-2xl' %}
+        <form method="POST" action="{% url 'marca_enviar' %}" enctype="multipart/form-data" class="grid gap-3 flex-1 basis-60">
+            {% csrf_token %}
+            <div class="campo">
+                <label for="id_marca" class="rotulo">{% if request.user.loja.logo_url %}Trocar a marca{% else %}Enviar a marca{% endif %} <span class="obrigatorio" aria-hidden="true">*</span></label>
+                <input type="file" id="id_marca" name="marca" required accept="image/jpeg,image/png,image/webp" class="entrada-arquivo">
+                <p class="ajuda">JPG, PNG ou WEBP, até {{ tamanho_maximo_mb }} MB. Imagens quadradas ficam melhores; nós reduzimos o arquivo automaticamente.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar marca</button>
+                {% if request.user.loja.logo_url %}
+                <button type="submit" form="form-remover-marca" class="btn-secundario"><svg class="ico"><use href="#i-lixeira"/></svg>Remover marca</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    {% if request.user.loja.logo_url %}
+    <form id="form-remover-marca" method="POST" action="{% url 'marca_remover' %}" onsubmit="return confirm('Remover a marca da loja?')">{% csrf_token %}</form>
+    {% endif %}
+</section>
+{% endif %}
+
+<section class="cartao cartao-corpo" aria-labelledby="t-sair">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div><h2 id="t-sair" class="titulo-cartao">Sair da conta</h2><p class="subtitulo">Encerra o acesso neste aparelho.</p></div>
+        <form action="{% url 'logout' %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn-secundario"><svg class="ico"><use href="#i-sair"/></svg>Sair</button>
+        </form>
+    </div>
+</section>
+
+</div>
+{% endblock %}

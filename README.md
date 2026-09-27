@@ -122,6 +122,14 @@ make test        # pytest com cobertura + jest
 - **Registro de alterações** (`RegistroDeAlteracao`, `application/auditoria/`): vendas, pagamentos, produtos e
   clientes, com antes → depois. Aparece em Relatórios › Alterações e no admin (só leitura).
 
+## Configurações e marca da loja
+
+- **Configurações** (engrenagem no topo do celular; item acima de "Sair" no menu lateral): usuário e loja só para
+  consulta, marca da loja e "Sair".
+- **Marca da loja** (`LojaModel.logo_url`, `application/lojas/`): qualquer usuário da loja envia; é reduzida para
+  512px em WebP e aparece no topo do sistema e no cabeçalho dos PDFs (extrato e relatórios, `pdf_marca.py`).
+  O PDF baixa a marca só do bucket do Supabase; se não conseguir, sai sem ela.
+
 ## CSS (Tailwind)
 
 `static/css/output.css` é **versionado** e servido direto em produção. Sempre que adicionar ou

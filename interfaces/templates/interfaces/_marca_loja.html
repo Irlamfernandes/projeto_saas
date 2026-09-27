@@ -1,0 +1,3 @@
+{% load navegacao %}{% comment %}
+Marca da loja do usuário ou, sem ela, as iniciais. Parâmetro: classes (tamanho e cantos).
+{% endcomment %}{% with loja=request.user.loja %}{% if loja.logo_url %}<img src="{{ loja.logo_url }}" alt="" class="{{ classes }} shrink-0 object-contain bg-white border border-linha">{% else %}<span class="grid place-items-center shrink-0 {{ classes }} bg-marca-600 text-white font-titulo font-bold" aria-hidden="true">{% if loja %}{{ loja.nome_loja|iniciais }}{% else %}<svg class="ico"><use href="#i-loja"/></svg>{% endif %}</span>{% endif %}{% endwith %}

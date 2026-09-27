@@ -5,6 +5,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 QUANTIDADE_DE_COMPRAS_NO_EXTRATO = 5
 
@@ -25,7 +26,7 @@ ESTILO_TABELA = TableStyle([
 ])
 
 
-def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None):
+def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None, storage=None):
     if loja_usuario and cliente.loja != loja_usuario:
         raise PermissionDenied("Acesso negado: Este cliente pertence a outra loja.")
 
@@ -33,8 +34,7 @@ def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None):
     texto_situacao, cor_situacao = situacao_financeira(cliente.saldo_geral)
 
     story = [
-        Paragraph(f"<b>{escape(cliente.loja.nome_loja)}</b>", _estilo(estilos['Heading1'], fontSize=16, textColor=colors.HexColor('#1f2937'), spaceAfter=2)),
-        Paragraph("Extrato Oficial de Conta / Caderneta", _estilo(estilos['Normal'], fontSize=10, textColor=COR_NEUTRA, spaceAfter=15)),
+        *cabecalho_da_loja(cliente.loja, "Extrato Oficial de Conta / Caderneta", storage),
         Paragraph(f"<b>Cliente:</b> {escape(cliente.nome)}", estilos['Normal']),
         Paragraph(f"<b>Telefone:</b> {escape(cliente.telefone or 'Não informado')}", estilos['Normal']),
         Spacer(1, 10),

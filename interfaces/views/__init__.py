@@ -14,3 +14,4 @@ from .relatorios_export_views import exportar_pdf_modular_view, exportar_excel_m
 from .relatorios_analises_views import (
     relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view, relatorios_alteracoes_view,
 )
+from .configuracoes_view import configuracoes_view, marca_enviar_view, marca_remover_view
