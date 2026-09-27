@@ -14,7 +14,9 @@ ROTULOS = {
 CAMPOS_EM_REAIS = {'preco_custo', 'preco_venda'}
 VAZIO = '(vazio)'
 ICONES_POR_ACAO = {'venda_cancelada': 'i-x', 'marca_alterada': 'i-foto', 'plano_renovado': 'i-calendario'}
-ICONES_POR_ASSUNTO = {'venda': 'i-venda', 'pagamento': 'i-carteira', 'produto': 'i-produto', 'cliente': 'i-clientes'}
+ICONES_POR_ASSUNTO = {
+    'venda': 'i-venda', 'pagamento': 'i-carteira', 'produto': 'i-produto', 'cliente': 'i-clientes', 'lembrete': 'i-mensagem',
+}
 
 
 @register.filter

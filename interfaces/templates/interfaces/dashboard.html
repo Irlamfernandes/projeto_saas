@@ -39,6 +39,8 @@
     </a>
 </section>
 
+{% include 'interfaces/_cobrancas.html' %}
+
 <div class="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-5 items-start">
     <section class="cartao cartao-corpo" aria-labelledby="t-faturamento">
         <div class="cartao-cabecalho">
@@ -165,4 +167,5 @@
 {% block extra_js %}
 <script src="{% static 'vendor/chart.umd.min.js' %}"></script>
 <script src="{% static 'js/graficos.js' %}"></script>
+<script src="{% static 'js/cobrancas.js' %}"></script>
 {% endblock %}

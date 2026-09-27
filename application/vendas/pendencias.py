@@ -9,7 +9,9 @@ Por ser calculado, nada fica desatualizado quando uma venda é editada ou cancel
 from dataclasses import dataclass
 from datetime import date
 from decimal import ROUND_DOWN, Decimal
+from django.db.models import Prefetch, prefetch_related_objects
 from django.utils import timezone
+from infrastructure.models import Venda
 
 ZERO = Decimal('0.00')
 CENTAVO = Decimal('0.01')
@@ -76,9 +78,16 @@ def abater(pendencias, credito):
     return resultado
 
 
+def dados_para_pendencias():
+    """Prefetch com tudo que o cálculo usa: aplicado a vários clientes, evita uma consulta por cliente."""
+    vendas = Venda.objects.order_by('data_venda', 'pk').prefetch_related('parcelas', 'pagamentos_no_ato', 'itens__produto')
+    return (Prefetch('vendas', queryset=vendas), 'pagamentos')
+
+
 def pendencias_do_cliente(cliente):
     """Todas as partes das compras do cliente, da mais antiga para a mais nova, com o que ainda falta de cada uma."""
-    vendas = cliente.vendas.prefetch_related('parcelas', 'pagamentos_no_ato').order_by('data_venda', 'pk')
+    prefetch_related_objects([cliente], *dados_para_pendencias())  # não repete o que já veio carregado
+    vendas = cliente.vendas.all()
     pagos_na_caderneta = sum((p.valor for p in cliente.pagamentos.all() if p.venda_id is None), ZERO)
     sobras_do_ato = sum((-a_prazo(venda) for venda in vendas if a_prazo(venda) < 0), ZERO)
     pendencias = [pendencia for venda in vendas for pendencia in pendencias_da_venda(venda)]

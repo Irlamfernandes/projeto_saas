@@ -179,12 +179,6 @@
   .btn-fantasma { @apply btn px-3 text-tinta-suave hover:bg-fundo hover:text-tinta; }
   .btn-pequeno { @apply px-3 py-1.5 text-xs rounded-lg; }
 
-  /* Selo de situação (ex.: parcela paga, atrasada). A cor sempre vem acompanhada do texto. */
-  .selo { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums; }
-  .selo-bom { @apply bg-bom-suave text-bom-texto; }
-  .selo-alerta { @apply bg-alerta-suave text-alerta-texto; }
-  .selo-critico { @apply bg-critico-suave text-critico-texto; }
-  .selo-neutro { @apply bg-fundo text-tinta-suave; }
 
   /* Formulários: rótulo + campo + ajuda */
   .campo { @apply grid gap-1.5 content-start min-w-0; }

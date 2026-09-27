@@ -1,0 +1,69 @@
+{% load formatacao %}{% comment %}
+Cobranças do Início: clientes com compra atrasada, vencendo hoje ou nos próximos 7 dias.
+"Cobrar" abre o WhatsApp com a mensagem pronta e anota "lembrado hoje" (static/js/cobrancas.js).
+Parâmetro: cobrancas (lista de CobrancaNaTela).
+{% endcomment %}
+<section class="cartao cartao-corpo" aria-labelledby="t-cobrancas" data-cobrancas>
+    {% csrf_token %}
+    <div class="cartao-cabecalho">
+        <div><h2 id="t-cobrancas" class="titulo-cartao">Cobranças</h2><p class="subtitulo">Atrasadas, vencendo hoje e nos próximos 7 dias</p></div>
+        {% if cobrancas %}<button type="button" class="btn-primario btn-pequeno" data-cobrar-todos aria-haspopup="dialog"><svg class="ico ico-sm"><use href="#i-whatsapp"/></svg>Cobrar todos</button>{% endif %}
+    </div>
+    {% if cobrancas %}
+    <ul class="divide-y divide-grade">
+        {% for item in cobrancas %}{% with c=item.cobranca %}
+        <li class="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-3" data-cobranca data-nome="{{ c.cliente.nome }}" data-link="{{ item.link }}" data-mensagem="{{ item.mensagem }}"
+            data-lembrete="{% url 'lembrete_de_pagamento' c.cliente.id %}"{% if c.lembrado_hoje %} data-lembrado{% endif %}>
+            <span class="basis-full sm:basis-0 sm:flex-1 min-w-0">
+                <a href="{% url 'extrato_cliente' c.cliente.id %}" class="block font-semibold truncate hover:text-marca-700 hover:underline">{{ c.cliente.nome }}</a>
+                <span class="mt-1 flex flex-wrap gap-1.5">
+                    {% if c.situacao == 'atrasada' %}<span class="pilula-critico"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-alerta"/></svg>Atrasado desde {{ c.primeiro_vencimento|date:"d/m" }}</span>
+                    {% elif c.situacao == 'vence_hoje' %}<span class="pilula-alerta"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-tempo"/></svg>Vence hoje</span>
+                    {% else %}<span class="pilula-neutra">Vence {{ c.primeiro_vencimento|date:"d/m" }}</span>{% endif %}
+                    <span class="pilula-bom{% if not c.lembrado_hoje %} hidden{% endif %}" data-selo-lembrado><svg class="ico ico-sm" aria-hidden="true"><use href="#i-check"/></svg>Lembrado hoje</span>
+                </span>
+            </span>
+            <span class="ml-auto flex items-center gap-3">
+            <span class="font-bold tabular-nums whitespace-nowrap">R$ {{ c.total|moeda }}</span>
+            {% if item.link %}
+            <a href="{{ item.link }}" target="_blank" rel="noopener noreferrer" class="btn-secundario btn-pequeno" data-enviar-lembrete><svg class="ico ico-sm"><use href="#i-whatsapp"/></svg>Cobrar</a>
+            {% else %}
+            <a href="{% url 'clientes' %}" class="text-xs font-semibold text-tinta-fraca hover:underline" title="Cadastre o telefone para cobrar pelo WhatsApp">Sem telefone</a>
+            {% endif %}
+            </span>
+            <details class="w-full text-xs text-tinta-suave">
+                <summary class="cursor-pointer font-semibold w-fit">Ver mensagem</summary>
+                <p class="mt-1.5 whitespace-pre-line rounded-controle bg-fundo p-3">{{ item.mensagem }}</p>
+            </details>
+        </li>
+        {% endwith %}{% endfor %}
+    </ul>
+    {% else %}
+        {% include 'interfaces/_vazio.html' with icone='i-check' titulo='Nada para cobrar' texto='Ninguém com pagamento atrasado ou vencendo nos próximos 7 dias.' %}
+    {% endif %}
+</section>
+
+{% if cobrancas %}
+<dialog id="cobrar-todos" class="janela max-w-lg" aria-labelledby="t-cobrar-todos">
+    <div class="cartao-corpo grid gap-4">
+        <div class="flex items-start justify-between gap-3">
+            <h2 id="t-cobrar-todos" class="flex items-center gap-2 text-lg font-bold"><svg class="ico text-marca-600"><use href="#i-whatsapp"/></svg>Cobrar todos</h2>
+            <button type="button" class="btn-fantasma btn-pequeno px-2" data-fechar-dialogo><svg class="ico ico-sm"><use href="#i-fechar"/></svg><span class="sr-only">Fechar</span></button>
+        </div>
+        <div class="grid gap-3" data-etapa aria-live="polite">
+            <p class="text-sm text-tinta-suave"><span data-passo></span> · confira a mensagem e toque em enviar</p>
+            <p class="text-lg font-bold" data-cliente></p>
+            <p class="whitespace-pre-line rounded-controle bg-fundo p-3 text-sm max-h-60 overflow-y-auto" data-texto></p>
+            <div class="flex flex-wrap justify-end gap-2">
+                <button type="button" class="btn-secundario" data-pular>Pular</button>
+                <a class="btn-primario" target="_blank" rel="noopener noreferrer" data-enviar><svg class="ico"><use href="#i-whatsapp"/></svg>Enviar no WhatsApp</a>
+            </div>
+        </div>
+        <div class="hidden grid gap-3 text-center" data-fim>
+            <p class="font-bold">Pronto, não falta ninguém.</p>
+            <p class="text-sm text-tinta-suave">Quem já foi lembrado hoje ou está sem telefone fica fora da lista.</p>
+            <button type="button" class="btn-secundario justify-self-center" data-fechar-dialogo>Fechar</button>
+        </div>
+    </div>
+</dialog>
+{% endif %}
