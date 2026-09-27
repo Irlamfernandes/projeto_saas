@@ -15,7 +15,7 @@
         <form method="POST" class="grid gap-4">
             {% csrf_token %}
             <div class="campo">
-                <label for="id_nome" class="rotulo">Nome</label>
+                <label for="id_nome" class="rotulo">Nome <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <input type="text" id="id_nome" name="nome" required maxlength="255" placeholder="Ex.: Maria da Silva" class="entrada">
             </div>
             <div class="campo">
@@ -91,7 +91,7 @@
             <h2 id="modal-titulo" class="text-lg font-bold">Editar cliente</h2>
             <button type="button" onclick="fecharModalEdicaoCliente()" class="btn-fantasma px-2" aria-label="Fechar"><svg class="ico"><use href="#i-fechar"/></svg></button>
         </div>
-        <div class="campo"><label for="edit-cli-nome" class="rotulo">Nome</label><input type="text" id="edit-cli-nome" name="nome" required maxlength="255" class="entrada"></div>
+        <div class="campo"><label for="edit-cli-nome" class="rotulo">Nome <span class="obrigatorio" aria-hidden="true">*</span></label><input type="text" id="edit-cli-nome" name="nome" required maxlength="255" class="entrada"></div>
         <div class="campo"><label for="edit-cli-telefone" class="rotulo">Telefone / WhatsApp <span class="rotulo-opcional">opcional</span></label><input type="tel" id="edit-cli-telefone" name="telefone" maxlength="20" class="entrada"></div>
         <div class="campo"><label for="edit-cli-email" class="rotulo">E-mail <span class="rotulo-opcional">opcional</span></label><input type="email" id="edit-cli-email" name="email" class="entrada"></div>
         <div class="campo"><label for="edit-cli-endereco" class="rotulo">Endereço ou observação <span class="rotulo-opcional">opcional</span></label><textarea id="edit-cli-endereco" name="endereco" rows="2" class="entrada"></textarea></div>

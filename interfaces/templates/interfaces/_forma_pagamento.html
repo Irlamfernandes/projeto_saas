@@ -1,10 +1,13 @@
-{% comment %}Escolha da forma de pagamento em botões. Parâmetros: formas (choices), selecionada, legenda.{% endcomment %}
+{% comment %}
+Escolha da forma de pagamento em botões. Parâmetros: formas (choices), selecionada, legenda,
+obrigatoria (mostra o *; nas vendas o static/js/venda.js liga e desliga conforme o cliente e o pago agora).
+{% endcomment %}
 <fieldset class="campo" data-forma-pagamento>
-    <legend class="rotulo mb-1.5">{{ legenda|default:"Como pagou" }}</legend>
+    <legend class="rotulo mb-1.5">{{ legenda|default:"Como pagou" }} <span class="obrigatorio{% if not obrigatoria %} hidden{% endif %}" aria-hidden="true">*</span></legend>
     <div class="flex flex-wrap gap-2">
         {% for valor, rotulo in formas %}
         <label class="opcao">
-            <input type="radio" name="forma_pagamento" value="{{ valor }}" class="sr-only peer" {% if valor == selecionada %}checked{% endif %}>
+            <input type="radio" name="forma_pagamento" value="{{ valor }}" class="sr-only peer" {% if valor == selecionada %}checked{% endif %}{% if obrigatoria %} required{% endif %}>
             <span class="opcao-rotulo">{{ rotulo }}</span>
         </label>
         {% endfor %}

@@ -3,6 +3,7 @@
  */
 const {
     normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,
+    formaDePagamentoObrigatoria, iniciarFormaObrigatoria,
 } = require('../js/venda.js');
 
 const CATALOGO = [
@@ -247,5 +248,64 @@ describe('inicialização automática', () => {
         montarPagina({ comResumo: true });
         document.dispatchEvent(new Event('DOMContentLoaded'));
         expect(document.querySelector('[data-resumo-pagamento]').textContent).toBe('Venda de balcão: paga na hora.');
+    });
+});
+
+describe('forma de pagamento obrigatória', () => {
+    function montarFormulario({ pagouNoAto = false } = {}) {
+        document.body.innerHTML = `
+            <form ${pagouNoAto ? 'data-pagou-no-ato' : ''}>
+                <select name="cliente"><option value="">Balcão</option><option value="7">Ana</option></select>
+                <input name="valor_pago">
+                <fieldset data-forma-pagamento><legend>Como pagou <span class="obrigatorio">*</span></legend>
+                    <input type="radio" name="forma_pagamento" value="pix"><input type="radio" name="forma_pagamento" value="dinheiro">
+                </fieldset>
+            </form>`;
+        const formulario = document.querySelector('form');
+        iniciarFormaObrigatoria(formulario);
+        return {
+            formulario,
+            cliente: formulario.querySelector('[name="cliente"]'),
+            pago: formulario.querySelector('[name="valor_pago"]'),
+            asteriscoVisivel: () => !formulario.querySelector('.obrigatorio').classList.contains('hidden'),
+            opcoesObrigatorias: () => [...formulario.querySelectorAll('[name="forma_pagamento"]')].every((o) => o.required),
+        };
+    }
+
+    function mudar(campo, valor, evento = 'change') {
+        campo.value = valor;
+        campo.dispatchEvent(new Event(evento, { bubbles: true }));
+    }
+
+    test('no balcão é obrigatória', () => {
+        const tela = montarFormulario();
+        expect(tela.asteriscoVisivel()).toBe(true);
+        expect(tela.opcoesObrigatorias()).toBe(true);
+    });
+
+    test('com cliente e sem pagamento na hora deixa de ser obrigatória', () => {
+        const tela = montarFormulario();
+        mudar(tela.cliente, '7');
+        expect(tela.asteriscoVisivel()).toBe(false);
+        expect(tela.opcoesObrigatorias()).toBe(false);
+    });
+
+    test('com cliente e valor pago agora volta a ser obrigatória', () => {
+        const tela = montarFormulario();
+        mudar(tela.cliente, '7');
+        mudar(tela.pago, '10', 'input');
+        expect(tela.asteriscoVisivel()).toBe(true);
+    });
+
+    test('na edição, venda com pagamento no ato continua obrigatória mesmo com cliente', () => {
+        const tela = montarFormulario({ pagouNoAto: true });
+        mudar(tela.cliente, '7');
+        expect(formaDePagamentoObrigatoria(tela.formulario)).toBe(true);
+        expect(tela.asteriscoVisivel()).toBe(true);
+    });
+
+    test('página sem a forma de pagamento não quebra', () => {
+        document.body.innerHTML = '<form><select name="cliente"></select></form>';
+        expect(() => iniciarFormaObrigatoria(document.querySelector('form'))).not.toThrow();
     });
 });

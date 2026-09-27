@@ -32,7 +32,7 @@
                 <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0" id="id_valor_pago_venda" name="valor_pago" placeholder="0,00" inputmode="decimal" class="tabular-nums"></div>
             </div>
 
-            {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada='dinheiro' %}
+            {% include 'interfaces/_forma_pagamento.html' with formas=formas_de_pagamento selecionada='dinheiro' obrigatoria=True %}
 
             <p data-resumo-pagamento class="rounded-controle bg-marca-50 px-3.5 py-2.5 text-sm font-semibold text-marca-700" aria-live="polite">Venda de balcão: paga na hora.</p>
 

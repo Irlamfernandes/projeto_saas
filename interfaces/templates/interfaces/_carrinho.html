@@ -3,7 +3,7 @@ Carrinho da venda (static/js/venda.js). Parâmetros: catalogo (lista de produtos
 Envia listas paralelas item_produto[] e item_quantidade[].
 {% endcomment %}
 <div class="campo" data-carrinho data-catalogo="catalogo-venda"{% if itens_iniciais %} data-itens="itens-iniciais"{% endif %}>
-    <label for="busca-produto" class="rotulo">Produtos</label>
+    <label for="busca-produto" class="rotulo">Produtos <span class="obrigatorio" aria-hidden="true">*</span></label>
     <div class="relative">
         <div class="entrada-grupo">
             <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>

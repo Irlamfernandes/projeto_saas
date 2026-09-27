@@ -49,6 +49,7 @@
   .campo { @apply grid gap-1.5 content-start min-w-0; }
   .rotulo { @apply text-sm font-semibold text-tinta; }
   .rotulo-opcional { @apply ml-1 text-xs font-medium text-tinta-fraca; }
+  .obrigatorio { @apply font-bold text-critico; }
   .ajuda { @apply text-xs text-tinta-fraca leading-relaxed; }
   .entrada { @apply w-full rounded-controle border border-linha bg-white px-3 py-2.5 text-[0.95rem] text-tinta placeholder:text-tinta-fraca transition focus:border-marca-500 focus:outline-none focus:ring-4 focus:ring-marca-100; }
   /* Seta própria: a nativa fica por cima do texto e muda de navegador para navegador */

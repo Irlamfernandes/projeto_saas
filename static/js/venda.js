@@ -254,14 +254,44 @@ function iniciarResumoDePagamento(formulario) {
     atualizar();
 }
 
+/* Mesma regra do servidor: a forma de pagamento é obrigatória no balcão ou quando houve pagamento no ato. */
+function formaDePagamentoObrigatoria(formulario) {
+    const cliente = formulario.querySelector('[name="cliente"]');
+    const pagoAgora = formulario.querySelector('[name="valor_pago"]');
+    return !cliente.value || 'pagouNoAto' in formulario.dataset || Number(pagoAgora?.value) > 0;
+}
+
+/* Mostra o * e liga o required da forma de pagamento só quando ela é obrigatória. */
+function iniciarFormaObrigatoria(formulario) {
+    const marca = formulario.querySelector('[data-forma-pagamento] .obrigatorio');
+    const opcoes = formulario.querySelectorAll('[name="forma_pagamento"]');
+    if (!marca || !formulario.querySelector('[name="cliente"]')) return;
+
+    function atualizar() {
+        const obrigatoria = formaDePagamentoObrigatoria(formulario);
+        marca.classList.toggle('hidden', !obrigatoria);
+        opcoes.forEach((opcao) => { opcao.required = obrigatoria; });
+    }
+
+    formulario.addEventListener('change', atualizar);
+    formulario.addEventListener('input', atualizar);
+    atualizar();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-carrinho]').forEach((raiz) => {
         const formulario = raiz.closest('form');
-        if (formulario) iniciarResumoDePagamento(formulario);
+        if (formulario) {
+            iniciarResumoDePagamento(formulario);
+            iniciarFormaObrigatoria(formulario);
+        }
         iniciarCarrinho(raiz);
     });
 });
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento };
+    module.exports = {
+        normalizar, buscarProdutos, totalDoCarrinho, formatarReais, iniciarCarrinho, iniciarResumoDePagamento,
+        formaDePagamentoObrigatoria, iniciarFormaObrigatoria,
+    };
 }

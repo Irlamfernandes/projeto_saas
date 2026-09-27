@@ -15,7 +15,7 @@
         <form method="POST" enctype="multipart/form-data" class="grid gap-4">
             {% csrf_token %}
             <div class="campo">
-                <label for="id_nome_produto" class="rotulo">Nome do produto</label>
+                <label for="id_nome_produto" class="rotulo">Nome do produto <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <input type="text" id="id_nome_produto" name="nome" required maxlength="150" placeholder="Ex.: Bolo de cenoura com chocolate" class="entrada">
                 <p class="ajuda">É assim que ele aparece na hora da venda e no extrato do cliente.</p>
             </div>
@@ -51,14 +51,14 @@
                     </div>
                 </div>
                 <div class="campo">
-                    <label for="id_preco_venda" class="rotulo">Quanto você cobra</label>
+                    <label for="id_preco_venda" class="rotulo">Quanto você cobra <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="id_preco_venda" name="preco_venda" required placeholder="0,00" inputmode="decimal" class="tabular-nums font-semibold"></div>
                     <p class="ajuda">Preencha o custo e o lucro desejado que calculamos o preço. Ou digite o preço e calculamos o lucro.</p>
                 </div>
             </fieldset>
 
             <div class="campo">
-                <label for="id_quantidade_estoque" class="rotulo">Quantidade em estoque</label>
+                <label for="id_quantidade_estoque" class="rotulo">Quantidade em estoque <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <div class="entrada-grupo"><input type="number" id="id_quantidade_estoque" name="quantidade_estoque" value="1" min="0" required inputmode="numeric" class="tabular-nums"><span class="afixo-fim">un.</span></div>
                 <p class="ajuda">Avisamos no início quando estiver acabando.</p>
             </div>
