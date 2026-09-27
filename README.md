@@ -91,7 +91,8 @@ make test        # pytest com cobertura + jest
 - Usuários criados em testes de telas da loja precisam de `deve_trocar_senha=False`
   (o padrão do model é `True`).
 - A cobertura é configurada em `.coveragerc` e enviada ao SonarQube (`sonar-project.properties`).
-  O objetivo é manter 100%.
+  O objetivo é manter 100%. `make test` grava `coverage.xml` (Python) e `coverage/lcov.info` (JS);
+  `SONAR_TOKEN=seu_token make sonar` roda os testes e já envia a análise, sempre com a cobertura nova.
 
 ## Visual, gráficos e relatórios
 

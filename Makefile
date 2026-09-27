@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test css traducoes
+.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test sonar css traducoes
 
 # Sobe os containers em background fazendo build
 up:
@@ -41,9 +41,16 @@ collectstatic:
 	docker compose exec web python manage.py collectstatic --noinput
 
 # Roda as suítes Python (com cobertura) e JS localmente; requer requirements-dev.txt e npm install
+# Testes com cobertura; também gera coverage.xml e coverage/lcov.info, lidos pelo SonarQube
 test:
-	python -m pytest --cov --cov-report=term-missing
-	npm test
+	python -m pytest --cov --cov-report=term-missing --cov-report=xml
+	npm test -- --coverage
+
+# Roda os testes (gerando a cobertura) e envia a análise ao SonarQube local.
+# O token não fica em arquivo: SONAR_TOKEN=seu_token make sonar
+sonar: test
+	@test -n "$$SONAR_TOKEN" || (echo "Defina SONAR_TOKEN: SONAR_TOKEN=seu_token make sonar"; exit 1)
+	sonar-scanner
 
 # Recompila o Tailwind (static/css/output.css é versionado: rode após mudar classes nos templates)
 css:

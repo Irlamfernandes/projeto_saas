@@ -2,6 +2,7 @@
 source = application
          interfaces
          infrastructure
+         config
 omit = 
     */static/sw.js
     tailwind.config.js
