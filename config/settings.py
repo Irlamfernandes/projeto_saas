@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,7 +17,8 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or os.getenv('SECRET_KEY')
 if not SECRET_KEY:
     if not DEBUG:
         raise ImproperlyConfigured("Defina DJANGO_SECRET_KEY no ambiente (obrigatória com DJANGO_DEBUG desligado).")
-    SECRET_KEY = 'django-insecure-somente-para-desenvolvimento-local'
+    # Desenvolvimento sem chave: uma aleatória a cada início (as sessões locais caem ao reiniciar).
+    SECRET_KEY = 'django-insecure-' + get_random_secret_key()
 
 # Trata hosts permitidos
 raw_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')

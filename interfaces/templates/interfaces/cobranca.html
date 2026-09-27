@@ -9,14 +9,14 @@
 {% block content %}
 <section class="cartao cartao-corpo max-w-xl" aria-labelledby="t-pix">
 {% if cobranca.status == 'paga' %}
-    <div class="grid justify-items-center gap-3 py-4 text-center" role="status">
+    <div class="grid justify-items-center gap-3 py-4 text-center">
         <span class="grid place-items-center w-14 h-14 rounded-full bg-bom-suave text-bom-texto" aria-hidden="true"><svg class="ico w-7 h-7"><use href="#i-check"/></svg></span>
         <h2 id="t-pix" class="text-xl font-bold">Pagamento confirmado!</h2>
         <p class="text-sm text-tinta-suave">Seu plano agora vai até <b class="text-tinta">{{ cobranca.vencimento_novo|date:"d/m/Y" }}</b>. Obrigado!</p>
         <a href="{% url 'dashboard' %}" class="btn-primario mt-2">Voltar ao início</a>
     </div>
 {% elif cobranca.status == 'expirada' %}
-    <div class="grid justify-items-center gap-3 py-4 text-center" role="status">
+    <div class="grid justify-items-center gap-3 py-4 text-center">
         <span class="grid place-items-center w-14 h-14 rounded-full bg-alerta-suave text-alerta-texto" aria-hidden="true"><svg class="ico w-7 h-7"><use href="#i-tempo"/></svg></span>
         <h2 id="t-pix" class="text-xl font-bold">Este Pix expirou</h2>
         <p class="text-sm text-tinta-suave">Nenhum valor foi cobrado. Gere um novo Pix para renovar.</p>
@@ -43,10 +43,10 @@
             <button type="button" class="btn-secundario" data-copiar="pix-copia-e-cola" onclick="copiarPix(this)"><svg class="ico"><use href="#i-check"/></svg><span>Copiar código</span></button>
         </div>
 
-        <p class="flex items-center gap-2 rounded-controle bg-marca-50 px-3.5 py-2.5 text-sm font-semibold text-marca-700" role="status" aria-live="polite">
+        <output class="flex items-center gap-2 rounded-controle bg-marca-50 px-3.5 py-2.5 text-sm font-semibold text-marca-700">
             <svg class="ico shrink-0 animate-spin motion-reduce:animate-none"><use href="#i-reposicao"/></svg>
             Aguardando o pagamento. Esta tela atualiza sozinha quando o Mercado Pago confirmar.
-        </p>
+        </output>
         <p class="ajuda">Válido até {{ cobranca.expira_em|date:"H:i" }}. Se já pagou e nada mudou, <a href="{% url 'cobranca' cobranca.pk %}" class="font-semibold text-marca-700 hover:underline">confira de novo</a>.</p>
     </div>
 {% endif %}

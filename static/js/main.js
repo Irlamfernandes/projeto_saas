@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarModalGaleria();
     inicializarDialogos();
     inicializarEnvioAoMudar();
+    inicializarMarcaDaLoja();
 });
 
 function inicializarFocoInputs() {
@@ -168,6 +169,7 @@ function inicializarFecharModalAoClicarFora() {
     });
 }
 
+/* Galeria de fotos (<dialog>): o Esc e o foco já vêm do navegador; aqui, setas trocam a foto e o toque fora fecha. */
 function inicializarModalGaleria() {
     const modal = document.getElementById('modal-imagem');
     if (!modal) return;
@@ -179,12 +181,9 @@ function inicializarModalGaleria() {
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
-            fecharModalDireto();
-        } else if (!modal.classList.contains('hidden')) {
-            if (event.key === 'ArrowLeft') mudarImagem(-1);
-            if (event.key === 'ArrowRight') mudarImagem(1);
-        }
+        if (!modal.open) return;
+        if (event.key === 'ArrowLeft') mudarImagem(-1);
+        if (event.key === 'ArrowRight') mudarImagem(1);
     });
 }
 
@@ -198,8 +197,7 @@ function abrirModalGaleria(listaUrls, indiceInicial = 0) {
     if (!modal) return;
 
     atualizarExibicaoGaleria();
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    if (!modal.open) modal.showModal();
 }
 
 function mudarImagem(direcao) {
@@ -235,11 +233,7 @@ function atualizarExibicaoGaleria() {
 }
 
 function fecharModalDireto() {
-    const modal = document.getElementById('modal-imagem');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
+    document.getElementById('modal-imagem')?.close();
 }
 
 /* Janelas <dialog>: [data-abrir-dialogo="id"] abre, [data-fechar-dialogo] fecha, e com [data-fechar-fora]
@@ -266,6 +260,22 @@ function inicializarEnvioAoMudar(raiz = document) {
     });
 }
 
+/* Marca da loja que não carrega (arquivo apagado, storage fora do ar): mostra as iniciais que estão logo depois. */
+function inicializarMarcaDaLoja(raiz = document) {
+    raiz.querySelectorAll('img[data-marca-loja]').forEach((imagem) => {
+        const trocarPorIniciais = () => {
+            imagem.classList.add('hidden');
+            imagem.nextElementSibling?.classList.remove('hidden');
+        };
+        // Pode ter falhado antes deste script rodar: aí o erro já passou e só resta conferir o resultado.
+        if (imagem.complete && imagem.naturalWidth === 0) {
+            trocarPorIniciais();
+        } else {
+            imagem.addEventListener('error', trocarPorIniciais);
+        }
+    });
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
@@ -278,6 +288,7 @@ if (typeof module !== 'undefined') {
         abrirModalGaleria,
         mudarImagem,
         inicializarDialogos,
-        inicializarEnvioAoMudar
+        inicializarEnvioAoMudar,
+        inicializarMarcaDaLoja
     };
 }

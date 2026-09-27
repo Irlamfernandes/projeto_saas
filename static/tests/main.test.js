@@ -258,20 +258,27 @@ describe('Testes de Cobertura Total - main.js', () => {
         modal.dispatchEvent(new MouseEvent('click', { clientX: 50, clientY: 50 }));
     });
 
+    /* O jsdom não abre <dialog> de verdade: showModal/close só ligam e desligam o atributo "open". */
+    function simularDialogo(dialogo) {
+        dialogo.showModal = jest.fn(() => { dialogo.open = true; });
+        dialogo.close = jest.fn(() => { dialogo.open = false; });
+        return dialogo;
+    }
+
     test('7. Deve testar modal de galeria, atalhos de teclado e navegação', () => {
         document.body.innerHTML = `
-            <div id="modal-imagem" class="hidden">
+            <dialog id="modal-imagem">
                 <img id="modal-imagem-src" />
                 <span id="modal-indicador"></span>
                 <button id="btn-anterior"></button>
                 <button id="btn-proximo"></button>
-            </div>
+            </dialog>
         `;
+        const modal = simularDialogo(document.getElementById('modal-imagem'));
 
         const { abrirModalGaleria, mudarImagem, fecharModalDireto } = require('../js/main.js');
         document.dispatchEvent(new Event('DOMContentLoaded'));
 
-        const modal = document.getElementById('modal-imagem');
         const img = document.getElementById('modal-imagem-src');
         const indicador = document.getElementById('modal-indicador');
         const btnAnt = document.getElementById('btn-anterior');
@@ -279,18 +286,20 @@ describe('Testes de Cobertura Total - main.js', () => {
 
         abrirModalGaleria([]);
         abrirModalGaleria(null);
-        expect(modal.classList.contains('hidden')).toBeTruthy();
+        expect(modal.open).toBeFalsy();
 
         abrirModalGaleria(['foto1.jpg']);
         expect(btnAnt.style.display).toBe('none');
         expect(btnProx.style.display).toBe('none');
 
         const imagens = ['img1.jpg', 'img2.jpg', 'img3.jpg'];
-        abrirModalGaleria(imagens, 0);
+        modal.showModal.mockClear();
+        abrirModalGaleria(imagens, 0); // já aberta: só troca as fotos
+        expect(modal.showModal).not.toHaveBeenCalled();
 
         expect(btnAnt.style.display).toBe('');
         expect(btnProx.style.display).toBe('');
-        expect(modal.classList.contains('hidden')).toBeFalsy();
+        expect(modal.open).toBeTruthy();
         expect(img.src).toContain('img1.jpg');
         expect(indicador.textContent).toBe('1 de 3');
 
@@ -308,30 +317,29 @@ describe('Testes de Cobertura Total - main.js', () => {
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
         expect(img.src).toContain('img3.jpg');
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-        expect(modal.classList.contains('hidden')).toBeTruthy();
+        expect(img.src).toContain('img3.jpg');
 
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
-
-        abrirModalGaleria(imagens, 0);
         img.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-        expect(modal.classList.contains('hidden')).toBeFalsy();
+        expect(modal.open).toBeTruthy();
 
         modal.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-        expect(modal.classList.contains('hidden')).toBeTruthy();
+        expect(modal.open).toBeFalsy();
 
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        // Fechada, as setas não mexem nas fotos
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+        expect(img.src).toContain('img3.jpg');
+
+        abrirModalGaleria(imagens, 0);
+        expect(modal.open).toBeTruthy();
         fecharModalDireto();
-        expect(modal.classList.contains('hidden')).toBeTruthy();
-        expect(modal.classList.contains('flex')).toBeFalsy();
+        expect(modal.open).toBeFalsy();
     });
 
     test('8. Deve testar galeria sem elementos de exibição no DOM (cobertura total de atualizarExibicaoGaleria)', () => {
         document.body.innerHTML = `
-            <div id="modal-imagem" class="hidden"></div>
+            <dialog id="modal-imagem"></dialog>
         `;
+        simularDialogo(document.getElementById('modal-imagem'));
 
         const { abrirModalGaleria, mudarImagem, fecharModalDireto } = require('../js/main.js');
         document.dispatchEvent(new Event('DOMContentLoaded'));
@@ -469,6 +477,41 @@ describe('Testes de Cobertura Total - main.js', () => {
             opcao.dispatchEvent(new Event('change', { bubbles: true }));
 
             expect(form.requestSubmit).toHaveBeenCalled();
+        });
+    });
+
+    describe('marca da loja que não carrega', () => {
+        const montar = () => {
+            document.body.innerHTML = `
+                <img data-marca-loja src="marca.webp"><span class="hidden">PP</span>
+                <img data-marca-loja src="sem-iniciais.webp">`;
+            return [...document.querySelectorAll('img')];
+        };
+
+        test('se a imagem falhar depois, troca pelas iniciais', () => {
+            const [imagem, sozinha] = montar();
+            require('../js/main.js').inicializarMarcaDaLoja();
+
+            imagem.dispatchEvent(new Event('error'));
+            expect(imagem.classList.contains('hidden')).toBe(true);
+            expect(document.querySelector('span').classList.contains('hidden')).toBe(false);
+            expect(() => sozinha.dispatchEvent(new Event('error'))).not.toThrow();
+        });
+
+        test('se já tinha falhado antes do script, troca na hora', () => {
+            const [imagem] = montar();
+            Object.defineProperty(imagem, 'complete', { value: true });
+            Object.defineProperty(imagem, 'naturalWidth', { value: 0 });
+            require('../js/main.js').inicializarMarcaDaLoja();
+            expect(imagem.classList.contains('hidden')).toBe(true);
+        });
+
+        test('imagem que carregou fica como está', () => {
+            const [imagem] = montar();
+            Object.defineProperty(imagem, 'complete', { value: true });
+            Object.defineProperty(imagem, 'naturalWidth', { value: 512 });
+            require('../js/main.js').inicializarMarcaDaLoja();
+            expect(imagem.classList.contains('hidden')).toBe(false);
         });
     });
 });

@@ -18,13 +18,15 @@ def test_usuario_com_loja_ativa_tem_acesso():
 
 
 def test_usuario_sem_loja_e_negado():
+    usuario = _usuario()
     with pytest.raises(PermissionDenied, match="nenhuma loja"):
-        verificar_acesso_loja(_usuario())
+        verificar_acesso_loja(usuario)
 
 
 def test_usuario_de_loja_inativa_e_negado():
+    usuario = _usuario(loja=SimpleNamespace(ativo=False))
     with pytest.raises(PermissionDenied, match="desativada"):
-        verificar_acesso_loja(_usuario(loja=SimpleNamespace(ativo=False)))
+        verificar_acesso_loja(usuario)
 
 
 def test_filtrar_por_loja_restringe_usuario_comum():

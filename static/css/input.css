@@ -236,6 +236,10 @@
   .texto-ajuda li::marker { @apply text-marca-600; }
   .texto-ajuda b { @apply font-semibold text-tinta; }
 
+  /* Galeria de fotos do produto: janela nativa ocupando a tela toda, escura nos dois temas */
+  .galeria { @apply m-0 h-dvh max-h-none w-full max-w-none border-0 bg-veu/95 p-0 text-white; }
+  .galeria[open] { @apply flex flex-col items-center justify-center gap-4 px-4 pt-16 pb-6; }
+
   /* Gráficos */
   .area-grafico { @apply relative w-full min-w-0 h-64 overflow-hidden; }
   .area-grafico canvas { @apply max-w-full; }

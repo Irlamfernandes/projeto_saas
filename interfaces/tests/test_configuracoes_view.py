@@ -50,7 +50,7 @@ class TelaDeConfiguracoesTest(ConfiguracoesTestCase):
 
         self.assertContains(response, f'src="{LOGO}"', count=3)  # menu lateral, topo do celular e a prévia
         # Se a imagem não carregar, as iniciais (escondidas) assumem o lugar
-        self.assertContains(response, "onerror=", count=3)
+        self.assertContains(response, "data-marca-loja", count=3)
         self.assertContains(response, 'class="hidden grid place-items-center', count=3)
         self.assertContains(response, "Remover marca")
 

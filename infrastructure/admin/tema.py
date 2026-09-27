@@ -3,7 +3,8 @@ from django.templatetags.static import static
 from django.urls import reverse_lazy
 
 
-def menu_lateral(request):
+def menu_lateral(_request):
+    """Unfold chama com o request; o menu é igual para todos (cada item confere a permissão)."""
     return [
         {'items': [_item('Painel', 'dashboard', 'admin:index')]},
         {'title': 'Lojas', 'items': [
@@ -21,7 +22,7 @@ def menu_lateral(request):
     ]
 
 
-def favicons(request):
+def favicons(_request):
     return [{'rel': 'icon', 'type': 'image/png', 'href': static('images/icon-192.png')}]
 
 

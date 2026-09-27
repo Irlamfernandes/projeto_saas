@@ -32,7 +32,7 @@ const FORMATOS = {
 
 /* O canvas só entende px: converte rem para px usando a letra da página (acompanha a letra grande do usuário). */
 function remEmPx(rem) {
-    const base = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const base = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     return rem * base;
 }
 

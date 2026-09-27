@@ -31,9 +31,13 @@ def test_producao_sem_secret_key_falha_ao_subir(recarregar):
         recarregar()
 
 
-def test_desenvolvimento_sem_secret_key_usa_chave_local(recarregar):
-    settings = recarregar(DJANGO_DEBUG='True')
-    assert settings.SECRET_KEY.startswith('django-insecure-')
+def test_desenvolvimento_sem_secret_key_usa_chave_aleatoria(recarregar):
+    """Nenhuma chave fica escrita no código: cada início gera outra."""
+    primeira = recarregar(DJANGO_DEBUG='True').SECRET_KEY
+    segunda = recarregar(DJANGO_DEBUG='True').SECRET_KEY
+    assert primeira.startswith('django-insecure-')
+    assert len(primeira) > 50
+    assert primeira != segunda
 
 
 def test_aceita_o_nome_alternativo_secret_key(recarregar):

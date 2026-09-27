@@ -11,7 +11,7 @@ def plano(request):
     return {'plano': situacao_do_plano(usuario.loja)}
 
 
-def desenvolvedor(request):
+def desenvolvedor(_request):
     """Marca de quem fez o sistema, para o rodapé, o login e o suporte."""
     return {'desenvolvedor': CORSARIOS_CODE}
 
