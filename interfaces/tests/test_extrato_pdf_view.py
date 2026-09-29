@@ -22,7 +22,7 @@ class ExtratoPdfViewTest(TestCase):
             deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
-        
+
         # Cria usuário sem loja ignorando o full_clean para testar a exceção de permissão
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
@@ -51,7 +51,7 @@ class ExtratoPdfViewTest(TestCase):
         """Usuário comum consegue baixar o extrato em PDF de um cliente da sua própria loja."""
         self.client.force_login(self.user_loja1)
         response = self.client.get(self._get_url_pdf(self.cliente_loja1.pk))
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn('attachment', response['Content-Disposition'])
@@ -68,7 +68,7 @@ class ExtratoPdfViewTest(TestCase):
         """Superusuário consegue gerar o PDF do extrato de clientes de qualquer loja."""
         self.client.force_login(self.superuser)
         response = self.client.get(self._get_url_pdf(self.cliente_loja2.pk))
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/pdf')
         self.assertIn('extrato_Maria_Souza.pdf', response['Content-Disposition'])

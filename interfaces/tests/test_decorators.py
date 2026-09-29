@@ -85,7 +85,7 @@ class TravaDoPlanoVencidoTest(SimpleTestCase):
 
         self.assertEqual((response.status_code, response.url), (302, 'http://testserver/dashboard/produtos/'))
         self.assertEqual(self.chamadas, [])
-        self.assertIn("Seu plano venceu e nada foi salvo", str(list(request._messages)[0]))
+        self.assertIn("Seu plano venceu e nada foi salvo", str(next(iter(request._messages))))
 
     def test_sem_tela_anterior_segura_volta_para_o_inicio(self):
         for extra in ({}, {'HTTP_REFERER': 'https://site-malicioso.com/'}):

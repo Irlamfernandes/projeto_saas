@@ -1,0 +1,30 @@
+# Linter do Python (roda no CI e em `make lint`). Regras escolhidas para achar bug, não para impor estilo.
+line-length = 140
+target-version = "py312"
+extend-exclude = ["*/migrations/*", "venv", "node_modules"]
+
+[lint]
+select = [
+    "E", "W",   # erros de sintaxe e formatação que confundem a leitura
+    "F",        # nomes indefinidos, imports e variáveis sem uso
+    "B",        # armadilhas comuns (argumento padrão mutável, except amplo demais...)
+    "UP",       # sintaxe antiga do Python
+    "SIM",      # código que pode ser mais simples
+    "C4",       # listas e dicionários montados do jeito mais longo
+    "DTZ",      # datas sem fuso horário
+    "BLE",      # except Exception engolindo erro
+    "PIE",      # código que não faz nada
+    "T20",      # print esquecido
+    "RUF",
+]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # travessão e aspas tipográficas são de propósito nos textos em português
+    "RUF012",                      # atributos de classe do Django (Meta, admin, forms) são listas por padrão
+    "C408",                        # dict(chave=valor) é tão legível quanto o literal
+    "SIM108",                      # if/else de mensagens fica mais legível que um ternário comprido
+]
+
+[lint.per-file-ignores]
+"*/tests/*" = ["DTZ"]              # testes montam datas fixas e depois aplicam o fuso com make_aware
+"*/__init__.py" = ["F401"]          # os __init__ reexportam os módulos do pacote
+"config/settings_test.py" = ["F403", "F405"]  # importa tudo das configurações de produção e sobrescreve

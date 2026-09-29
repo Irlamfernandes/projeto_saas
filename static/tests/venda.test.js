@@ -671,7 +671,7 @@ describe('unidades e estoque sem controle', () => {
     });
 
     test('sem controle de estoque vende qualquer quantidade e aparece na busca', () => {
-        const { carrinho, busca, resultados } = montarPagina();
+        const { carrinho } = montarPagina();
         carrinho.adicionar(BOLO);
         const campo = document.querySelector('.quantidade-campo');
         expect(campo.hasAttribute('max')).toBe(false);

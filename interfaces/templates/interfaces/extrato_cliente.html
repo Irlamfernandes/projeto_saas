@@ -34,7 +34,7 @@
             <div class="cartao-cabecalho">
                 <div><h2 id="t-pagamento" class="titulo-cartao">Registrar pagamento</h2><p class="subtitulo">O valor é abatido do que o cliente deve</p></div>
             </div>
-            <form method="POST" class="grid gap-4">
+            <form method="POST" class="grid gap-4">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
                 {% csrf_token %}
                 <div class="campo">
                     <label for="id_valor_pagamento" class="rotulo">Valor recebido <span class="obrigatorio" aria-hidden="true">*</span></label>

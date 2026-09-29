@@ -70,7 +70,7 @@ def pendencias_da_venda(venda):
     vencimentos = [parcela.vencimento for parcela in venda.parcelas.all()] or [None]
     return [
         Pendencia(venda=venda, vencimento=vencimento, valor=valor, pendente=valor, numero=numero, de=len(vencimentos))
-        for numero, (vencimento, valor) in enumerate(zip(vencimentos, dividir(restante, len(vencimentos))), start=1)
+        for numero, (vencimento, valor) in enumerate(zip(vencimentos, dividir(restante, len(vencimentos)), strict=True), start=1)
     ]
 
 

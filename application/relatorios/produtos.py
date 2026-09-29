@@ -70,17 +70,17 @@ def lucro_estimado(user, inicio=None, fim=None):
         produtos.append(lucro)
         por_categoria[linha['produto__categoria'] or SEM_CATEGORIA].append(lucro)
 
-    produtos.sort(key=lambda l: l.lucro, reverse=True)
-    categorias = sorted((_somar(nome, linhas) for nome, linhas in por_categoria.items()), key=lambda l: l.lucro, reverse=True)
-    return RelatorioDeLucro(produtos, categorias, _somar('Total', produtos), sum(l.sem_custo for l in produtos))
+    produtos.sort(key=lambda item: item.lucro, reverse=True)
+    categorias = sorted((_somar(nome, linhas) for nome, linhas in por_categoria.items()), key=lambda item: item.lucro, reverse=True)
+    return RelatorioDeLucro(produtos, categorias, _somar('Total', produtos), sum(item.sem_custo for item in produtos))
 
 
 def _somar(nome, linhas):
     return LinhaDeLucro(
         nome,
-        sum(l.quantidade for l in linhas),
-        sum((l.receita for l in linhas), ZERO),
-        sum((l.custo for l in linhas), ZERO),
+        sum(item.quantidade for item in linhas),
+        sum((item.receita for item in linhas), ZERO),
+        sum((item.custo for item in linhas), ZERO),
     )
 
 
@@ -132,8 +132,8 @@ def _classe(acumulado_antes):
 
 
 def _resumo_da_classe(classe, linhas, total):
-    da_classe = [l for l in linhas if l.classe == classe]
-    faturamento = sum((l.faturamento for l in da_classe), ZERO)
+    da_classe = [item for item in linhas if item.classe == classe]
+    faturamento = sum((item.faturamento for item in da_classe), ZERO)
     return ResumoDaClasse(classe, len(da_classe), faturamento, percentual(faturamento, total))
 
 

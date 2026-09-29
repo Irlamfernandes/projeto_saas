@@ -5,13 +5,17 @@
   "scripts": {
     "test": "jest",
     "build:css": "tailwindcss -i static/css/input.css -o static/css/output.css --minify",
-    "watch:css": "tailwindcss -i static/css/input.css -o static/css/output.css --watch"
+    "watch:css": "tailwindcss -i static/css/input.css -o static/css/output.css --watch",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",
     "tailwindcss": "3.4.19"
@@ -19,6 +23,14 @@
   "jest": {
     "roots": [
       "<rootDir>/static"
-    ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
   }
 }

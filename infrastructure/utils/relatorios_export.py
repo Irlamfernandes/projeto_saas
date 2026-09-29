@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from functools import partial
 from decimal import Decimal
-from typing import Callable
+from collections.abc import Callable
 import openpyxl
 from django.utils import timezone
 from reportlab.lib import colors

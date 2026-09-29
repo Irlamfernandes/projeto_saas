@@ -1,5 +1,7 @@
-# Dependabot: PRs de versão nova PAUSADOS enquanto o sistema recebe melhorias (open-pull-requests-limit: 0).
-# As atualizações são feitas à mão, testadas, num PR só. Para religar, troque os 0 por 5.
+# Dependabot: PRs de versão nova PAUSADOS (open-pull-requests-limit: 0). Quem avisa das versões novas é a
+# verificação semanal (.github/workflows/atualizacoes.yml), que testa cada uma e publica o resultado numa issue.
+# Se religar (troque os 0 por 5), os PRs vão para a homologacao e só depois de 7 dias da versão publicada
+# (cooldown: dá tempo de a versão com problema ser retirada antes de chegar aqui).
 # Alertas e correções de segurança não dependem deste arquivo: ficam em Settings > Code security no GitHub.
 version: 2
 updates:
@@ -8,6 +10,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 0
+    target-branch: homologacao
+    cooldown:
+      default-days: 7
     groups:
       python:
         applies-to: version-updates
@@ -21,6 +26,9 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 0
+    target-branch: homologacao
+    cooldown:
+      default-days: 7
     groups:
       javascript:
         applies-to: version-updates
@@ -34,3 +42,6 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 0
+    target-branch: homologacao
+    cooldown:
+      default-days: 7

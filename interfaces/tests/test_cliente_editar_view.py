@@ -24,7 +24,7 @@ class ClienteEditarViewTest(TestCase):
             deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
-        
+
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
                 deve_trocar_senha=False,
@@ -32,13 +32,13 @@ class ClienteEditarViewTest(TestCase):
             )
 
         self.cliente_loja1 = Cliente.objects.create(
-            loja=self.loja1, 
-            nome="Cliente Antigo", 
-            telefone="11999999999", 
+            loja=self.loja1,
+            nome="Cliente Antigo",
+            telefone="11999999999",
             email="antigo@email.com"
         )
         self.cliente_loja2 = Cliente.objects.create(
-            loja=self.loja2, 
+            loja=self.loja2,
             nome="Cliente Outra Loja"
         )
 
@@ -70,7 +70,7 @@ class ClienteEditarViewTest(TestCase):
             'endereco': 'Rua Teste, 123'
         })
         self.assertRedirects(response, self.url_clientes)
-        
+
         self.cliente_loja1.refresh_from_db()
         self.assertEqual(self.cliente_loja1.nome, 'Cliente Atualizado')
         self.assertEqual(self.cliente_loja1.telefone, '11888888888')
@@ -93,7 +93,7 @@ class ClienteEditarViewTest(TestCase):
             'endereco': self.cliente_loja2.endereco or '',
         })
         self.assertRedirects(response, self.url_clientes)
-        
+
         self.cliente_loja2.refresh_from_db()
         self.assertEqual(self.cliente_loja2.nome, 'Editado pelo Admin')
 
@@ -104,7 +104,7 @@ class ClienteEditarViewTest(TestCase):
             'nome': ''
         })
         self.assertRedirects(response, self.url_clientes)
-        
+
         self.cliente_loja1.refresh_from_db()
         self.assertEqual(self.cliente_loja1.nome, 'Cliente Antigo')
 
@@ -112,15 +112,15 @@ class ClienteEditarViewTest(TestCase):
         """Enviar dados que estouram os limites de tamanho exibe erro."""
         self.client.force_login(self.user_loja1)
         response = self.client.post(self._get_url_editar(self.cliente_loja1.pk), {
-            'nome': 'a' * 256,  
-            'telefone': '1' * 21  
+            'nome': 'a' * 256,
+            'telefone': '1' * 21
         })
         self.assertRedirects(response, self.url_clientes)
 
     def test_erro_validacao_model_capturado(self):
         """Simula erro de validação do modelo durante a limpeza dos dados."""
         self.client.force_login(self.user_loja1)
-        
+
         err = ValidationError({'nome': ['Erro de validação']})
         with patch('infrastructure.models.cliente.Cliente.full_clean', side_effect=err):
             response = self.client.post(self._get_url_editar(self.cliente_loja1.pk), {

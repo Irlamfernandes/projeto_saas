@@ -9,7 +9,7 @@ const tokens = {
     tintaFraca: '#7c8a87', linha: '#e2e9e7', grade: '#edf1f0', superficie: '#ffffff',
 };
 const dados = { rotulos: ['18/03', '19/03', '20/03'], detalhes: ['quarta', 'quinta', 'sexta'], series: [{ nome: 'Faturamento', valores: [10, 0, 1500.5], cor: 'marca' }] };
-const semEspacoDuro = (t) => t.replace(/ /g, ' ');
+const semEspacoDuro = (t) => t.replace(/\u00a0/g, ' ');
 
 function contextoFalso() {
     return {
@@ -232,7 +232,7 @@ describe('detalhes visuais (achados pelo teste de mutação)', () => {
         const nomes = { marca: 'marca', destaque: 'destaque', neutra: 'neutra', tinta: 'tinta', tintaSuave: 'tinta-suave',
             tintaFraca: 'tinta-fraca', linha: 'linha', grade: 'grade', superficie: 'superficie' };
         const elemento = document.createElement('div');
-        Object.entries(nomes).forEach(([chave, css], i) => elemento.style.setProperty(`--cor-${css}`, ` #00000${i} `));
+        Object.entries(nomes).forEach(([, css], i) => elemento.style.setProperty(`--cor-${css}`, ` #00000${i} `));
         document.body.append(elemento);
 
         const lidos = g.lerTokens(elemento);

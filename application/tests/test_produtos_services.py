@@ -80,9 +80,11 @@ class CadastrarProdutoTest(TestCase):
         self.assertEqual(self.storage.enviados, [])
 
     def test_erro_no_banco_apos_envio_tambem_apaga_o_arquivo(self):
-        with patch('application.produtos.services.ProdutoImagem.objects.create', side_effect=RuntimeError("banco caiu")):
-            with self.assertRaises(RuntimeError):
-                cadastrar_produto(self._novo(self.loja), [imagem_de_teste()], storage=self.storage)
+        with (
+            patch('application.produtos.services.ProdutoImagem.objects.create', side_effect=RuntimeError("banco caiu")),
+            self.assertRaises(RuntimeError),
+        ):
+            cadastrar_produto(self._novo(self.loja), [imagem_de_teste()], storage=self.storage)
 
         self.assertEqual(self.storage.removidos, self.storage.enviados)
         self.assertEqual(len(self.storage.removidos), 1)
@@ -156,9 +158,12 @@ class AtualizarProdutoTest(TestCase):
         self.produto.nome = "Não deve salvar"
         storage = StorageFalso(falhar_no_envio=0)
 
-        with self.captureOnCommitCallbacks(execute=True), self.assertLogs('application.produtos.services', 'ERROR'):
-            with self.assertRaises(FalhaNoEnvioDeImagem):
-                atualizar_produto(self.produto, [imagem_de_teste()], [self.foto_antiga.pk], storage=storage)
+        with (
+            self.captureOnCommitCallbacks(execute=True),
+            self.assertLogs('application.produtos.services', 'ERROR'),
+            self.assertRaises(FalhaNoEnvioDeImagem),
+        ):
+            atualizar_produto(self.produto, [imagem_de_teste()], [self.foto_antiga.pk], storage=storage)
 
         self.produto.refresh_from_db()
         self.assertEqual(self.produto.nome, "Bolo")

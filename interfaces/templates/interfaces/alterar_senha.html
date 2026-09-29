@@ -19,7 +19,7 @@
                 </div>
             {% endif %}
 
-            <form method="POST" autocomplete="off" class="mt-6 grid gap-4">
+            <form method="POST" autocomplete="off" class="mt-6 grid gap-4">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
                 {% csrf_token %}
                 <div class="campo">
                     <label for="nova_senha" class="rotulo">Nova senha <span class="obrigatorio" aria-hidden="true">*</span></label>

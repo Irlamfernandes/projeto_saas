@@ -20,7 +20,7 @@ class LoginViewTest(TestCase):
 
         self.username = "testuser"
         self.password = "password123"
-        
+
         # Garante explicitamente deve_trocar_senha=False para os testes padrão
         self.user_comum = User.objects.create_user(
             username=self.username, password=self.password, loja=self.loja, deve_trocar_senha=False
@@ -64,7 +64,7 @@ class LoginViewTest(TestCase):
             'password': self.password
         })
         self.assertRedirects(response, self.url_dashboard, fetch_redirect_response=False)
-        self.assertTrue(("_auth_user_id" in self.client.session))
+        self.assertTrue("_auth_user_id" in self.client.session)
 
     def test_login_com_sucesso_superuser(self):
         """Realizar login com credenciais de superuser redireciona para o admin."""
@@ -101,7 +101,7 @@ class LoginViewTest(TestCase):
             'password': 'senha_errada'
         })
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(("_auth_user_id" in self.client.session))
+        self.assertFalse("_auth_user_id" in self.client.session)
         form = response.context['form']
         self.assertTrue(form.errors)
 

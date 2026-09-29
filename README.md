@@ -81,7 +81,9 @@ a trocá-la.
 ## Testes e qualidade
 
 ```bash
-make test        # pytest com cobertura + jest
+make test        # pytest com cobertura + jest (falha abaixo de 100%)
+make lint        # ruff (Python) + ESLint (JS)
+make verificar   # o mesmo que o CI confere: lint, testes, segurança, migrações e CSS
 ```
 
 - A suíte usa `config/settings_test.py` (configurado no `pytest.ini`): hasher de senha rápido e
@@ -194,6 +196,42 @@ make css         # ou: npm run watch:css durante o desenvolvimento
 - `dvh` para altura de tela cheia (`min-h-dvh`), que desconta a barra de endereço do celular;
 - `px` só em bordas, anéis de foco e sombras. `width`/`height` de `<img>` são números sem unidade (só a proporção).
 - Nos gráficos (canvas só aceita px), o texto é convertido de `rem` na hora (`remEmPx` em `graficos.js`).
+
+## Homologação e produção
+
+```
+homologacao ──PR──▶ main ──▶ Render (produção)
+```
+
+- **`homologacao`**: onde o trabalho acontece. Commit e push direto, à vontade; a cada push o CI roda e mostra
+  ✓ ou ✗ no GitHub, sem travar nada.
+- **`main`**: só a produção. Recebe um PR vindo da `homologacao`, aceito apenas com o CI verde. Cada merge
+  vira deploy no Render (e o Render guarda os anteriores: *Rollback* volta um deploy com um clique).
+- **Testar antes de liberar**: `make homologar` sobe o sistema na sua máquina **em modo produção**
+  (DEBUG desligado, gunicorn, estáticos comprimidos, Postgres em container). Abre em `http://localhost:8000`
+  e no celular pela mesma rede Wi-Fi. Primeira vez: `make homologar-admin` cria seu usuário;
+  `make homologar-parar` desliga o banco (os dados continuam lá para a próxima vez).
+  Fotos e Pix só funcionam se `SUPABASE_*` e `MERCADO_PAGO_ACCESS_TOKEN` estiverem no ambiente — use
+  credenciais de teste, nunca as de produção.
+
+**CI** (`.github/workflows/ci.yml`), em todo push e PR da `homologacao` e da `main`:
+
+| Parte | O que confere |
+|---|---|
+| Python | ruff; testes no Postgres 17 com 100% de cobertura; `check --deploy` com DEBUG desligado; migrações em dia e indo e voltando; `collectstatic` |
+| JavaScript | ESLint; testes com 100% de cobertura; `output.css` em dia com os templates |
+| Segurança | Bandit, Semgrep (OWASP, Django, Python, JS, segredos), pip-audit, npm audit, gitleaks no histórico |
+
+**Atualizações** (`.github/workflows/atualizacoes.yml`): toda segunda, lista as bibliotecas com versão nova,
+roda os testes com elas (todas juntas e, se quebrar, uma por uma) e publica na issue *Atualizações das
+bibliotecas*: o que é "só atualizar", o que "precisa mexer no código" e o link do que mudou. Não abre PR.
+Localmente: `make atualizacoes` (a lista) e `make atualizar PACOTES="nome outro"` (aplica no requirements).
+O Dependabot fica pausado; se religado, abre os PRs na `homologacao` e espera 7 dias de cada versão.
+
+**Proteção da `main`** (uma vez, no GitHub: *Settings → Branches → Add branch ruleset*): alvo `main`;
+marque *Require a pull request before merging* e *Require status checks to pass* com os três checks do CI
+(`Python · testes no Postgres, lint e Django`, `JavaScript · testes, lint e CSS`,
+`Segurança · código, bibliotecas e segredos`); e *Block force pushes*.
 
 ## Deploy (Render)
 

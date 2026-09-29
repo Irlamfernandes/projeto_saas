@@ -38,7 +38,7 @@ class _VendaForm(forms.Form):
         error_messages={'invalid_choice': "Cliente selecionado não foi encontrado."},
     )
     forma_pagamento = forms.ChoiceField(
-        choices=[('', '---')] + FormaDePagamento.choices,
+        choices=[('', '---'), *FormaDePagamento.choices],
         required=False,
         error_messages={'invalid_choice': "Forma de pagamento inválida."},
     )
@@ -75,7 +75,7 @@ class _VendaForm(forms.Form):
         try:
             itens = [
                 (int(produto), _quantidade(quantidade), _escolhas(escolhas))
-                for produto, quantidade, escolhas in zip(produtos, quantidades, opcoes)
+                for produto, quantidade, escolhas in zip(produtos, quantidades, opcoes, strict=True)
             ]
         except (ValueError, InvalidOperation):
             raise ValidationError(ERRO_ITEM) from None

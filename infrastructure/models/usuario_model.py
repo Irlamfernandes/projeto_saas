@@ -31,17 +31,17 @@ class UsuarioModel(AbstractUser):
             'unique': "Já existe um usuário com este nome.",
         },
     )
-    
+
     loja = models.ForeignKey(
-        LojaModel, 
-        on_delete=models.CASCADE, 
-        related_name='usuarios', 
+        LojaModel,
+        on_delete=models.CASCADE,
+        related_name='usuarios',
         null=True,
         blank=True,
         db_index=True
     )
     deve_trocar_senha = models.BooleanField(
-        default=True, 
+        default=True,
         help_text="Indica se o usuário deve trocar a senha no próximo login."
     )
     tema = models.CharField(

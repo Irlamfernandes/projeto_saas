@@ -31,7 +31,7 @@ class LojaAdminTest(TestCase):
         self.superuser = User.objects.create_superuser(
             username="admin", password="password", email="admin@admin.com"
         )
-        
+
         # Usuário comum com loja vinculada logo na criação
         self.user_com_loja = User.objects.create_user(
             username="user_loja1", password="password", loja=self.loja1
@@ -64,7 +64,7 @@ class LojaAdminTest(TestCase):
         """Superusuário deve visualizar todas as lojas."""
         request = DummyRequest(user=self.superuser)
         qs = self.loja_admin.get_queryset(request)
-        
+
         self.assertEqual(qs.count(), 2)
         self.assertIn(self.loja1, qs)
         self.assertIn(self.loja2, qs)
@@ -73,7 +73,7 @@ class LojaAdminTest(TestCase):
         """Usuário comum com loja vinculada deve visualizar apenas a sua loja."""
         request = DummyRequest(user=self.user_com_loja)
         qs = self.loja_admin.get_queryset(request)
-        
+
         self.assertEqual(qs.count(), 1)
         self.assertIn(self.loja1, qs)
         self.assertNotIn(self.loja2, qs)
@@ -82,7 +82,7 @@ class LojaAdminTest(TestCase):
         """Usuário comum sem loja vinculada não deve visualizar nenhuma loja."""
         request = DummyRequest(user=self.user_sem_loja)
         qs = self.loja_admin.get_queryset(request)
-        
+
         self.assertEqual(qs.count(), 0)
 
     # ---------------------------------------------------------
@@ -111,11 +111,8 @@ class LojaAdminTest(TestCase):
         """Superusuário pode salvar qualquer alteração sem restrições."""
         request = DummyRequest(user=self.superuser)
         self.loja1.nome_loja = "Loja Alpha Alterada"
-        
-        try:
-            self.loja_admin.save_model(request, self.loja1, form=None, change=True)
-        except Exception as e:
-            self.fail(f"save_model levantou uma exceção inesperada para superuser: {e}")
+
+        self.loja_admin.save_model(request, self.loja1, form=None, change=True)  # sem exceção
 
     def test_save_model_user_modifying_own_loja(self):
         """Usuário comum pode alterar a sua própria loja."""

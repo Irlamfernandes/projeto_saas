@@ -52,29 +52,29 @@ def campo_de_quantidade(**kwargs):
 class Produto(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='produtos')
     codigo_interno = models.CharField(max_length=50, blank=True, default='', db_index=True)
-    
+
     nome = models.CharField(max_length=150, db_index=True)
     categoria = models.CharField(max_length=100, blank=True, default='', db_index=True)
     descricao = models.TextField(blank=True, default='')
-    
+
     preco_custo = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=Decimal('0.00'),
         validators=[MinValueValidator(Decimal('0.00'))]
     )
     preco_venda = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
     margem_lucro = models.DecimalField(
-        max_digits=5, 
-        decimal_places=2, 
+        max_digits=5,
+        decimal_places=2,
         default=Decimal('0.00'),
         validators=[MinValueValidator(Decimal('0.00'))]
     )
-    
+
     unidade = models.CharField(max_length=5, choices=Unidade.choices, default=Unidade.UNIDADE)
     # Sem controle (ex.: feito na hora, serviço, sob encomenda): vende sem conferir nem baixar o estoque.
     controla_estoque = models.BooleanField(default=True)
@@ -113,8 +113,8 @@ class Produto(models.Model):
 
 class ProdutoImagem(models.Model):
     produto = models.ForeignKey(
-        Produto, 
-        on_delete=models.CASCADE, 
+        Produto,
+        on_delete=models.CASCADE,
         related_name='imagens'
     )
     imagem_url = models.URLField(max_length=500)

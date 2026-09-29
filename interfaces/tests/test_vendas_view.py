@@ -24,7 +24,9 @@ class VendasViewTest(TestCase):
 
         self.cliente1 = Cliente.objects.create(loja=self.loja1, nome="Cliente Alpha")
         self.cliente2 = Cliente.objects.create(loja=self.loja2, nome="Cliente Beta")
-        self.produto1 = Produto.objects.create(loja=self.loja1, nome="Produto A", codigo_interno="PA001", preco_venda=Decimal('50.00'), quantidade_estoque=10)
+        self.produto1 = Produto.objects.create(
+            loja=self.loja1, nome="Produto A", codigo_interno="PA001", preco_venda=Decimal('50.00'), quantidade_estoque=10,
+        )
         self.cafe = Produto.objects.create(loja=self.loja1, nome="Café", preco_venda=Decimal('5.00'), quantidade_estoque=20)
         self.esgotado = Produto.objects.create(loja=self.loja1, nome="Esgotado", preco_venda=Decimal('1.00'), quantidade_estoque=0)
         self.produto2 = Produto.objects.create(loja=self.loja2, nome="Produto B", preco_venda=Decimal('100.00'), quantidade_estoque=5)

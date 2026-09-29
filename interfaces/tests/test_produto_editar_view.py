@@ -59,7 +59,8 @@ class ProdutoEditarViewTest(TestCase):
         self.assertContains(response, 'data-maximo-fotos="5"')
 
     def test_opcoes_vem_preenchidas_e_sao_salvas_com_historico(self):
-        self.produto.opcoes = [{'nome': 'Sabor', 'valores': [{'nome': 'Coco', 'acrescimo': '0.00'}, {'nome': 'Nozes', 'acrescimo': '3.00'}]}]
+        valores = [{'nome': 'Coco', 'acrescimo': '0.00'}, {'nome': 'Nozes', 'acrescimo': '3.00'}]
+        self.produto.opcoes = [{'nome': 'Sabor', 'valores': valores}]
         self.produto.save()
         self.client.force_login(self.user_loja1)
         pagina = self.client.get(self.url)

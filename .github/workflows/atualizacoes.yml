@@ -1,0 +1,48 @@
+# Toda segunda de manhã: lista as bibliotecas com versão nova, roda os testes com elas e publica o resultado
+# numa issue (sempre a mesma, atualizada). Não abre PR nem muda nada no código.
+# Para mensal, troque o cron por "0 9 1 * *" (dia 1 de cada mês).
+name: Atualizações
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"  # 06:00 em Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: homologacao
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci --silent
+
+      - name: Versões novas e testes com elas
+        run: python scripts/atualizacoes.py relatorio --testar > relatorio.md
+
+      - name: Publicar na issue "Atualizações"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create atualizacoes --color 0f5f58 --description "Verificação semanal de versões" 2>/dev/null || true
+          numero=$(gh issue list --label atualizacoes --state open --json number --jq '.[0].number')
+          if [ -n "$numero" ]; then
+            gh issue edit "$numero" --body-file relatorio.md
+          else
+            numero=$(gh issue create --title "Atualizações das bibliotecas" --label atualizacoes --body-file relatorio.md | grep -o '[0-9]*$')
+          fi
+          # Editar a issue não avisa ninguém; o comentário manda o e-mail do GitHub quando há algo pendente.
+          if ! grep -q "Tudo em dia" relatorio.md; then
+            gh issue comment "$numero" --body "$(head -1 relatorio.md | sed 's/^## //') — detalhes na descrição da issue."
+          fi

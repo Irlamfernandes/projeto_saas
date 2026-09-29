@@ -29,7 +29,7 @@ class ExtratoClienteViewTest(TestCase):
             deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
-        
+
         # Cria usuário sem loja ignorando o full_clean para testar a exceção de permissão
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
@@ -63,7 +63,7 @@ class ExtratoClienteViewTest(TestCase):
         """Usuário comum visualiza o extrato e a timeline da sua própria loja com sucesso."""
         self.client.force_login(self.user_loja1)
         response = self.client.get(self._get_url_extrato(self.cliente_loja1.pk))
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, TEMPLATE_EXTRATO_CLIENTE)
         self.assertEqual(response.context['cliente'], self.cliente_loja1)
@@ -92,7 +92,7 @@ class ExtratoClienteViewTest(TestCase):
             'observacao': 'Pagamento parcial via Pix'
         })
         self.assertRedirects(response, self._get_url_extrato(self.cliente_loja1.pk))
-        
+
         pagamento_criado = PagamentoCliente.objects.filter(cliente=self.cliente_loja1, valor=Decimal('75.50')).first()
         self.assertIsNotNone(pagamento_criado)
         self.assertEqual(pagamento_criado.observacao, 'Pagamento parcial via Pix')
@@ -120,7 +120,7 @@ class ExtratoClienteViewTest(TestCase):
     def test_erro_validacao_model_ao_registrar_pagamento(self):
         """Captura ValidationError lançado pelo model durante o full_clean do pagamento."""
         self.client.force_login(self.user_loja1)
-        
+
         err = ValidationError({'valor': ['Valor inválido']})
         with patch('infrastructure.models.venda.PagamentoCliente.full_clean', side_effect=err):
             response = self.client.post(self._get_url_extrato(self.cliente_loja1.pk), {

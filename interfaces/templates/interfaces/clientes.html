@@ -12,7 +12,7 @@
         <div class="cartao-cabecalho">
             <div><h2 id="t-novo" class="titulo-cartao">Novo cliente</h2><p class="subtitulo">Só o nome é obrigatório</p></div>
         </div>
-        <form method="POST" class="grid gap-4">
+        <form method="POST" class="grid gap-4">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
             {% csrf_token %}
             <div class="campo">
                 <label for="id_nome" class="rotulo">Nome <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -85,7 +85,7 @@
 </div>
 
 <dialog id="modal-edicao-cliente" class="w-full max-w-lg rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-veu/50" aria-labelledby="modal-titulo" data-fechar-fora>
-    <form id="form-edicao-cliente" method="POST" class="grid gap-4 p-6">
+    <form id="form-edicao-cliente" method="POST" class="grid gap-4 p-6">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
         {% csrf_token %}
         <div class="flex items-center justify-between">
             <h2 id="modal-titulo" class="text-lg font-bold">Editar cliente</h2>

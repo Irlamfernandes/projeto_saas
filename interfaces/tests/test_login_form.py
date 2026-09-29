@@ -58,7 +58,7 @@ class LoginFormTest(TestCase):
     def test_widgets_e_atributos(self):
         """Campos usam o componente visual `entrada` e os atributos de preenchimento automático."""
         form = LoginForm()
-        
+
         # Valida campo username
         username_html = str(form['username'])
         self.assertIn('class="entrada"', username_html)

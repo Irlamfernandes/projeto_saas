@@ -31,7 +31,7 @@
     </div>
     <div class="flex flex-wrap items-center gap-4">
         {% include 'interfaces/_marca_loja.html' with classes='w-20 h-20 rounded-2xl text-2xl' %}
-        <form method="POST" action="{% url 'marca_enviar' %}" enctype="multipart/form-data" class="grid gap-3 flex-1 basis-60">
+        <form method="POST" action="{% url 'marca_enviar' %}" enctype="multipart/form-data" class="grid gap-3 flex-1 basis-60">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
             {% csrf_token %}
             <div class="campo">
                 <label for="id_marca" class="rotulo">{% if request.user.loja.logo_url %}Trocar a marca{% else %}Enviar a marca{% endif %} <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -56,7 +56,7 @@
     <div class="cartao-cabecalho">
         <div><h2 id="t-aparencia" class="titulo-cartao">Aparência</h2><p class="subtitulo">Vale só para você, em qualquer aparelho em que entrar. Os PDFs continuam claros para imprimir.</p></div>
     </div>
-    <form method="POST" action="{% url 'tema' %}" data-enviar-ao-mudar>
+    <form method="POST" action="{% url 'tema' %}" data-enviar-ao-mudar>{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
         {% csrf_token %}
         <fieldset>
             <legend class="sr-only">Tema</legend>

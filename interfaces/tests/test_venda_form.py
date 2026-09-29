@@ -111,7 +111,10 @@ class NovaVendaFormTest(TestCase):
             'quantidade zero': ({'itens': ((1, 0),)}, "A quantidade de cada produto deve ser maior que zero."),
             'quantidade texto': ({'itens': ((1, 'abc'),)}, "Um dos itens da venda é inválido. Remova-o e adicione de novo."),
             'produto texto': ({'itens': (('pão', 1),)}, "Um dos itens da venda é inválido. Remova-o e adicione de novo."),
-            'itens demais': ({'itens': tuple((i, 1) for i in range(MAXIMO_DE_ITENS + 1))}, "Um dos itens da venda é inválido. Remova-o e adicione de novo."),
+            'itens demais': (
+                {'itens': tuple((i, 1) for i in range(MAXIMO_DE_ITENS + 1))},
+                "Um dos itens da venda é inválido. Remova-o e adicione de novo.",
+            ),
             'balcão sem forma': ({'cliente': ''}, "Informe como foi pago."),
             'pagou sem forma': ({'cliente': 'CLIENTE', 'valor_pago': '5'}, "Informe como foi pago."),
             'forma inválida': ({'cliente': '', 'forma_pagamento': 'cheque'}, "Forma de pagamento inválida."),

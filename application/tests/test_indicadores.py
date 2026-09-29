@@ -23,10 +23,12 @@ class IndicadoresDoPainelTest(TestCase):
 
         indicadores = indicadores_do_painel(c.usuario(), agora=AGORA)
 
-        self.assertEqual((indicadores.hoje.atual, indicadores.hoje.anterior, indicadores.hoje.variacao), (Decimal('120.00'), Decimal('100.00'), 20))
+        hoje = indicadores.hoje
+        self.assertEqual((hoje.atual, hoje.anterior, hoje.variacao), (Decimal('120.00'), Decimal('100.00'), 20))
         self.assertEqual((indicadores.sete_dias.atual, indicadores.sete_dias.anterior), (Decimal('120.00'), Decimal('100.00')))
         self.assertEqual((indicadores.mes.atual, indicadores.mes.anterior), (Decimal('720.00'), Decimal('200.00')))
-        self.assertEqual((indicadores.a_receber, indicadores.clientes_devendo, indicadores.devendo_ha_muito_tempo), (Decimal('30.00'), 1, 1))
+        self.assertEqual((indicadores.a_receber, indicadores.clientes_devendo, indicadores.devendo_ha_muito_tempo),
+                         (Decimal('30.00'), 1, 1))
 
 
 class ComparacaoTest(SimpleTestCase):

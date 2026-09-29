@@ -1,0 +1,128 @@
+# CI: roda em todo push e PR da homologacao e da main.
+# Na homologacao ele só avisa (✓ ou ✗); na main, a proteção da branch exige tudo verde para aceitar o PR.
+name: CI
+
+on:
+  push:
+    branches: [homologacao, main]
+  pull_request:
+    branches: [homologacao, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "20"
+
+jobs:
+  python:
+    name: Python · testes no Postgres, lint e Django
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Mesmo banco da produção (Postgres), num container que só existe durante o CI.
+      DATABASE_URL: postgresql://postgres:ci@localhost:5432/ci
+      DATABASE_SSL_REQUIRE: "False"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Testes com cobertura de 100% (linhas e condições)
+        run: python -m pytest --cov --cov-report=term-missing
+
+      - name: Modo produção (DEBUG desligado, chave nova a cada execução)
+        run: |
+          echo "DJANGO_SECRET_KEY=$(python -c 'import secrets; print(secrets.token_urlsafe(50))')" >> "$GITHUB_ENV"
+          echo "DJANGO_ALLOWED_HOSTS=localhost" >> "$GITHUB_ENV"
+
+      - name: Configuração de produção (check --deploy)
+        run: python manage.py check --deploy --fail-level WARNING
+
+      - name: Modelos e migrações batem
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Migrações indo e voltando (aplicar, desfazer tudo, aplicar de novo)
+        run: |
+          python manage.py migrate --no-input
+          python manage.py migrate infrastructure zero --no-input
+          python manage.py migrate --no-input
+
+      - name: Arquivos estáticos como no deploy
+        run: python manage.py collectstatic --no-input --ignore tests
+
+  javascript:
+    name: JavaScript · testes, lint e CSS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+
+      - name: Lint (ESLint)
+        run: npm run lint
+
+      - name: Testes com cobertura de 100%
+        run: npx jest --coverage
+
+      - name: CSS compilado está em dia com os templates
+        # O output.css é versionado: se alguém mudou classes e esqueceu o `make css`, a produção fica sem o estilo.
+        run: |
+          npm run build:css
+          git diff --exit-code static/css/output.css || (echo "::error::Rode 'make css' e faça commit do static/css/output.css"; exit 1)
+
+  seguranca:
+    name: Segurança · código, bibliotecas e segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # o gitleaks lê o histórico inteiro
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install bandit==1.9.4 semgrep==1.178.0 pip-audit==2.10.1
+
+      - name: Bandit (falhas de segurança no Python, média e alta)
+        run: bandit -q -r application infrastructure interfaces config -x '*/tests/*,*/migrations/*' -ll
+
+      - name: Semgrep (regras OWASP, Django, Python, JS e segredos)
+        run: >-
+          semgrep scan --error --metrics=off --quiet
+          --config p/django --config p/python --config p/javascript --config p/owasp-top-ten --config p/secrets
+          application infrastructure interfaces config static/js .github
+
+      - name: Falhas conhecidas nas bibliotecas Python
+        run: pip-audit -r requirements.txt -r requirements-dev.txt
+
+      - name: Falhas conhecidas nas bibliotecas JS
+        run: npm audit --audit-level=moderate
+
+      - name: Senhas e chaves no histórico (gitleaks)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks git . --redact --no-banner

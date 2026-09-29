@@ -39,7 +39,9 @@ def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None, stora
         Paragraph(f"<b>Cliente:</b> {escape(cliente.nome)}", estilos['Normal']),
         Paragraph(f"<b>Telefone:</b> {escape(cliente.telefone or 'Não informado')}", estilos['Normal']),
         Spacer(1, 10),
-        Paragraph(texto_situacao, _estilo(estilos['Normal'], fontSize=11, textColor=cor_situacao, spaceAfter=15, fontName='Helvetica-Bold')),
+        Paragraph(texto_situacao, _estilo(
+            estilos['Normal'], fontSize=11, textColor=cor_situacao, spaceAfter=15, fontName='Helvetica-Bold',
+        )),
         Spacer(1, 5),
         Paragraph(f"<b>Últimas {QUANTIDADE_DE_COMPRAS_NO_EXTRATO} Compras Registradas no Sistema:</b>", estilos['Heading3']),
         Spacer(1, 5),

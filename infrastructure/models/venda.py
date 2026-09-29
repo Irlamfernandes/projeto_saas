@@ -27,8 +27,8 @@ class Venda(models.Model):
     data_venda = models.DateTimeField(default=timezone.now, db_index=True)
     data_atualizacao = models.DateTimeField(auto_now=True, db_index=True)
     valor_total = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=Decimal('0.00'),
         validators=[MinValueValidator(Decimal('0.00'))]
     )
@@ -69,7 +69,7 @@ class ItemVenda(models.Model):
         validators=[MinValueValidator(Decimal('0.001'))]
     )
     preco_unitario = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
@@ -112,7 +112,7 @@ class PagamentoCliente(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='pagamentos_cliente', db_index=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='pagamentos', db_index=True)
     valor = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )

@@ -3,7 +3,6 @@ from decimal import Decimal
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 from django.test import TestCase
-from django.utils import timezone
 from application.relatorios.periodos import inicios_dos_periodos
 from application.relatorios.selectors import (
     Relatorio, faturamento_por_periodo, filtrar_por_intervalo, montar_painel, montar_relatorio,

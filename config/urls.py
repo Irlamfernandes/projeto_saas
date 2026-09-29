@@ -3,8 +3,8 @@ from django.urls import path
 from django.shortcuts import redirect
 from django.contrib.auth.views import LogoutView
 from interfaces.views import (
-    extrato_pdf_view, login_view, dashboard_view, alterar_senha_view, produtos_view, 
-    produto_editar_view, clientes_view, cliente_editar_view, vendas_view, 
+    extrato_pdf_view, login_view, dashboard_view, alterar_senha_view, produtos_view,
+    produto_editar_view, clientes_view, cliente_editar_view, vendas_view,
     extrato_cliente_view, venda_editar_view, relatorio_view, exportar_excel_modular_view,
     exportar_pdf_modular_view, relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view,
     relatorios_alteracoes_view, venda_cancelar_view, configuracoes_view, marca_enviar_view, marca_remover_view,

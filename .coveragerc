@@ -2,6 +2,7 @@
 # Mede também os caminhos de cada decisão (os dois lados de cada if), não só as linhas
 branch = True
 source = application
+         scripts
          interfaces
          infrastructure
          config
@@ -12,3 +13,6 @@ omit =
     manage.py
     */wsgi.py
     */asgi.py
+[report]
+# Abaixo de 100% o comando falha (no CI e no make test)
+fail_under = 100

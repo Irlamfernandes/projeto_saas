@@ -2,9 +2,8 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import patch
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.test import TestCase
 from django.utils import timezone
 from infrastructure.admin.painel import (
     _ultimos_meses, cartoes, grafico_lojas_novas_por_mes, grafico_recebido_por_mes, grafico_situacao_dos_planos,

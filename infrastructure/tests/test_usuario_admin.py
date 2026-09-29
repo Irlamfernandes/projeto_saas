@@ -28,7 +28,7 @@ class UsuarioAdminTest(TestCase):
         self.superuser = User.objects.create_superuser(
             username="admin", password="password", email="admin@admin.com"
         )
-        
+
         self.user_loja1 = User.objects.create_user(
             username="user_loja1", password="password", loja=self.loja1
         )
@@ -97,12 +97,12 @@ class UsuarioAdminTest(TestCase):
         request = self.factory.post('/admin/resetar-senha/')
         request.user = self.superuser
         self._add_session_and_messages(request)
-        
+
         response = self.user_admin.reset_password_view(request, self.user_loja1.pk)
-        
+
         self.user_loja1.refresh_from_db()
         self.assertTrue(self.user_loja1.deve_trocar_senha)
-        
+
         expected_url = reverse('admin:infrastructure_usuariomodel_change', args=[self.user_loja1.pk])
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, expected_url)
@@ -114,7 +114,7 @@ class UsuarioAdminTest(TestCase):
         """Usuário comum não pode criar usuário com privilégios administrativos."""
         request = self.factory.post('/admin/add/')
         request.user = self.user_loja1
-        
+
         novo_usuario = UsuarioModel(username="hacker", is_staff=True, loja=self.loja1)
 
         with self.assertRaises(PermissionDenied):
@@ -127,9 +127,9 @@ class UsuarioAdminTest(TestCase):
         self._add_session_and_messages(request)
 
         novo_usuario = UsuarioModel(username="novo_user", loja=self.loja1)
-        
+
         self.user_admin.save_model(request, novo_usuario, form=None, change=False)
-        
+
         novo_usuario.refresh_from_db()
         self.assertTrue(novo_usuario.deve_trocar_senha)
         self.assertTrue(novo_usuario.has_usable_password())
