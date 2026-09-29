@@ -6,7 +6,7 @@ from .produto_editar_view import produto_editar_view
 from .clientes_view import clientes_view
 from .cliente_editar_view import cliente_editar_view
 from .vendas_view import vendas_view
-from .extrato_cliente_view import extrato_cliente_view
+from .extrato_cliente_view import cliente_apagar_dados_view, extrato_cliente_view
 from .vendas_editar_view import venda_editar_view, venda_cancelar_view
 from .relatorio_view import relatorio_view
 from .extrato_pdf_view import extrato_pdf_view
@@ -19,3 +19,4 @@ from .planos_view import planos_view, cobranca_view, cobranca_situacao_view
 from .lembrete_view import lembrete_view
 from .gastos_view import excluir_gasto_view, gastos_view, registrar_gasto_view
 from .backup_view import backup_agendado_view
+from .legal_view import privacidade_view, termos_view

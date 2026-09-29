@@ -22,5 +22,9 @@ da CorsariosCode, no azul-marinho da logo.
             {% endif %}
         </nav>
         {% endif %}
+        <nav class="flex w-full justify-center gap-4 text-xs text-corsario-claro/70 sm:w-auto" aria-label="Documentos">
+            <a href="{% url 'termos' %}" class="hover:text-corsario-claro">Termos de uso</a>
+            <a href="{% url 'privacidade' %}" class="hover:text-corsario-claro">Privacidade</a>
+        </nav>
     </div>
 </footer>

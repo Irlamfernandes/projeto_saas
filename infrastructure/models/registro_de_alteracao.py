@@ -21,6 +21,7 @@ class Acao(models.TextChoices):
     DESPESA_EXCLUIDA = 'despesa_excluida', 'Despesa excluída'
     PERDA_REGISTRADA = 'perda_registrada', 'Perda registrada'
     PERDA_EXCLUIDA = 'perda_excluida', 'Perda excluída'
+    CLIENTE_ANONIMIZADO = 'cliente_anonimizado', 'Dados pessoais do cliente apagados'
 
 
 class RegistroDeAlteracao(models.Model):
@@ -32,6 +33,9 @@ class RegistroDeAlteracao(models.Model):
     descricao = models.CharField(max_length=255)
     # Ex.: {"alteracoes": {"preco_venda": ["10.00", "12.00"]}} ou a cópia da venda cancelada.
     detalhes = models.JSONField(default=dict, blank=True)
+    # Clientes citados (nome e contatos na descrição e nos detalhes): é por aqui que "apagar os dados pessoais
+    # do cliente" encontra o que precisa limpar também no histórico.
+    clientes = models.ManyToManyField('infrastructure.Cliente', blank=True, related_name='+')
 
     class Meta:
         db_table = 'registros_de_alteracao'

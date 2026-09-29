@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory, TestCase
 
-from infrastructure.admin.loja_admin import LojaAdmin
+from infrastructure.admin.loja_admin import DadosParaApagar, LojaAdmin
 from infrastructure.models.loja_model import LojaModel
 
 User = get_user_model()
@@ -51,7 +51,7 @@ class LojaAdminTest(TestCase):
         self.assertEqual(self.loja_admin.list_display,
                          ('marca', 'nome_loja', 'situacao_do_plano', 'vencimento', 'usuarios', 'ativo', 'criado_em'))
         self.assertEqual(self.loja_admin.search_fields, ('nome_loja',))
-        self.assertEqual(self.loja_admin.list_filter, ('ativo', 'vencimento', 'criado_em'))
+        self.assertEqual(self.loja_admin.list_filter, ('ativo', DadosParaApagar, 'vencimento', 'criado_em'))
 
     def test_so_o_superusuario_muda_o_vencimento_a_mao(self):
         self.assertEqual(self.loja_admin.get_readonly_fields(DummyRequest(user=self.superuser)), ())

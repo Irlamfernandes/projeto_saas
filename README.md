@@ -198,6 +198,23 @@ As regras e permissões são as mesmas de antes; mudou o visual.
 - **Tradução:** o Unfold não vem em português; as frases dele estão em `locale/pt_BR/LC_MESSAGES/django.po`.
   Depois de editar, rode `make traducoes` (usa o Babel do `requirements-dev.txt`) e versione o `.mo`.
 
+## Privacidade (LGPD)
+
+- **Termos de uso e política de privacidade** em `/termos/` e `/privacidade/` (abertos sem login, com link no rodapé
+  de todas as telas). Os textos ficam em `interfaces/templates/interfaces/legal/`: a loja é a controladora dos
+  dados dos clientes dela; a CorsariosCode, a operadora. Revise com um advogado antes do lançamento.
+- **Apagar os dados de um cliente** (direito do titular): na caderneta, *Apagar dados pessoais*, com a senha de
+  quem pede. Nome, telefone, e-mail e endereço — os de hoje e os que já passaram pelo histórico — saem do cadastro
+  e do histórico; as vendas ficam, como "Cliente removido #id". Com saldo na caderneta, não deixa (a lei permite
+  guardar enquanto há valor a acertar). Vale mesmo com o plano vencido. Código: `apagar_dados_pessoais`
+  (`application/clientes/services.py`); o histórico sabe quem cita pelo campo `clientes` de `RegistroDeAlteracao`.
+- **Fim do contrato:** 90 dias depois do fim do plano os dados da loja são apagados. No admin, em Lojas, o filtro
+  *Plano vencido há mais de 90 dias* mostra quem passou do prazo; apagar a loja leva tudo (vendas, clientes,
+  usuários, histórico) e as fotos e a marca no Storage (`application/lojas/encerramento.py`).
+- **O que sai do alcance da loja vai sem dados pessoais:** o log do console e a tela *Erros do sistema* mascaram
+  telefones, documentos e e-mails (`infrastructure/utils/dados_pessoais.py`); o histórico no admin mostra
+  "(oculto)" no lugar do telefone, e-mail e endereço dos clientes.
+
 ## CSS (Tailwind)
 
 `static/css/output.css` é **versionado** e servido direto em produção. Sempre que adicionar ou

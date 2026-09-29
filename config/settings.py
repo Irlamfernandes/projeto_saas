@@ -195,7 +195,9 @@ UNFOLD = {
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {'padrao': {'format': '{levelname} {name}: {message}', 'style': '{'}},
+    'formatters': {'padrao': {
+        '()': 'infrastructure.registro_de_erros.SemDadosPessoais', 'format': '{levelname} {name}: {message}', 'style': '{',
+    }},
     'filters': {'sem_avisos_de_seguranca': {'()': 'infrastructure.registro_de_erros.SemAvisosDeSeguranca'}},
     'handlers': {
         'console': {'class': 'logging.StreamHandler', 'formatter': 'padrao'},

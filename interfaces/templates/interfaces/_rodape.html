@@ -6,6 +6,10 @@ Rodapé discreto no fim das páginas: fica depois do conteúdo (não é fixo), e
         <img src="{% static 'images/corsarioscode-emblema.webp' %}" alt="" width="24" height="24" loading="lazy" class="w-6 h-6 rounded-md">
         <span>Sistema feito por <b class="font-titulo text-tinta-suave">Corsarios<span class="text-corsario-azul-escuro">Code</span></b></span>
     </p>
+    <nav class="flex items-center gap-4" aria-label="Documentos">
+        <a href="{% url 'termos' %}" class="hover:text-tinta">Termos de uso</a>
+        <a href="{% url 'privacidade' %}" class="hover:text-tinta">Privacidade</a>
+    </nav>
     <nav class="flex items-center gap-1" aria-label="Contatos da {{ desenvolvedor.nome }}">
         {% if desenvolvedor.link_whatsapp %}
         <a href="{{ desenvolvedor.link_whatsapp }}" target="_blank" rel="noopener" class="grid place-items-center w-11 h-11 rounded-lg hover:bg-fundo hover:text-tinta" aria-label="WhatsApp da {{ desenvolvedor.nome }}"><svg class="ico"><use href="#i-whatsapp"/></svg></a>

@@ -56,6 +56,11 @@ class Cliente(models.Model):
             return self.saldo_calculado
         return Cliente.objects.com_saldo().values_list('saldo_calculado', flat=True).get(pk=self.pk)
 
+    @property
+    def dados_apagados(self):
+        """Já passou por "apagar dados pessoais" (LGPD): sobrou só o nome genérico."""
+        return self.nome == f"Cliente removido #{self.pk}"
+
     def __str__(self):
         return self.nome
 

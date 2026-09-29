@@ -5,14 +5,19 @@ from infrastructure.models import RegistroDeAlteracao
 CENTAVOS = Decimal('0.01')
 
 
-def registrar_alteracao(*, loja, usuario, acao, descricao, detalhes=None):
-    return RegistroDeAlteracao.objects.create(
+def registrar_alteracao(*, loja, usuario, acao, descricao, detalhes=None, clientes=()):
+    """`clientes`: os que o registro cita pelo nome (vazios são ignorados), para a LGPD achar depois."""
+    registro = RegistroDeAlteracao.objects.create(
         loja=loja,
         usuario=usuario if getattr(usuario, 'is_authenticated', False) else None,
         acao=acao,
         descricao=descricao[:255],
         detalhes=detalhes or {},
     )
+    citados = {cliente.pk for cliente in clientes if cliente is not None}
+    if citados:
+        registro.clientes.set(citados)
+    return registro
 
 
 def fotografar(instancia, campos):

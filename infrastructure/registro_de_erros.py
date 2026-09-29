@@ -9,6 +9,7 @@ import threading
 import traceback
 from pathlib import Path
 from django.conf import settings
+from infrastructure.utils.dados_pessoais import mascarar
 
 RAIZ = Path(settings.BASE_DIR)
 PASTAS_DE_TERCEIROS = ('site-packages', 'dist-packages')  # bibliotecas instaladas, mesmo dentro do venv do projeto
@@ -78,6 +79,13 @@ class GuardarErroNoBanco(logging.Handler):
             self.handleError(record)
         finally:
             self._gravando.ativo = False
+
+
+class SemDadosPessoais(logging.Formatter):
+    """Formato do console (log do Render): o mesmo texto de sempre, com e-mails e telefones mascarados."""
+
+    def format(self, record):
+        return mascarar(super().format(record))
 
 
 class SemAvisosDeSeguranca(logging.Filter):

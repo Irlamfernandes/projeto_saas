@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from infrastructure.models import ErroDoSistema
+from infrastructure.utils.dados_pessoais import mascarar
 
 LIMITE_DA_MENSAGEM = 1000
 LIMITE_DOS_DETALHES = 20000
@@ -32,8 +33,9 @@ def registrar_erro(ocorrencia, agora=None):
     """Soma no erro em aberto com a mesma assinatura ou abre um novo. Devolve o registro."""
     agora = agora or timezone.now()
     ultima = {
-        'mensagem': ocorrencia.mensagem[:LIMITE_DA_MENSAGEM],
-        'detalhes': ocorrencia.detalhes[-LIMITE_DOS_DETALHES:],  # o fim do traceback é onde o erro aconteceu
+        # A mensagem do erro pode trazer o dado que o causou (telefone, e-mail): o admin não precisa vê-lo.
+        'mensagem': mascarar(ocorrencia.mensagem)[:LIMITE_DA_MENSAGEM],
+        'detalhes': mascarar(ocorrencia.detalhes)[-LIMITE_DOS_DETALHES:],  # o fim do traceback é onde o erro aconteceu
         'caminho': ocorrencia.caminho[:500],
         'metodo': ocorrencia.metodo[:10],
         'loja_id': ocorrencia.loja_id,

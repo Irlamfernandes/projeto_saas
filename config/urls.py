@@ -9,7 +9,8 @@ from interfaces.views import (
     exportar_pdf_modular_view, relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view,
     relatorios_alteracoes_view, venda_cancelar_view, configuracoes_view, marca_enviar_view, marca_remover_view,
     planos_view, cobranca_view, cobranca_situacao_view, tema_view, lembrete_view,
-    gastos_view, registrar_gasto_view, excluir_gasto_view, backup_agendado_view,
+    gastos_view, registrar_gasto_view, excluir_gasto_view, backup_agendado_view, cliente_apagar_dados_view,
+    privacidade_view, termos_view,
 )
 
 urlpatterns = [
@@ -18,6 +19,8 @@ urlpatterns = [
     path('interno/backup/', backup_agendado_view, name='backup_agendado'),
     path('login/', login_view, name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+    path('termos/', termos_view, name='termos'),
+    path('privacidade/', privacidade_view, name='privacidade'),
 
     path('dashboard/', dashboard_view, name='dashboard'),
     path('alterar-senha/', alterar_senha_view, name='alterar_senha'),
@@ -32,6 +35,7 @@ urlpatterns = [
     path('clientes/<int:cliente_id>/extrato/', extrato_cliente_view, name='extrato_cliente'),
     path('clientes/<int:cliente_id>/pdf/', extrato_pdf_view, name='extrato_pdf'),
     path('clientes/<int:cliente_id>/lembrete/', lembrete_view, name='lembrete_de_pagamento'),
+    path('clientes/<int:cliente_id>/apagar-dados/', cliente_apagar_dados_view, name='cliente_apagar_dados'),
     path('vendas/<int:venda_id>/editar/', venda_editar_view, name='venda_editar'),
     path('vendas/<int:venda_id>/cancelar/', venda_cancelar_view, name='venda_cancelar'),
 

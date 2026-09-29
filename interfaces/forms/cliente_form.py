@@ -47,3 +47,12 @@ class PagamentoForm(forms.Form):
     def parametros(self):
         dados = self.cleaned_data
         return {'valor': dados['valor'], 'forma_pagamento': dados['forma_pagamento'], 'observacao': dados['observacao']}
+
+
+class ApagarDadosDoClienteForm(forms.Form):
+    senha = forms.CharField(
+        strip=False, widget=forms.PasswordInput, error_messages={'required': "Digite sua senha para confirmar."},
+    )
+
+    def parametros(self):
+        return {'senha': self.cleaned_data['senha']}
