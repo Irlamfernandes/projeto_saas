@@ -13,11 +13,6 @@ updates:
         applies-to: version-updates
         update-types: [minor, patch]
     ignore:
-      # Tem que ser a versão exata que o pydantic pede: sobe junto com ele, nunca sozinho.
-      - dependency-name: pydantic-core
-      # O realtime (Supabase) só aceita websockets < 16: sobe quando ele liberar.
-      - dependency-name: websockets
-        update-types: [version-update:semver-major]
       # Versão principal do Django é migração planejada (como a 5.2 -> 6.1), não PR automático.
       - dependency-name: django
         update-types: [version-update:semver-major]
