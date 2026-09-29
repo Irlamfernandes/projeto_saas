@@ -11,3 +11,5 @@ PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 STORAGES = {**STORAGES, 'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'}}
 # O cliente de testes fala HTTP; o redirecionamento para HTTPS é testado à parte.
 SECURE_SSL_REDIRECT = False
+# Nos testes o erro não vai para a tabela: quem testa o registro de erros liga o handler por conta própria.
+LOGGING = {**LOGGING, 'root': {'handlers': ['console'], 'level': 'WARNING'}}

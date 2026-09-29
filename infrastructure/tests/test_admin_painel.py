@@ -6,11 +6,11 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 from infrastructure.admin.painel import (
-    _ultimos_meses, cartoes, grafico_lojas_novas_por_mes, grafico_recebido_por_mes, grafico_situacao_dos_planos,
+    _ultimos_meses, cartoes, erros_em_aberto, grafico_lojas_novas_por_mes, grafico_recebido_por_mes, grafico_situacao_dos_planos,
     painel_do_admin, tabela_ultimas_cobrancas, tabela_vencendo,
 )
 from infrastructure.admin.tema import favicons, menu_lateral
-from infrastructure.models import Cobranca, LojaModel, Plano, StatusDaCobranca
+from infrastructure.models import Cobranca, ErroDoSistema, LojaModel, Plano, StatusDaCobranca
 from tests.apoio import ComPlanosIniciais
 
 HOJE = timezone.localdate()
@@ -84,12 +84,20 @@ class PainelTest(ComPlanosIniciais, TestCase):
         self.assertEqual(contexto['x'], 1)
         self.assertEqual(json.loads(contexto['painel']['grafico_situacao'])['datasets'][0]['data'], [1, 1, 1])
 
+    def test_erros_em_aberto(self):
+        ErroDoSistema.objects.create(assinatura='a', tipo='ValueError')
+        ErroDoSistema.objects.create(assinatura='b', tipo='KeyError', resolvido=True)
+        self.assertEqual(erros_em_aberto(), {
+            'quantidade': 1, 'link': '/admin/infrastructure/errodosistema/?resolvido__exact=0',
+        })
+
 
 class TemaTest(TestCase):
 
     def test_menu_mostra_so_o_que_o_usuario_pode_ver(self):
         grupos = menu_lateral(None)
-        self.assertEqual([g.get('title') for g in grupos], [None, "Lojas", "Assinaturas", "Auditoria"])
+        self.assertEqual([g.get('title') for g in grupos], [None, "Lojas", "Assinaturas", "Auditoria", "Sistema"])
+        self.assertEqual([i['title'] for i in grupos[4]['items']], ["Erros do sistema", "Tentativas de login"])
         lojas = grupos[1]['items'][0]
         self.assertEqual((lojas['title'], str(lojas['link'])), ("Lojas", "/admin/infrastructure/lojamodel/"))
 
@@ -118,6 +126,39 @@ class TelasDoAdminTest(ComPlanosIniciais, TestCase):
         self.assertContains(response, "Recebido por mês")
         self.assertContains(response, 'data-type="bar"', count=3)
         self.assertContains(response, "Padaria")  # vence em 2 dias
+        self.assertNotContains(response, "em aberto</strong>")
+
+    def test_painel_avisa_dos_erros_em_aberto(self):
+        ErroDoSistema.objects.create(assinatura='a', tipo='ValueError')
+        ErroDoSistema.objects.create(assinatura='b', tipo='KeyError')
+        response = self.client.get('/admin/')
+        self.assertContains(response, "<strong>2 erros em aberto</strong>")
+        self.assertContains(response, 'href="/admin/infrastructure/errodosistema/?resolvido__exact=0"')
+
+    def test_erros_do_sistema(self):
+        erro = ErroDoSistema.objects.create(
+            assinatura='a', tipo='ValueError', mensagem="valor ruim", local="application/x.py:3 em f",
+            caminho='/vendas/', metodo='POST', loja=self.loja, detalhes="Traceback <linha>\nValueError: valor ruim",
+        )
+        lista = self.client.get('/admin/infrastructure/errodosistema/')
+        self.assertContains(lista, "Em aberto")
+        self.assertContains(lista, "application/x.py:3 em f")
+        tela = self.client.get(f'/admin/infrastructure/errodosistema/{erro.pk}/change/')
+        self.assertContains(tela, "Traceback &lt;linha&gt;")  # o traceback aparece escapado, nunca como HTML
+        self.assertEqual(self.client.get('/admin/infrastructure/errodosistema/add/').status_code, 403)
+
+        url = '/admin/infrastructure/errodosistema/'
+        self.client.post(url, {'action': 'marcar_resolvidos', '_selected_action': [erro.pk]})
+        erro.refresh_from_db()
+        self.assertTrue(erro.resolvido)
+        self.assertContains(self.client.get(url), "Resolvido")
+        self.client.post(url, {'action': 'reabrir', '_selected_action': [erro.pk]})
+        erro.refresh_from_db()
+        self.assertFalse(erro.resolvido)
+
+    def test_erro_sem_traceback(self):
+        erro = ErroDoSistema.objects.create(assinatura='a', tipo='application.produtos.services')
+        self.assertContains(self.client.get(f'/admin/infrastructure/errodosistema/{erro.pk}/change/'), "—")
 
     def test_listas_e_formularios_abrem(self):
         from infrastructure.models import RegistroDeAlteracao

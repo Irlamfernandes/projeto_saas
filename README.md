@@ -174,7 +174,13 @@ As regras e permissões são as mesmas de antes; mudou o visual.
 - **Painel** (`infrastructure/admin/painel.py`, só para o superusuário): lojas ativas e em teste, vencendo em
   7 dias, vencidas, recebido no mês; gráficos de recebido e de lojas novas por mês e da situação dos planos;
   listas de lojas que vencem logo e das últimas cobranças.
-- **Menu lateral** em grupos (Lojas, Assinaturas, Auditoria), em `infrastructure/admin/tema.py`.
+- **Menu lateral** em grupos (Lojas, Assinaturas, Auditoria, Sistema), em `infrastructure/admin/tema.py`.
+- **Erros do sistema** (Sistema): toda página que quebra em produção (erro 500) e todo `logger.error`/
+  `logger.exception` do código vira um registro com tipo, mensagem, ponto do código, tela, loja, usuário e o
+  traceback — o mesmo erro soma em "ocorrências". Corrigiu? Marque como resolvido; se voltar, reabre como novo.
+  O painel avisa no topo quando há erro em aberto. Os erros também saem no console (log do Render).
+  Configuração em `LOGGING` (`config/settings.py`) e `infrastructure/registro_de_erros.py`. Não guarda o que foi
+  digitado nem os parâmetros do endereço. Nos testes o registro no banco fica desligado (`config/settings_test.py`).
 - **Listas** com pílulas coloridas (situação do plano, tipo de acesso, senha a trocar, status da cobrança).
 - **Resetar senha** do usuário fica num formulário próprio abaixo da edição (`admin/usuario_resetar_senha.html`).
 - **Tradução:** o Unfold não vem em português; as frases dele estão em `locale/pt_BR/LC_MESSAGES/django.po`.
