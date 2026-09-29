@@ -1,4 +1,6 @@
 # CI: roda em todo push e PR da homologacao e da main.
+# As ações ficam presas ao commit (SHA), não à etiqueta: uma etiqueta pode ser trocada pelo dono sem aviso.
+# A verificação semanal (scripts/atualizacoes.py) não cobre estas; para atualizar, troque o SHA e o comentário.
 # Na homologacao ele só avisa (✓ ou ✗); na main, a proteção da branch exige tudo verde para aceitar o PR.
 name: CI
 
@@ -18,12 +20,12 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.12"
-  NODE_VERSION: "20"
+  NODE_VERSION: "24"
 
 jobs:
   python:
     name: Python · testes no Postgres, lint e Django
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -38,8 +40,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:ci@localhost:5432/ci
       DATABASE_SSL_REQUIRE: "False"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -74,10 +76,10 @@ jobs:
 
   javascript:
     name: JavaScript · testes, lint e CSS
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -97,12 +99,12 @@ jobs:
 
   seguranca:
     name: Segurança · código, bibliotecas e segredos
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0  # o gitleaks lê o histórico inteiro
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: pip install bandit==1.9.4 semgrep==1.178.0 pip-audit==2.10.1
@@ -124,5 +126,7 @@ jobs:
 
       - name: Senhas e chaves no histórico (gitleaks)
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz | tar -xz gitleaks
+          curl -sSL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz
+          echo "a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb  gitleaks.tgz" | sha256sum --check  # o arquivo é o publicado
+          tar -xzf gitleaks.tgz gitleaks
           ./gitleaks git . --redact --no-banner
