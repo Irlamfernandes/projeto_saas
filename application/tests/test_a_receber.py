@@ -8,7 +8,7 @@ from application.a_receber.selectors import clientes_a_cobrar, cobranca_do_clien
 from application.a_receber.services import registrar_lembrete
 from application.vendas.pendencias import Situacao
 from infrastructure.models import (
-    Acao, Cliente, LembreteDePagamento, LojaModel, PagamentoCliente, Parcela, RegistroDeAlteracao, Venda,
+    Acao, Cliente, ItemVenda, LembreteDePagamento, LojaModel, PagamentoCliente, Parcela, Produto, RegistroDeAlteracao, Venda,
 )
 
 HOJE = timezone.localdate()
@@ -102,11 +102,13 @@ class ClientesACobrarTest(ACobrarTestCase):
 
     def test_numero_de_consultas_nao_cresce_com_os_clientes(self):
         def consultas():
-            # clientes, lembretes e os prefetches (vendas, parcelas, pagos no ato, itens, produtos, pagamentos)
+            # clientes, lembretes e os prefetches (vendas, parcelas, pagos no ato, itens com produto, pagamentos)
             with self.assertNumQueries(7):
                 clientes_a_cobrar(self.usuario, HOJE)
 
-        self.venda(self.cliente("Ana"), '10', HOJE)
+        venda = self.venda(self.cliente("Ana"), '10', HOJE)
+        bolo = Produto.objects.create(loja=self.loja, nome="Bolo", preco_venda=Decimal('10'))
+        ItemVenda.objects.create(venda=venda, produto=bolo, quantidade=1, preco_unitario=Decimal('10'))
         consultas()
         for numero in range(5):
             self.venda(self.cliente(f"Cliente {numero}"), '10', HOJE - timedelta(days=numero))

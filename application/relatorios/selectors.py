@@ -6,19 +6,18 @@ from application.relatorios.periodos import inicios_dos_periodos
 from application.tenancy import filtrar_por_loja
 from infrastructure.models import Cliente, Produto, Venda
 
-LIMITE_ESTOQUE_BAIXO_PADRAO = 5
 _DINHEIRO = DecimalField(max_digits=14, decimal_places=2)
 _ZERO = Value(Decimal('0.00'), output_field=_DINHEIRO)
 
 
-class _Contexto:
+class Contexto:
     def como_contexto(self):
         """Campos como dict raso, pronto para o contexto do template."""
         return {campo.name: getattr(self, campo.name) for campo in fields(self)}
 
 
 @dataclass(frozen=True)
-class Relatorio(_Contexto):
+class Relatorio(Contexto):
     total_geral_vendas: Decimal
     ticket_medio: Decimal
     vendas_hoje_valor: Decimal
@@ -32,25 +31,14 @@ class Relatorio(_Contexto):
     estoque_ordenado: list
 
 
-@dataclass(frozen=True)
-class Painel(_Contexto):
-    total_produtos: int
-    total_clientes: int
-    total_geral: Decimal
-    vendas_hoje: Decimal
-    vendas_semana: Decimal
-    vendas_quinzena: Decimal
-    vendas_mes: Decimal
-    vendas_bimestre: Decimal
-    vendas_trimestre: Decimal
-    vendas_ano: Decimal
-    produtos_baixo_estoque: object
-
-
 def faturamento_por_periodo(vendas, inicios):
     """Soma das vendas no total e a partir de cada início informado, numa única consulta."""
-    somas = {nome: soma_das_vendas(Q(data_venda__gte=inicio)) for nome, inicio in inicios.items()}
-    return vendas.aggregate(total=soma_das_vendas(), **somas)
+    return vendas.aggregate(total=soma_das_vendas(), **somas_desde(inicios))
+
+
+def somas_desde(inicios):
+    """Uma soma das vendas a partir de cada início, para usar num aggregate."""
+    return {nome: soma_das_vendas(Q(data_venda__gte=inicio)) for nome, inicio in inicios.items()}
 
 
 def filtrar_por_intervalo(queryset, inicio=None, fim=None, campo='data_venda'):
@@ -93,27 +81,6 @@ def montar_relatorio(user, inicio=None, fim=None, agora=None):
         total_credito_clientes=sum((c.valor_credito for c in credito), Decimal('0.00')),
         estoque_ordenado=list(
             filtrar_por_loja(Produto.objects.filter(controla_estoque=True), user).order_by('quantidade_estoque', 'nome')
-        ),
-    )
-
-
-def montar_painel(user, limite_estoque=LIMITE_ESTOQUE_BAIXO_PADRAO, agora=None):
-    produtos = filtrar_por_loja(Produto.objects.all(), user)
-    faturamento = faturamento_por_periodo(filtrar_por_loja(Venda.objects.all(), user), inicios_dos_periodos(agora))
-
-    return Painel(
-        total_produtos=produtos.count(),
-        total_clientes=filtrar_por_loja(Cliente.objects.all(), user).count(),
-        total_geral=faturamento['total'],
-        vendas_hoje=faturamento['hoje'],
-        vendas_semana=faturamento['semana'],
-        vendas_quinzena=faturamento['quinzena'],
-        vendas_mes=faturamento['mes'],
-        vendas_bimestre=faturamento['bimestre'],
-        vendas_trimestre=faturamento['trimestre'],
-        vendas_ano=faturamento['ano'],
-        produtos_baixo_estoque=(
-            produtos.filter(controla_estoque=True, quantidade_estoque__lte=limite_estoque).order_by('quantidade_estoque')
         ),
     )
 

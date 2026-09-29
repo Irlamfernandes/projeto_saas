@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from django.test import TestCase
 from application.relatorios.periodos import inicios_dos_periodos
 from application.relatorios.selectors import (
-    Relatorio, faturamento_por_periodo, filtrar_por_intervalo, montar_painel, montar_relatorio,
+    Relatorio, faturamento_por_periodo, filtrar_por_intervalo, montar_relatorio,
 )
 from infrastructure.models import Cliente, LojaModel, PagamentoCliente, Produto, Venda
 
@@ -129,28 +129,3 @@ class MontarRelatorioTest(TestCase):
         contexto = montar_relatorio(self.usuario, agora=self.agora).como_contexto()
         self.assertEqual(contexto['total_geral_vendas'], Decimal('400.00'))
         self.assertEqual(len(contexto), 11)
-
-
-class MontarPainelTest(TestCase):
-
-    def test_painel_da_loja(self):
-        loja = LojaModel.objects.create(nome_loja="Loja A")
-        usuario = SimpleNamespace(is_superuser=False, loja=loja)
-        agora = _local(2026, 3, 20, 15)
-        Cliente.objects.create(loja=loja, nome="Ana")
-        Venda.objects.create(loja=loja, valor_total=Decimal('10.00'), data_venda=_local(2026, 3, 20, 1))
-        Venda.objects.create(loja=loja, valor_total=Decimal('20.00'), data_venda=_local(2026, 3, 10))
-        Venda.objects.create(loja=loja, valor_total=Decimal('40.00'), data_venda=_local(2025, 12, 31))
-        escasso = Produto.objects.create(loja=loja, nome="Escasso", preco_venda=Decimal('1'), quantidade_estoque=2)
-        Produto.objects.create(loja=loja, nome="Farto", preco_venda=Decimal('1'), quantidade_estoque=50)
-        Produto.objects.create(loja=loja, nome="Sob encomenda", preco_venda=Decimal('1'), controla_estoque=False)
-
-        painel = montar_painel(usuario, limite_estoque=5, agora=agora)
-
-        self.assertEqual((painel.total_produtos, painel.total_clientes), (3, 1))
-        self.assertEqual(painel.vendas_hoje, Decimal('10.00'))
-        self.assertEqual(painel.vendas_quinzena, Decimal('30.00'))
-        self.assertEqual(painel.vendas_ano, Decimal('30.00'))
-        self.assertEqual(painel.total_geral, Decimal('70.00'))
-        self.assertEqual(list(painel.produtos_baixo_estoque), [escasso])
-        self.assertEqual(montar_painel(usuario, limite_estoque=100, agora=agora).produtos_baixo_estoque.count(), 2)

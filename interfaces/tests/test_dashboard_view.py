@@ -7,7 +7,7 @@ from django.utils import timezone
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto
-from infrastructure.models.venda import Venda
+from infrastructure.models.venda import ItemVenda, Parcela, Venda
 
 User = get_user_model()
 
@@ -76,6 +76,24 @@ class DashboardViewTest(TestCase):
         self.assertEqual(response.context['total_clientes'], 1)
         self.assertEqual(response.context['total_geral'], 100.0)
         self.assertEqual(response.context['vendas_hoje'], 100.0)
+
+    def test_consultas_nao_crescem_com_clientes_vendas_e_produtos(self):
+        """O Início faz sempre as mesmas consultas, com 1 ou com muitos clientes devendo."""
+        self.client.force_login(self.user_loja1)
+
+        def consultas():
+            with self.assertNumQueries(26):
+                self.client.get(self.url_dashboard)
+
+        ItemVenda.objects.create(venda=self.venda_l1_hoje, produto=self.produto_l1_normal, quantidade=1, preco_unitario=100)
+        Parcela.objects.create(venda=self.venda_l1_hoje, vencimento=timezone.localdate())
+        consultas()
+        for numero in range(5):
+            cliente = Cliente.objects.create(loja=self.loja1, nome=f"Cliente {numero}")
+            venda = Venda.objects.create(loja=self.loja1, cliente=cliente, valor_total=10)
+            ItemVenda.objects.create(venda=venda, produto=self.produto_l1_baixo, quantidade=1, preco_unitario=10)
+            Parcela.objects.create(venda=venda, vencimento=timezone.localdate())
+        consultas()
 
     def test_superuser_visualiza_dados_de_todas_as_lojas(self):
         """Superusuário vê a soma de métricas e cadastros de todas as lojas."""

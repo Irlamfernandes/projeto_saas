@@ -11,7 +11,7 @@ from datetime import date
 from decimal import ROUND_DOWN, Decimal
 from django.db.models import Prefetch, prefetch_related_objects
 from django.utils import timezone
-from infrastructure.models import Venda
+from infrastructure.models import ItemVenda, Venda
 
 ZERO = Decimal('0.00')
 CENTAVO = Decimal('0.01')
@@ -86,7 +86,8 @@ def abater(pendencias, credito):
 
 def dados_para_pendencias():
     """Prefetch com tudo que o cálculo usa: aplicado a vários clientes, evita uma consulta por cliente."""
-    vendas = Venda.objects.order_by('data_venda', 'pk').prefetch_related('parcelas', 'pagamentos_no_ato', 'itens__produto')
+    itens = Prefetch('itens', queryset=ItemVenda.objects.select_related('produto'))  # item e produto numa consulta só
+    vendas = Venda.objects.order_by('data_venda', 'pk').prefetch_related('parcelas', 'pagamentos_no_ato', itens)
     return (Prefetch('vendas', queryset=vendas), 'pagamentos')
 
 

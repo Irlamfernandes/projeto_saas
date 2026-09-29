@@ -2,7 +2,7 @@ import calendar
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from django.db.models import DecimalField, ExpressionWrapper, F, Sum
+from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import Coalesce
 from application.relatorios.periodos import meses_ate
 from application.tenancy import filtrar_por_loja
@@ -90,15 +90,20 @@ def resultado_do_mes(user, mes):
     itens = filtrar_por_loja(ItemVenda.objects.all(), user, campo='venda__loja').filter(
         venda__data_venda__date__range=(mes.inicio, mes.fim),
     )
+    vendido = itens.aggregate(custo=_soma(QUANTIDADE_X_CUSTO), sem_custo=Count('pk', filter=Q(custo_unitario=0)))
     return Resultado(
         vendas=_somar(vendas, F('valor_total')),
-        custo_do_vendido=_somar(itens, QUANTIDADE_X_CUSTO).quantize(ZERO),
+        custo_do_vendido=vendido['custo'].quantize(ZERO),
         despesas=_somar(despesas_do_mes(user, mes), F('valor')),
         perdas=_somar(perdas_do_mes(user, mes), QUANTIDADE_X_CUSTO).quantize(ZERO),
         compras=_somar(compras_do_mes(user, mes), F('valor_total')),
-        itens_sem_custo=itens.filter(custo_unitario=0).count(),
+        itens_sem_custo=vendido['sem_custo'],
     )
 
 
+def _soma(expressao):
+    return Coalesce(Sum(expressao, output_field=DINHEIRO), ZERO, output_field=DINHEIRO)
+
+
 def _somar(queryset, expressao):
-    return queryset.aggregate(total=Coalesce(Sum(expressao, output_field=DINHEIRO), ZERO, output_field=DINHEIRO))['total']
+    return queryset.aggregate(total=_soma(expressao))['total']
