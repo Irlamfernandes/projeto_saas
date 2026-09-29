@@ -80,3 +80,30 @@ class PaginasTest(TestCase):
         loja = LojaModel.objects.create(nome_loja="Loja")
         self.client.force_login(User.objects.create_user(username="u", password="x", loja=loja, deve_trocar_senha=False))
         self.assertContains(self.client.get(reverse('dashboard')), 'data-enviar-ao-mudar')
+
+
+class VoltarDepoisDeSairTest(TestCase):
+    """Regressão: depois de sair, o voltar do celular mostrava o painel guardado no navegador."""
+
+    def setUp(self):
+        loja = LojaModel.objects.create(nome_loja="Loja A", ativo=True)
+        self.usuario = User.objects.create_user(username="caixa", password="x", loja=loja, deve_trocar_senha=False)
+
+    def test_paginas_de_quem_esta_logado_nao_ficam_guardadas(self):
+        self.client.force_login(self.usuario)
+
+        cache = self.client.get(reverse('dashboard'))['Cache-Control']
+
+        self.assertIn('no-store', cache)
+        self.assertIn('private', cache)
+
+    def test_depois_de_sair_o_painel_manda_para_o_login(self):
+        self.client.force_login(self.usuario)
+        self.client.post(reverse('logout'))
+
+        response = self.client.get(reverse('dashboard'))
+
+        self.assertRedirects(response, f"{reverse('login')}?next={reverse('dashboard')}", fetch_redirect_response=False)
+
+    def test_login_de_quem_nao_entrou_segue_como_antes(self):
+        self.assertNotIn('Cache-Control', self.client.get(reverse('login')))

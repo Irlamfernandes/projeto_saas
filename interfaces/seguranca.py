@@ -6,6 +6,7 @@ O admin (Unfold) depende de scripts inline e do Alpine.js, então tem uma polít
 """
 from urllib.parse import urlsplit
 from django.conf import settings
+from django.utils.cache import add_never_cache_headers
 
 CABECALHO = 'Content-Security-Policy'
 PREFIXO_DO_ADMIN = '/admin/'
@@ -69,4 +70,18 @@ class PoliticaDeSegurancaMiddleware:
         response = self.get_response(request)
         if CABECALHO not in response:
             response[CABECALHO] = self.admin if request.path.startswith(PREFIXO_DO_ADMIN) else self.site
+        return response
+
+
+class SemCacheParaQuemEstaLogadoMiddleware:
+    """Páginas de quem está logado não ficam guardadas no navegador: depois de sair da conta, o botão voltar
+    pede a página de novo ao servidor, que manda para o login (em vez de mostrar o painel guardado)."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if request.user.is_authenticated:
+            add_never_cache_headers(response)
         return response

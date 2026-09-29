@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarOpcoesDoProduto();
 });
 
+recarregarSeVoltouDaMemoria();
+
 function inicializarFocoInputs() {
     // Só em telas de toque: evita que o teclado virtual cubra o campo. No computador a página não pula.
     if (!globalThis.matchMedia?.('(pointer: coarse)').matches) return;
@@ -314,6 +316,14 @@ function inicializarOpcoesDoProduto(raiz = document) {
     });
 }
 
+/* Alguns navegadores (o Safari, principalmente) mostram a página guardada na memória ao tocar em voltar,
+   mesmo depois de sair da conta. Nesse caso a página é pedida de novo: logado, vem atualizada; senão, vai ao login. */
+function recarregarSeVoltouDaMemoria(janela = globalThis) {
+    janela.addEventListener('pageshow', (evento) => {
+        if (evento.persisted) janela.location.reload();
+    });
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
@@ -329,6 +339,7 @@ if (typeof module !== 'undefined') {
         inicializarMarcaDaLoja,
         inicializarAcoes,
         inicializarEstoqueDoProduto,
-        inicializarOpcoesDoProduto
+        inicializarOpcoesDoProduto,
+        recarregarSeVoltouDaMemoria
     };
 }

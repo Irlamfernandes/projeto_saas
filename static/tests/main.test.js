@@ -703,3 +703,17 @@ describe('opções do produto no cadastro', () => {
         expect(lista.children).toHaveLength(1);
     });
 });
+
+describe('voltar depois de sair da conta', () => {
+    test('página restaurada da memória é pedida de novo; carregamento normal não', () => {
+        const { recarregarSeVoltouDaMemoria } = require('../js/main.js');
+        const eventos = {};
+        const janela = { addEventListener: (nome, funcao) => { eventos[nome] = funcao; }, location: { reload: jest.fn() } };
+        recarregarSeVoltouDaMemoria(janela);
+
+        eventos.pageshow({ persisted: false });
+        expect(janela.location.reload).not.toHaveBeenCalled();
+        eventos.pageshow({ persisted: true });
+        expect(janela.location.reload).toHaveBeenCalledTimes(1);
+    });
+});
