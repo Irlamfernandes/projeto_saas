@@ -38,6 +38,7 @@ function remEmPx(rem) {
 
 function lerTokens(elemento) {
     const estilo = getComputedStyle(elemento || document.documentElement);
+    // Stryker disable next-line MethodExpression: jsdom e navegadores novos já tiram os espaços; o trim cobre os antigos.
     const ler = (nome) => estilo.getPropertyValue(nome).trim();
     return {
         fonte: remEmPx(0.75),
@@ -241,6 +242,7 @@ function acompanharTemaDoAparelho(graficos, redesenhar = desenharGraficos) {
 document.addEventListener('DOMContentLoaded', () => acompanharTemaDoAparelho(desenharGraficos()));
 
 /* istanbul ignore else */
+// Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         formatarMoeda, formatarMoedaCurta, formatarUnidades, remEmPx, lerTokens, montarConfiguracao, desenharGraficos,

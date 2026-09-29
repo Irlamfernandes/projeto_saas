@@ -4,7 +4,7 @@
 function anotarLembrete(linha, enviar) {
     const token = document.querySelector('[data-cobrancas] [name="csrfmiddlewaretoken"]')?.value;
     linha.dataset.lembrado = '';
-    linha.querySelector('[data-selo-lembrado]')?.classList.remove('hidden');
+    linha.querySelector('[data-selo-lembrado]').classList.remove('hidden');
     // Se a anotação falhar (internet caiu), a mensagem já foi aberta: o dono não perde nada.
     return enviar(linha.dataset.lembrete, { method: 'POST', headers: { 'X-CSRFToken': token }, credentials: 'same-origin' })
         .catch(() => {});
@@ -21,7 +21,7 @@ function iniciarCobrarTodos(quadro, janela, enviar) {
     const etapa = janela.querySelector('[data-etapa]');
     const fim = janela.querySelector('[data-fim]');
     const enviarNoWhatsApp = janela.querySelector('[data-enviar]');
-    let fila = [];
+    let fila; // preenchida ao abrir a janela
     let posicao = 0;
 
     function mostrar() {
@@ -67,6 +67,7 @@ function iniciarCobrancas(raiz = document, enviar = (...args) => globalThis.fetc
 document.addEventListener('DOMContentLoaded', () => iniciarCobrancas());
 
 /* istanbul ignore else */
+// Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { anotarLembrete, aLembrar, iniciarCobrancas };
 }

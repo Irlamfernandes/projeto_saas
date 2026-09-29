@@ -115,3 +115,15 @@ test('liga sozinho ao carregar a página', () => {
     document.dispatchEvent(new Event('DOMContentLoaded'));
     expect(document.querySelector('[data-total-compra]').textContent).toBe(reais(0));
 });
+
+test('digitar o custo por último já atualiza o total; a opção vazia volta o passo para 1', () => {
+    const tela = montar();
+    const linha = tela.linhas()[0];
+    tela.escolher(linha, '2');
+    tela.digitar(linha, 'item_quantidade', '2');
+    tela.digitar(linha, 'item_custo', '10');
+    expect(tela.total()).toBe(reais(20));
+
+    tela.escolher(linha, '');
+    expect(linha.querySelector('[name="item_quantidade"]').step).toBe('1');
+});

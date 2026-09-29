@@ -617,6 +617,47 @@ describe('vencimento', () => {
         expect(umaSo.$('[data-numero-parcelas]').value).toBe('1');
     });
 
+    test('apagar a data some com as parcelas, mesmo com o número de parcelas escolhido', () => {
+        const t = montar();
+        mudar(t.cliente, '7');
+        t.total(90);
+        mudar(t.data, '2026-02-01');
+        mudar(t.$('[data-numero-parcelas]'), '3');
+        expect(t.datas()).toHaveLength(3);
+        mudar(t.data, '');
+        expect(t.datas()).toEqual(['']);
+    });
+
+    test('resumo só aparece com mais de uma parcela e com algo a prazo', () => {
+        const t = montar();
+        mudar(t.cliente, '7');
+        t.total(90);
+        mudar(t.data, '2026-02-01');
+        expect(t.$('[data-resumo-parcelas]').textContent).toBe('');
+        mudar(t.$('[data-numero-parcelas]'), '3');
+        expect(t.$('[data-resumo-parcelas]').textContent).toMatch(/^3 parcelas de/);
+        mudar(t.pago, '90', 'input');
+        expect(t.$('[data-resumo-parcelas]').textContent).toBe('');
+    });
+
+    test('escolher outro prazo mantém o número de parcelas', () => {
+        const t = montar();
+        mudar(t.cliente, '7');
+        t.total(90);
+        mudar(t.data, '2026-02-01');
+        mudar(t.$('[data-numero-parcelas]'), '3');
+        t.$('[data-prazo-dias="7"]').click();
+        expect(t.$('[data-numero-parcelas]').value).toBe('3');
+        expect(t.datas()).toEqual(['2026-02-04', '2026-03-06', '2026-04-05']);
+    });
+
+    test('na edição lê as datas como o template escreve (com espaço no fim)', () => {
+        const t = montar({ vencimentos: '2026-02-01 2026-03-01 ' });
+        expect(t.$('[data-numero-parcelas]').value).toBe('2');
+        expect(t.datas()).toEqual(['2026-02-01', '2026-03-01']);
+        expect(t.$('[data-parcelas]').innerHTML).toMatchSnapshot();
+    });
+
     test('página sem o campo não quebra', () => {
         document.body.innerHTML = '<form><select name="cliente"></select></form>';
         expect(() => iniciarVencimento(document.querySelector('form'))).not.toThrow();
@@ -792,5 +833,133 @@ describe('opções do produto', () => {
         expect(total()).toMatch(/85,00/); // 45 (preço de hoje) + 40
         escolher(linhas()[0], 0, 'GG');
         expect(total()).toMatch(/82,00/);
+    });
+});
+
+
+describe('detalhes do carrinho (cobrados pelo teste de mutação)', () => {
+    const QUEIJO = { id: 1, nome: 'Queijo', codigo: '', preco: '39.90', estoque: 5.5, unidade: 'kg', casas: 3 };
+    const CAMISETA = {
+        id: 2, nome: 'Camiseta', codigo: 'C1', preco: '40.00', estoque: 2, unidade: 'un.', casas: 0,
+        opcoes: [{ nome: 'Tamanho', valores: [{ nome: 'P', acrescimo: '0.00' }, { nome: 'G', acrescimo: '5.00' }] }],
+    };
+    const linhas = () => [...document.querySelectorAll('[data-itens-lista] li')];
+    let rolar;
+
+    beforeEach(() => {
+        rolar = jest.fn();
+        Element.prototype.scrollIntoView = rolar;
+    });
+
+    test('marcação dos resultados, do aviso sem resultado e das linhas do carrinho', () => {
+        const { busca, resultados, carrinho } = montarPagina({ catalogo: [QUEIJO, CAMISETA] });
+        digitar(busca, 'e');
+        expect(resultados.innerHTML).toMatchSnapshot('resultados');
+        digitar(busca, 'zzz');
+        expect(resultados.innerHTML).toMatchSnapshot('sem resultado');
+        carrinho.adicionar(QUEIJO);
+        carrinho.adicionar(CAMISETA);
+        expect(document.querySelector('[data-itens-lista]').innerHTML).toMatchSnapshot('itens');
+    });
+
+    test('código igual vem antes de nome que só começa com o termo, mesmo fora da ordem alfabética', () => {
+        const nomes = buscarProdutos([{ nome: 'Abacate', codigo: '' }, { nome: 'Zebra', codigo: 'ab' }], 'ab').map((p) => p.nome);
+        expect(nomes).toEqual(['Zebra', 'Abacate']);
+    });
+
+    test('na edição, valor da época que ainda existe não aparece repetido', () => {
+        montarPagina({ catalogo: [CAMISETA], itens: [{ id: 2, quantidade: 1, preco: '45.00', opcoes: { Tamanho: 'G' } }] });
+        const tamanho = linhas()[0].querySelector('select');
+        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', 'P', 'G']);
+    });
+
+    test('item novo com opções começa no "Tamanho…" e cada vez vira uma linha', () => {
+        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
+        carrinho.adicionar(CAMISETA);
+        carrinho.adicionar(CAMISETA);
+        expect(linhas()).toHaveLength(2);
+        expect(linhas()[0].querySelector('select').selectedIndex).toBe(0);
+    });
+
+    test('o estoque de um produto não é gasto pelas linhas de outro', () => {
+        const { carrinho } = montarPagina();
+        carrinho.adicionar(CATALOGO[0]);
+        carrinho.mudarQuantidade(carrinho.itens[0], 5);
+        carrinho.adicionar(CATALOGO[1]); // pão de queijo: 2 em estoque
+        expect(enviados()).toEqual({ produtos: ['1', '2'], quantidades: ['5', '1'] });
+    });
+
+    test('quantidade com vírgula vale como decimal', () => {
+        const { carrinho } = montarPagina({ catalogo: [QUEIJO] });
+        carrinho.adicionar(QUEIJO);
+        carrinho.mudarQuantidade(carrinho.itens[0], '1,5');
+        expect(carrinho.itens[0].quantidade).toBe(1.5);
+    });
+
+    test('adicionar um produto tira o aviso de venda vazia', () => {
+        const { formulario, busca, carrinho } = montarPagina();
+        busca.reportValidity = jest.fn();
+        formulario.dispatchEvent(new Event('submit', { cancelable: true }));
+        expect(busca.validationMessage).not.toBe('');
+        carrinho.adicionar(CATALOGO[0]);
+        expect(busca.validationMessage).toBe('');
+    });
+
+    test('setas e Enter antes de buscar não adicionam nada', () => {
+        const { busca } = montarPagina();
+        tecla(busca, 'ArrowDown');
+        tecla(busca, 'Enter');
+        expect(linhas()).toHaveLength(0);
+    });
+
+    test('busca só com espaços não abre a lista', () => {
+        const { busca, resultados } = montarPagina();
+        digitar(busca, '   ');
+        expect(resultados.classList.contains('hidden')).toBe(true);
+    });
+
+    test('clicar ou dar Enter no esgotado deixa a busca como estava', () => {
+        const { busca, resultados } = montarPagina();
+        digitar(busca, 'bolo');
+        resultados.firstChild.dispatchEvent(new MouseEvent('mousedown', { cancelable: true }));
+        tecla(busca, 'Enter');
+        expect([busca.value, resultados.classList.contains('hidden')]).toEqual(['bolo', false]);
+    });
+
+    test('opção ativa rola para ficar visível; sem resultado, nada fica ativo', () => {
+        const { busca } = montarPagina();
+        digitar(busca, 'pão');
+        expect(rolar).toHaveBeenCalledWith({ block: 'nearest' });
+        expect(busca.hasAttribute('aria-activedescendant')).toBe(true);
+        digitar(busca, 'zzz');
+        expect(busca.hasAttribute('aria-activedescendant')).toBe(false);
+    });
+
+    test('seta para cima no primeiro vai para o último', () => {
+        const { busca } = montarPagina();
+        digitar(busca, 'o'); // 4 resultados: voltar e avançar não caem no mesmo lugar
+        tecla(busca, 'ArrowUp');
+        expect(busca.getAttribute('aria-activedescendant')).toBe(`produto-${buscarProdutos(CATALOGO, 'o').at(-1).id}`);
+    });
+
+    test('Escape fecha a lista e avisa o leitor de tela', () => {
+        const { busca } = montarPagina();
+        digitar(busca, 'pão');
+        tecla(busca, 'Escape');
+        expect([busca.getAttribute('aria-expanded'), busca.hasAttribute('aria-activedescendant')]).toEqual(['false', false]);
+    });
+
+    test('resumo com cliente funciona sem o campo de "pago agora"', () => {
+        document.body.innerHTML = `
+            <form><select name="cliente"><option value="7" selected>Ana</option></select><p data-resumo-pagamento></p></form>`;
+        const formulario = document.querySelector('form');
+        iniciarResumoDePagamento(formulario);
+        formulario.dispatchEvent(new CustomEvent('carrinho:total', { detail: { total: 50 } }));
+        expect(formulario.querySelector('[data-resumo-pagamento]').textContent).toBe(`Vai para a caderneta: ${formatarReais(50)}.`);
+    });
+
+    test('com cliente e sem campo de "pago agora", a forma de pagamento não é obrigatória', () => {
+        document.body.innerHTML = '<form><select name="cliente"><option value="7" selected>Ana</option></select></form>';
+        expect(formaDePagamentoObrigatoria(document.querySelector('form'))).toBe(false);
     });
 });
