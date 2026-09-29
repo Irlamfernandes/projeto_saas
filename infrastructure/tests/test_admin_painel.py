@@ -97,7 +97,7 @@ class TemaTest(TestCase):
     def test_menu_mostra_so_o_que_o_usuario_pode_ver(self):
         grupos = menu_lateral(None)
         self.assertEqual([g.get('title') for g in grupos], [None, "Lojas", "Assinaturas", "Auditoria", "Sistema"])
-        self.assertEqual([i['title'] for i in grupos[4]['items']], ["Erros do sistema", "Tentativas de login"])
+        self.assertEqual([i['title'] for i in grupos[4]['items']], ["Erros do sistema", "Backups", "Tentativas de login"])
         lojas = grupos[1]['items'][0]
         self.assertEqual((lojas['title'], str(lojas['link'])), ("Lojas", "/admin/infrastructure/lojamodel/"))
 

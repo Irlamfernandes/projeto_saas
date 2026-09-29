@@ -138,3 +138,28 @@ class MercadoPagoFalso:
         from infrastructure.pagamentos.mercado_pago import PagamentoConsultado
         self.consultas.append(pagamento_id)
         return self.pagamentos.get(pagamento_id) or PagamentoConsultado(pagamento_id, 'pending', None, 'BRL', '')
+
+
+class BackupsFalsos:
+    """No lugar do bucket `backups` do Supabase: guarda os arquivos enviados na memória."""
+
+    def __init__(self, falhar_no_envio=False, falhar_ao_remover=()):
+        self.arquivos = {}
+        self.removidos = []
+        self._falhar_no_envio = falhar_no_envio
+        self._falhar_ao_remover = falhar_ao_remover
+
+    def enviar(self, caminho_local, nome):
+        if self._falhar_no_envio:
+            raise SupabaseAPIError("Supabase fora do ar")
+        with open(caminho_local, 'rb') as arquivo:
+            self.arquivos[nome] = arquivo.read()
+
+    def baixar(self, nome, destino):
+        destino.write(self.arquivos[nome])
+
+    def remover(self, nome):
+        if nome in self._falhar_ao_remover:
+            raise SupabaseAPIError("não removeu")
+        self.removidos.append(nome)
+        self.arquivos.pop(nome, None)

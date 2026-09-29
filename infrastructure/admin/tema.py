@@ -21,6 +21,7 @@ def menu_lateral(_request):
         ]},
         {'title': 'Sistema', 'items': [
             _item('Erros do sistema', 'bug_report', 'admin:infrastructure_errodosistema_changelist', 'view_errodosistema'),
+            _item('Backups', 'backup', 'admin:infrastructure_backup_changelist', 'view_backup'),
             _item('Tentativas de login', 'lock_person', 'admin:infrastructure_tentativasdelogin_changelist',
                   'view_tentativasdelogin'),
         ]},

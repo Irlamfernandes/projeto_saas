@@ -18,3 +18,4 @@ from .configuracoes_view import configuracoes_view, marca_enviar_view, marca_rem
 from .planos_view import planos_view, cobranca_view, cobranca_situacao_view
 from .lembrete_view import lembrete_view
 from .gastos_view import excluir_gasto_view, gastos_view, registrar_gasto_view
+from .backup_view import backup_agendado_view

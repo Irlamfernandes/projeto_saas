@@ -13,3 +13,8 @@ services:
       # Com --threads 4, cada processo atende 4 pessoas ao mesmo tempo: um PDF ou o Mercado Pago não trava os outros.
       - key: WEB_CONCURRENCY
         value: 2
+      # Backup: gere valores longos e aleatórios. Guarde a BACKUP_CHAVE também fora do Render: sem ela, nenhum backup abre.
+      - key: BACKUP_CHAVE
+        sync: false
+      - key: BACKUP_TOKEN
+        sync: false

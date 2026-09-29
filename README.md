@@ -181,6 +181,18 @@ As regras e permissões são as mesmas de antes; mudou o visual.
   O painel avisa no topo quando há erro em aberto. Os erros também saem no console (log do Render).
   Configuração em `LOGGING` (`config/settings.py`) e `infrastructure/registro_de_erros.py`. Não guarda o que foi
   digitado nem os parâmetros do endereço. Nos testes o registro no banco fica desligado (`config/settings_test.py`).
+- **Backups** (Sistema, só o superusuário): *Configurar* liga/desliga o automático, define de quanto em quanto
+  tempo (horas, dias ou meses) e quantas cópias guardar; *Fazer backup agora* faz na hora; cada cópia tem *Baixar*.
+  - O arquivo é o `dumpdata` do Django compactado e criptografado (AES-256-GCM, senha `BACKUP_CHAVE`): não depende
+    do `pg_dump` e restaura em qualquer banco. Fica no bucket **privado** `backups` do Supabase (criado sozinho na
+    primeira vez; se alguém deixá-lo público, o backup recusa). As fotos não entram: já ficam no Storage.
+  - Quem dispara é o `.github/workflows/backup.yml`, de hora em hora, chamando `POST /interno/backup/` com o
+    `BACKUP_TOKEN`; o sistema só faz se estiver ligado e na hora (com 30 min de folga para o atraso do agendador).
+    Num servidor próprio, o mesmo pelo cron: `python manage.py fazer_backup --agendado`.
+  - **Restaurar** (num banco novo): `python manage.py migrate` e depois
+    `python manage.py restaurar_backup backup-AAAAMMDD-HHMMSS.json.gz.enc` (senha: `BACKUP_CHAVE` ou `--chave`).
+  - Para ligar: no Render, `BACKUP_CHAVE` e `BACKUP_TOKEN` (valores longos e aleatórios; guarde a chave também fora
+    do Render — sem ela nenhum backup abre); no GitHub, os segredos `SITE_URL` e `BACKUP_TOKEN` (o mesmo do Render).
 - **Listas** com pílulas coloridas (situação do plano, tipo de acesso, senha a trocar, status da cobrança).
 - **Resetar senha** do usuário fica num formulário próprio abaixo da edição (`admin/usuario_resetar_senha.html`).
 - **Tradução:** o Unfold não vem em português; as frases dele estão em `locale/pt_BR/LC_MESSAGES/django.po`.

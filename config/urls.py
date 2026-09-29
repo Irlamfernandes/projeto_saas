@@ -9,12 +9,13 @@ from interfaces.views import (
     exportar_pdf_modular_view, relatorios_vendas_view, relatorios_produtos_view, relatorios_clientes_view,
     relatorios_alteracoes_view, venda_cancelar_view, configuracoes_view, marca_enviar_view, marca_remover_view,
     planos_view, cobranca_view, cobranca_situacao_view, tema_view, lembrete_view,
-    gastos_view, registrar_gasto_view, excluir_gasto_view,
+    gastos_view, registrar_gasto_view, excluir_gasto_view, backup_agendado_view,
 )
 
 urlpatterns = [
     path('', lambda request: redirect('login', permanent=False)),
     path('admin/', admin.site.urls),
+    path('interno/backup/', backup_agendado_view, name='backup_agendado'),
     path('login/', login_view, name='login'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
 
