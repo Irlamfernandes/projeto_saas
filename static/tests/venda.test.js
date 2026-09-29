@@ -84,6 +84,7 @@ describe('carrinho', () => {
     test('a lista de sugestões vira listbox quando o script liga a busca', () => {
         const { resultados } = montarPagina();
         expect(resultados.getAttribute('role')).toBe('listbox');
+        expect(resultados.getAttribute('aria-label')).toBe('Produtos encontrados');
     });
 
     test('digitar mostra os resultados com preço e estoque; Enter adiciona o primeiro', () => {

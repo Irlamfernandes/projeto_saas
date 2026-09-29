@@ -33,6 +33,26 @@ class StorageFalso:
         self.removidos.append(url_publica)
 
 
+def garantir_planos_iniciais():
+    """Cria os planos iniciais pela mesma função da migração 0015 (não duplica se já existirem).
+
+    O teste de migração (TransactionTestCase) esvazia o banco quando termina, planos inclusive: sem isto,
+    os testes de planos passariam ou falhariam conforme a ordem em que rodam.
+    """
+    from importlib import import_module
+    from django.apps import apps
+    import_module('infrastructure.migrations.0015_planos_iniciais').criar_planos(apps, None)
+
+
+class ComPlanosIniciais:
+    """Mistura para TestCase: os planos iniciais existem em todo teste, qualquer que seja a ordem."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        garantir_planos_iniciais()
+
+
 class CenarioDeLoja:
     """Monta dados de uma loja para testes de relatórios, com datas no fuso local."""
 

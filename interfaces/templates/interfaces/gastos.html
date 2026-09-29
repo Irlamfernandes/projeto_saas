@@ -55,9 +55,9 @@
             <div class="campo">
                 <label for="id_categoria" class="rotulo">Categoria <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <input type="text" id="id_categoria" name="categoria" list="categorias-de-despesa" required maxlength="60" placeholder="Ex.: Aluguel" class="entrada">
-                <datalist id="categorias-de-despesa">{% for categoria in categorias %}<option value="{{ categoria }}">{% endfor %}</datalist>
+                <datalist id="categorias-de-despesa">{% for categoria in categorias %}<option value="{{ categoria }}"></option>{% endfor %}</datalist>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 min-[22em]:grid-cols-2 gap-3">
                 <div class="campo">
                     <label for="id_valor_despesa" class="rotulo">Valor <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <div class="entrada-grupo"><span class="afixo">R$</span><input type="number" step="0.01" min="0.01" id="id_valor_despesa" name="valor" required placeholder="0,00" inputmode="decimal" class="tabular-nums"></div>
@@ -89,7 +89,7 @@
                 <input type="checkbox" name="atualizar_custo" value="1" checked class="mt-0.5 w-4 h-4 rounded border-linha text-marca-600 focus:ring-marca-500">
                 <span><b class="font-semibold">Usar este custo como o preço de custo dos produtos</b><span class="block text-xs text-tinta-suave">O lucro das próximas vendas passa a contar com ele.</span></span>
             </label>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 min-[22em]:grid-cols-2 gap-3">
                 <div class="campo">
                     <label for="id_fornecedor" class="rotulo">Fornecedor <span class="rotulo-opcional">opcional</span></label>
                     <input type="text" id="id_fornecedor" name="fornecedor" maxlength="120" class="entrada">
@@ -117,7 +117,7 @@
                     {% for produto in produtos %}<option value="{{ produto.id }}">{{ produto.nome }}{% if produto.controla_estoque %} · {{ produto.quantidade_estoque|quantidade:produto.unidade }}{% endif %}</option>{% endfor %}
                 </select>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 min-[22em]:grid-cols-2 gap-3">
                 <div class="campo">
                     <label for="id_quantidade_perda" class="rotulo">Quantidade <span class="obrigatorio" aria-hidden="true">*</span></label>
                     <input type="number" step="any" min="0.001" id="id_quantidade_perda" name="quantidade" required value="1" inputmode="decimal" class="entrada tabular-nums">
@@ -130,7 +130,7 @@
             <div class="campo">
                 <label for="id_motivo_perda" class="rotulo">Motivo <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <input type="text" id="id_motivo_perda" name="motivo" list="motivos-de-perda" required maxlength="120" placeholder="Ex.: Venceu" class="entrada">
-                <datalist id="motivos-de-perda">{% for motivo in motivos %}<option value="{{ motivo }}">{% endfor %}</datalist>
+                <datalist id="motivos-de-perda">{% for motivo in motivos %}<option value="{{ motivo }}"></option>{% endfor %}</datalist>
             </div>
             <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Lançar perda</button>
         </form>
@@ -177,5 +177,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/gastos.js' %}"></script>
+<script src="{% static 'js/gastos.js' %}" defer></script>
 {% endblock %}

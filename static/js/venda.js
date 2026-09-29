@@ -142,6 +142,7 @@ function iniciarCarrinho(raiz) {
     let encontrados = [];
     // A lista de sugestões só existe com este script (as opções também ganham o papel aqui).
     resultados.setAttribute('role', 'listbox');
+    resultados.setAttribute('aria-label', 'Produtos encontrados');
     let ativo = -1;
 
     lerJson(raiz.dataset.itens).forEach((inicial) => {
@@ -263,7 +264,8 @@ function iniciarCarrinho(raiz) {
         const tirar = botaoIcone('i-lixeira', `Tirar ${item.produto.nome} da venda`, 'btn-fantasma btn-pequeno px-2 text-critico-texto');
         tirar.addEventListener('click', () => remover(item));
 
-        const acoes = criarElemento('div', 'flex items-center gap-2');
+        // Em telas bem estreitas (menos de ~340px) a lixeira desce para a linha de baixo, em vez de alargar a página.
+        const acoes = criarElemento('div', 'flex flex-wrap items-center justify-end gap-2');
         acoes.append(quantidade, valor, tirar);
         linha.append(info, acoes, produto, escolhas);
         return linha;

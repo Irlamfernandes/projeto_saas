@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render
+from application.contas.tentativas import minutos_bloqueado
 from application.tenancy import loja_desativada
 from interfaces.forms.login_form import LoginForm
 from interfaces.views.comum import redirecionar_apos_login
@@ -15,12 +16,20 @@ def _autenticar(request, form):
         password=form.cleaned_data['password'],
     )
     if user is None:
-        form.add_error(None, 'Usuário ou senha inválidos.')
+        form.add_error(None, _motivo_da_recusa(form.cleaned_data['username']))
         return None
     if loja_desativada(user):
         form.add_error(None, 'Esta loja está desativada. Procure o administrador.')
         return None
     return user
+
+
+def _motivo_da_recusa(usuario):
+    minutos = minutos_bloqueado(usuario)
+    if minutos:
+        tempo = "1 minuto" if minutos == 1 else f"{minutos} minutos"
+        return f"Muitas tentativas com senha errada. Por segurança, tente de novo daqui a {tempo}."
+    return 'Usuário ou senha inválidos.'
 
 
 def login_view(request):

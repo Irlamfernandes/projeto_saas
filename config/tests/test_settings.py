@@ -8,7 +8,9 @@ import config.settings
 def recarregar(monkeypatch):
     """Executa config/settings.py num módulo novo e isolado, com o ambiente informado."""
     def _recarregar(**ambiente):
-        for nome in ('DJANGO_DEBUG', 'DJANGO_SECRET_KEY', 'SECRET_KEY', 'DJANGO_SECURE_SSL_REDIRECT', 'DJANGO_HSTS_SECONDS'):
+        # DATABASE_URL também sai: a suíte pode rodar apontada para um Postgres (ex.: conferência em container).
+        for nome in ('DJANGO_DEBUG', 'DJANGO_SECRET_KEY', 'SECRET_KEY', 'DJANGO_SECURE_SSL_REDIRECT', 'DJANGO_HSTS_SECONDS',
+                     'DATABASE_URL', 'DATABASE_SSL_REQUIRE'):
             monkeypatch.delenv(nome, raising=False)
         for nome, valor in ambiente.items():
             monkeypatch.setenv(nome, valor)

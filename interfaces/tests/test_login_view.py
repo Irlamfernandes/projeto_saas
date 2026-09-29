@@ -104,3 +104,35 @@ class LoginViewTest(TestCase):
         self.assertFalse(("_auth_user_id" in self.client.session))
         form = response.context['form']
         self.assertTrue(form.errors)
+
+class LoginComMuitasTentativasTest(TestCase):
+    """Regressão (auditoria de 29/09): o login aceitava senhas erradas sem limite."""
+
+    def setUp(self):
+        loja = LojaModel.objects.create(nome_loja="Loja Teste", ativo=True)
+        User.objects.create_user(username="caixa", password="certa", loja=loja, deve_trocar_senha=False)
+
+    def entrar(self, senha):
+        return self.client.post(reverse('login'), {'username': 'caixa', 'password': senha})
+
+    def test_na_quinta_senha_errada_avisa_e_bloqueia_ate_a_certa(self):
+        for _ in range(4):
+            self.assertContains(self.entrar('errada'), 'Usuário ou senha inválidos.')
+
+        self.assertContains(self.entrar('errada'), 'tente de novo daqui a 15 minutos.')
+        bloqueado = self.entrar('certa')
+        self.assertContains(bloqueado, 'Muitas tentativas com senha errada.')
+        self.assertFalse(bloqueado.wsgi_request.user.is_authenticated)
+
+    def test_no_ultimo_minuto_fala_no_singular(self):
+        with patch('interfaces.views.login_view.minutos_bloqueado', return_value=1):
+            self.assertContains(self.entrar('errada'), 'daqui a 1 minuto.')
+
+    def test_o_login_do_admin_tambem_bloqueia(self):
+        User.objects.create_superuser(username="dono", password="certa", deve_trocar_senha=False)
+        for _ in range(5):
+            self.client.post('/admin/login/', {'username': 'dono', 'password': 'errada'})
+
+        response = self.client.post('/admin/login/', {'username': 'dono', 'password': 'certa'})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)

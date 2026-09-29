@@ -9,6 +9,13 @@ from django.conf import settings
 from django.utils.cache import add_never_cache_headers
 
 CABECALHO = 'Content-Security-Policy'
+PERMISSOES = 'Permissions-Policy'
+# Recursos do aparelho que o sistema nunca usa: nem um script injetado consegue pedi-los.
+# (Tirar foto do produto usa o seletor de arquivos do celular, que não depende da permissão de câmera.)
+SEM_PERMISSOES = ', '.join(f"{recurso}=()" for recurso in (
+    'camera', 'microphone', 'geolocation', 'payment', 'usb', 'serial', 'bluetooth', 'hid', 'midi',
+    'magnetometer', 'gyroscope', 'accelerometer', 'display-capture', 'browsing-topics',
+))
 PREFIXO_DO_ADMIN = '/admin/'
 PROPRIO = "'self'"
 NENHUM = "'none'"
@@ -70,6 +77,7 @@ class PoliticaDeSegurancaMiddleware:
         response = self.get_response(request)
         if CABECALHO not in response:
             response[CABECALHO] = self.admin if request.path.startswith(PREFIXO_DO_ADMIN) else self.site
+        response.setdefault(PERMISSOES, SEM_PERMISSOES)
         return response
 
 

@@ -6,7 +6,7 @@ from django.http import HttpResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from infrastructure.models import LojaModel
-from interfaces.seguranca import CABECALHO, PoliticaDeSegurancaMiddleware, origem_do_storage, politica_do_site
+from interfaces.seguranca import CABECALHO, PERMISSOES, PoliticaDeSegurancaMiddleware, origem_do_storage, politica_do_site
 
 User = get_user_model()
 PASTAS_DE_TEMPLATES = [Path(settings.BASE_DIR) / 'interfaces' / 'templates' / 'interfaces']
@@ -47,6 +47,13 @@ class MiddlewareTest(SimpleTestCase):
     def test_telas_do_sistema_recebem_a_politica_estrita(self):
         self.assertEqual(_diretivas(self._resposta('/dashboard/')[CABECALHO])['script-src'], "'self'")
 
+    def test_bloqueia_camera_microfone_e_localizacao(self):
+        permissoes = self._resposta('/dashboard/')[PERMISSOES]
+        for recurso in ('camera=()', 'microphone=()', 'geolocation=()', 'payment=()'):
+            self.assertIn(recurso, permissoes)
+        propria = HttpResponse(headers={PERMISSOES: 'camera=(self)'})
+        self.assertEqual(self._resposta('/dashboard/', propria)[PERMISSOES], 'camera=(self)')
+
     def test_admin_recebe_a_politica_do_unfold(self):
         script = _diretivas(self._resposta('/admin/')[CABECALHO])['script-src']
         self.assertIn("'unsafe-eval'", script)
@@ -74,7 +81,7 @@ class PaginasTest(TestCase):
         self.assertIn("script-src 'self'", response[CABECALHO])
         self.assertNotContains(response, 'fonts.googleapis.com')
         self.assertContains(response, 'fonts/figtree-latin.woff2')
-        self.assertContains(response, 'js/registrar-sw.js')
+        self.assertNotContains(response, 'sw.js')  # o service worker nunca atuou nas telas e foi removido
 
     def test_telas_logadas_usam_data_atributos(self):
         loja = LojaModel.objects.create(nome_loja="Loja")

@@ -3,7 +3,7 @@
 <div class="relative overflow-x-auto">
     <table class="w-full border-separate text-xs" style="border-spacing: 0.2rem" aria-label="Total vendido por dia da semana e hora">
         <thead>
-            <tr><th class="w-10"></th>{% for dia in mapa.dias %}<th scope="col" class="font-semibold text-tinta-fraca pb-1">{{ dia }}</th>{% endfor %}</tr>
+            <tr><th scope="col" class="w-10"><span class="sr-only">Hora</span></th>{% for dia in mapa.dias %}<th scope="col" class="font-semibold text-tinta-fraca pb-1">{{ dia }}</th>{% endfor %}</tr>
         </thead>
         <tbody>
             {% for hora, celulas in mapa.linhas %}

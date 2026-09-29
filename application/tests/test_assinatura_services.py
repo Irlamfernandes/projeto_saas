@@ -11,12 +11,12 @@ from application.assinatura.services import (
 )
 from infrastructure.models import Acao, Cobranca, LojaModel, Plano, RegistroDeAlteracao, StatusDaCobranca
 from infrastructure.pagamentos.mercado_pago import MercadoPagoError, MercadoPagoRecusou
-from tests.apoio import MercadoPagoFalso
+from tests.apoio import ComPlanosIniciais, MercadoPagoFalso
 
 HOJE = timezone.localdate()
 
 
-class AssinaturaTestCase(TestCase):
+class AssinaturaTestCase(ComPlanosIniciais, TestCase):
 
     def setUp(self):
         self.loja = LojaModel.objects.create(nome_loja="Padaria", vencimento=HOJE + timedelta(days=5))
@@ -28,7 +28,7 @@ class AssinaturaTestCase(TestCase):
         return gerar_cobranca(self.loja, plano or self.plano_30, email=email, usuario=self.usuario, gateway=gateway or self.mp)
 
 
-class PlanosIniciaisTest(TestCase):
+class PlanosIniciaisTest(ComPlanosIniciais, TestCase):
 
     def test_quatro_planos_de_teste_a_um_centavo(self):
         self.assertEqual(

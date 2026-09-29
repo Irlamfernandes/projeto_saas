@@ -3,9 +3,10 @@ from decimal import Decimal
 from django.test import TestCase
 from django.utils import timezone
 from infrastructure.models import Cobranca, LojaModel, Plano
+from tests.apoio import ComPlanosIniciais
 
 
-class AssinaturaModelTest(TestCase):
+class AssinaturaModelTest(ComPlanosIniciais, TestCase):
 
     def test_textos_no_admin(self):
         plano = Plano.objects.get(nome="30 dias")

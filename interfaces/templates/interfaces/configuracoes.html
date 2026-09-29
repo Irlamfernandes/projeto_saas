@@ -15,11 +15,11 @@
     <dl class="grid gap-3 sm:grid-cols-2">
         <div class="campo">
             <dt class="rotulo">Usuário</dt>
-            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.username }}</span><svg class="ico ico-sm shrink-0" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
+            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.username }}</span><svg class="ico ico-sm shrink-0" role="img" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
         </div>
         <div class="campo">
             <dt class="rotulo">Loja</dt>
-            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.loja.nome_loja|default:"Painel global" }}</span><svg class="ico ico-sm shrink-0" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
+            <dd class="entrada flex items-center justify-between gap-2 bg-fundo text-tinta-suave"><span class="truncate">{{ request.user.loja.nome_loja|default:"Painel global" }}</span><svg class="ico ico-sm shrink-0" role="img" aria-label="Bloqueado"><use href="#i-cadeado"/></svg></dd>
         </div>
     </dl>
 </section>

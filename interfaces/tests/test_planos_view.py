@@ -8,13 +8,13 @@ from django.utils import timezone
 from application.assinatura.services import gerar_cobranca
 from infrastructure.models import Cobranca, LojaModel, Plano, StatusDaCobranca
 from infrastructure.pagamentos.mercado_pago import MercadoPagoRecusou
-from tests.apoio import MercadoPagoFalso
+from tests.apoio import ComPlanosIniciais, MercadoPagoFalso
 
 User = get_user_model()
 HOJE = timezone.localdate()
 
 
-class PlanosTestCase(TestCase):
+class PlanosTestCase(ComPlanosIniciais, TestCase):
 
     def setUp(self):
         self.loja = LojaModel.objects.create(nome_loja="Padaria", vencimento=HOJE + timedelta(days=5), email_cobranca="Dono@Padaria.com")

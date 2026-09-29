@@ -13,7 +13,6 @@ ROTULOS = {
     'telefone': 'Telefone', 'email': 'E-mail', 'endereco': 'Endereço',
     'unidade': 'Vendido por', 'controla_estoque': 'Controla estoque', 'opcoes': 'Opções',
 }
-CAMPOS_EM_REAIS = {'preco_custo', 'preco_venda'}
 VAZIO = '(vazio)'
 ICONES_POR_ACAO = {'venda_cancelada': 'i-x', 'marca_alterada': 'i-foto', 'plano_renovado': 'i-calendario'}
 ICONES_POR_ASSUNTO = {
@@ -60,15 +59,19 @@ def _valor(campo, valor):
         return VAZIO
     if isinstance(valor, bool):
         return 'sim' if valor else 'não'
-    if campo in CAMPOS_EM_REAIS:
-        return _reais(valor)
-    if campo == 'quantidade_estoque' and _e_numero(valor):
-        return numero(valor)
-    if campo == 'unidade' and valor in Unidade.values:
-        return Unidade(valor).label
-    if campo == 'opcoes':
-        return '; '.join(map(_opcao, valor)) or VAZIO
-    return str(valor)
+    return _FORMATOS.get(campo, str)(valor)
+
+
+def _estoque(valor):
+    return numero(valor) if _e_numero(valor) else str(valor)
+
+
+def _unidade(valor):
+    return Unidade(valor).label if valor in Unidade.values else str(valor)
+
+
+def _opcoes(opcoes):
+    return '; '.join(map(_opcao, opcoes)) or VAZIO
 
 
 def _opcao(opcao):
@@ -95,20 +98,27 @@ def _e_numero(valor):
 
 
 def _resumo_da_venda(venda):
-    itens = ', '.join(
+    partes = [venda.get('cliente') or 'Balcão', _itens_da_venda(venda) or 'sem itens', f"total {_reais(venda.get('total'))}"]
+    return ' · '.join(partes + _complementos_da_venda(venda))
+
+
+def _itens_da_venda(venda):
+    return ', '.join(
         f"{descrever_item(item['quantidade'], item.get('unidade'), item['produto'])} ({_reais(item['preco_unitario'])})"
         for item in venda.get('itens', [])
     )
-    partes = [venda.get('cliente') or 'Balcão', itens or 'sem itens', f"total {_reais(venda.get('total'))}"]
-    if venda.get('forma_pagamento'):
-        partes.append(venda['forma_pagamento'])
+
+
+def _complementos_da_venda(venda):
+    """Forma de pagamento, o que foi pago no ato e os vencimentos, só quando houver."""
     pago = venda.get('pago_no_ato') or []
-    if pago:
-        partes.append(f"pago no ato {', '.join(_reais(v) for v in pago)}")
     vencimentos = venda.get('vencimentos') or []
-    if vencimentos:
-        partes.append(f"vence {', '.join(_data(v) for v in vencimentos)}")
-    return ' · '.join(partes)
+    complementos = [
+        venda.get('forma_pagamento'),
+        pago and f"pago no ato {', '.join(_reais(v) for v in pago)}",
+        vencimentos and f"vence {', '.join(_data(v) for v in vencimentos)}",
+    ]
+    return [texto for texto in complementos if texto]
 
 
 def _vencimento(anterior, novo):
@@ -126,3 +136,9 @@ def _fotos(fotos):
     if isinstance(fotos, int):
         return f"Fotos: {fotos}"
     return f"Fotos: {fotos.get('adicionadas', 0)} adicionada(s), {fotos.get('removidas', 0)} removida(s)"
+
+
+# Como mostrar o valor de cada campo no histórico (o resto aparece como veio).
+_FORMATOS = {
+    'preco_custo': _reais, 'preco_venda': _reais, 'quantidade_estoque': _estoque, 'unidade': _unidade, 'opcoes': _opcoes,
+}

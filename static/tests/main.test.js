@@ -717,3 +717,40 @@ describe('voltar depois de sair da conta', () => {
         expect(janela.location.reload).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('áreas com rolagem acessíveis pelo teclado', () => {
+    function area(html, { larga = true, alta = false, classe = 'overflow-x-auto' } = {}) {
+        const div = document.createElement('div');
+        div.className = classe;
+        div.innerHTML = html;
+        Object.defineProperty(div, 'scrollWidth', { value: larga ? 900 : 300 });
+        Object.defineProperty(div, 'clientWidth', { value: 300 });
+        Object.defineProperty(div, 'scrollHeight', { value: alta ? 900 : 300 });
+        Object.defineProperty(div, 'clientHeight', { value: 300 });
+        return div;
+    }
+
+    test('só a área que passa do tamanho recebe foco, papel e nome', () => {
+        document.body.innerHTML = '';
+        const secao = document.createElement('section');
+        secao.innerHTML = '<h2>Curva ABC</h2>';
+        const comRotulo = area('<table aria-label="Mapa de horários"></table>');
+        const comLegenda = area('<table><caption> Ranking </caption></table>', { larga: false, alta: true, classe: 'overflow-y-auto' });
+        const soTitulo = area('<table></table>');
+        const semNome = area('<p>texto</p>');
+        const cabe = area('<table aria-label="Pequena"></table>', { larga: false });
+        const jaFocavel = area('<table aria-label="X"></table>');
+        jaFocavel.setAttribute('tabindex', '-1');
+        secao.append(soTitulo);
+        document.body.append(comRotulo, comLegenda, secao, semNome, cabe, jaFocavel);
+
+        require('../js/main.js').inicializarRolagemAcessivel(document);
+
+        expect([comRotulo, comLegenda, soTitulo, semNome].map((a) => [a.tabIndex, a.getAttribute('role'), a.getAttribute('aria-label')])).toEqual([
+            [0, 'region', 'Tabela: Mapa de horários'], [0, 'region', 'Tabela: Ranking'], [0, 'region', 'Tabela: Curva ABC'],
+            [0, 'region', 'Área com rolagem'],
+        ]);
+        expect(cabe.hasAttribute('tabindex')).toBe(false);
+        expect([jaFocavel.getAttribute('tabindex'), jaFocavel.hasAttribute('role')]).toEqual(['-1', false]);
+    });
+});

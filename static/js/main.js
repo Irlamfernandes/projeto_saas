@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarAcoes();
     inicializarEstoqueDoProduto();
     inicializarOpcoesDoProduto();
+    inicializarRolagemAcessivel();
 });
 
 recarregarSeVoltouDaMemoria();
@@ -324,6 +325,26 @@ function recarregarSeVoltouDaMemoria(janela = globalThis) {
     });
 }
 
+/* Áreas com rolagem própria (tabelas longas ou largas): quando o conteúdo passa do tamanho, a área recebe foco
+   pelo Tab para rolar com as setas, e o leitor de tela anuncia "Tabela: <nome da tabela ou da seção>"
+   (o prefixo evita repetir o nome da seção, que já é uma região da página). */
+function inicializarRolagemAcessivel(raiz = document) {
+    raiz.querySelectorAll('.overflow-x-auto, .overflow-y-auto').forEach((area) => {
+        const rola = area.scrollWidth > area.clientWidth || area.scrollHeight > area.clientHeight;
+        if (!rola || area.hasAttribute('tabindex')) return;
+        area.tabIndex = 0;
+        area.setAttribute('role', 'region');
+        area.setAttribute('aria-label', nomeDaArea(area));
+    });
+}
+
+function nomeDaArea(area) {
+    const tabela = area.querySelector('table');
+    const titulo = area.closest('section')?.querySelector('h2, h3');
+    const nome = tabela?.getAttribute('aria-label') || tabela?.caption?.textContent.trim() || titulo?.textContent.trim();
+    return nome ? `Tabela: ${nome}` : 'Área com rolagem';
+}
+
 /* istanbul ignore else */
 if (typeof module !== 'undefined') {
     module.exports = { 
@@ -340,6 +361,7 @@ if (typeof module !== 'undefined') {
         inicializarAcoes,
         inicializarEstoqueDoProduto,
         inicializarOpcoesDoProduto,
-        recarregarSeVoltouDaMemoria
+        recarregarSeVoltouDaMemoria,
+        inicializarRolagemAcessivel
     };
 }

@@ -32,6 +32,7 @@
         </aside>
 
         <div class="min-w-0 flex flex-col pb-24 md:pb-0">
+            <header>
             <div class="md:hidden flex items-center justify-between gap-3 bg-superficie border-b border-linha px-4 py-3">
                 <span class="flex items-center gap-2.5 min-w-0">
                     {% include 'interfaces/_marca_loja.html' with classes='w-8 h-8 rounded-lg text-sm' %}
@@ -40,7 +41,7 @@
                 {% menu_ativo 'configuracoes planos cobranca' as em_configuracoes %}<a href="{% url 'configuracoes' %}" class="btn-fantasma btn-pequeno shrink-0" {% if em_configuracoes %}aria-current="page"{% endif %}><svg class="ico"><use href="#i-config"/></svg>Configurações</a>
             </div>
 
-            <header class="flex flex-wrap items-end justify-between gap-4 px-4 sm:px-8 pt-6 pb-2">
+            <div class="flex flex-wrap items-end justify-between gap-4 px-4 sm:px-8 pt-6 pb-2">
                 <div class="min-w-0">
                     {% block voltar %}{% endblock %}
                     {% ajuda_da_tela as texto_de_ajuda %}
@@ -51,6 +52,7 @@
                     <p class="text-sm text-tinta-suave mt-1">{% block subtitulo %}{% endblock %}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">{% block acoes %}{% endblock %}</div>
+            </div>
             </header>
 
             <main class="px-4 sm:px-8 py-4 sm:py-6 grid grid-cols-1 gap-5 sm:gap-6 content-start">
@@ -100,8 +102,7 @@
         {% include 'interfaces/_menu_movel.html' with rota='relatorios' icone='i-relatorio' rotulo='Relatórios' ativo_se='relatorios relatorios_vendas relatorios_produtos relatorios_clientes relatorios_alteracoes gastos' %}
     </nav>
 
-    <script src="{% static 'js/registrar-sw.js' %}" data-sw="{% static 'sw.js' %}"></script>
-    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/main.js' %}" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -12,6 +12,7 @@ from infrastructure.admin.painel import (
 )
 from infrastructure.admin.tema import favicons, menu_lateral
 from infrastructure.models import Cobranca, LojaModel, Plano, StatusDaCobranca
+from tests.apoio import ComPlanosIniciais
 
 HOJE = timezone.localdate()
 
@@ -24,7 +25,7 @@ def cobranca(loja, valor='10.00', status=StatusDaCobranca.PAGA, paga_em=None):
     )
 
 
-class PainelTest(TestCase):
+class PainelTest(ComPlanosIniciais, TestCase):
 
     def setUp(self):
         self.em_dia = LojaModel.objects.create(nome_loja="Em dia", vencimento=HOJE + timedelta(days=30))
@@ -102,7 +103,7 @@ class TemaTest(TestCase):
         self.assertTrue(favicons(None)[0]['href'].endswith('images/icon-192.png'))
 
 
-class TelasDoAdminTest(TestCase):
+class TelasDoAdminTest(ComPlanosIniciais, TestCase):
     """Abre de verdade cada tela do admin com o tema: nada pode quebrar na troca de visual."""
 
     def setUp(self):
@@ -122,6 +123,9 @@ class TelasDoAdminTest(TestCase):
     def test_listas_e_formularios_abrem(self):
         from infrastructure.models import RegistroDeAlteracao
         registro = RegistroDeAlteracao.objects.create(loja=self.loja, acao='venda_cancelada', descricao="Venda #1")
+        from application.contas.tentativas import registrar_falha
+        from infrastructure.models import TentativasDeLogin
+        registrar_falha('caixa')
         paginas = [
             '/admin/infrastructure/lojamodel/', f'/admin/infrastructure/lojamodel/{self.loja.pk}/change/',
             '/admin/infrastructure/lojamodel/add/',
@@ -131,10 +135,13 @@ class TelasDoAdminTest(TestCase):
             '/admin/infrastructure/cobranca/', f'/admin/infrastructure/cobranca/{Cobranca.objects.get().pk}/change/',
             '/admin/infrastructure/registrodealteracao/',
             f'/admin/infrastructure/registrodealteracao/{registro.pk}/change/',
+            '/admin/infrastructure/tentativasdelogin/',
+            f'/admin/infrastructure/tentativasdelogin/{TentativasDeLogin.objects.get().pk}/change/',
         ]
         for pagina in paginas:
             with self.subTest(pagina):
                 self.assertEqual(self.client.get(pagina).status_code, 200)
+        self.assertEqual(self.client.get('/admin/infrastructure/tentativasdelogin/add/').status_code, 403)
 
     def test_pilulas_de_situacao(self):
         lojas = self.client.get('/admin/infrastructure/lojamodel/')

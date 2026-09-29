@@ -24,6 +24,13 @@ def _decimal(texto):
     return numero
 
 
+def _converter(linhas):
+    try:
+        return [(int(produto), _decimal(quantidade), _decimal(custo)) for produto, quantidade, custo in linhas]
+    except (ValueError, InvalidOperation):
+        raise ValidationError(ERRO_ITEM) from None
+
+
 class CompraForm(forms.Form):
     """Os itens chegam em listas paralelas: item_produto[], item_quantidade[] e item_custo[]."""
 
@@ -42,19 +49,20 @@ class CompraForm(forms.Form):
         return dados
 
     def _ler_itens(self):
+        itens = _converter(self._linhas_preenchidas())
+        if any(quantidade <= 0 or custo < 0 for _, quantidade, custo in itens):
+            raise ValidationError("A quantidade precisa ser maior que zero e o custo não pode ser negativo.")
+        return [(produto, quantidade, custo.quantize(Decimal('0.01'))) for produto, quantidade, custo in itens]
+
+    def _linhas_preenchidas(self):
+        """Linhas (produto, quantidade, custo) com algo escrito; linhas totalmente em branco são ignoradas."""
         colunas = [self.data.getlist(nome) for nome in ('item_produto', 'item_quantidade', 'item_custo')]
         linhas = [linha for linha in zip(*colunas) if any(parte.strip() for parte in linha)]
         if not linhas:
             raise ValidationError("Adicione pelo menos um produto à compra.")
         if len(set(map(len, colunas))) != 1 or len(linhas) > MAXIMO_DE_ITENS:
             raise ValidationError(ERRO_ITEM)
-        try:
-            itens = [(int(produto), _decimal(quantidade), _decimal(custo)) for produto, quantidade, custo in linhas]
-        except (ValueError, InvalidOperation):
-            raise ValidationError(ERRO_ITEM) from None
-        if any(quantidade <= 0 or custo < 0 for _, quantidade, custo in itens):
-            raise ValidationError("A quantidade precisa ser maior que zero e o custo não pode ser negativo.")
-        return [(produto, quantidade, custo.quantize(Decimal('0.01'))) for produto, quantidade, custo in itens]
+        return linhas
 
     def parametros(self):
         dados = self.cleaned_data

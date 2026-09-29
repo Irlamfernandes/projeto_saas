@@ -36,7 +36,7 @@
     --corsario-azul-escuro: 51 86 126;
     --tinta: 22 33 31;
     --tinta-suave: 75 91 88;
-    --tinta-fraca: 124 138 135;
+    --tinta-fraca: 99 112 109;  /* #63706d: 5,2:1 no branco, 4,8:1 no fundo (WCAG AA) */
     --fundo: 244 247 246;
     --superficie: 255 255 255;
     --linha: 226 233 231;
@@ -56,7 +56,7 @@
     --cor-neutra: #c9d3d1;
     --cor-tinta: #16211f;
     --cor-tinta-suave: #4b5b58;
-    --cor-tinta-fraca: #7c8a87;
+    --cor-tinta-fraca: #63706d;
     --cor-linha: #e2e9e7;
     --cor-grade: #edf1f0;
     --cor-superficie: #ffffff;
@@ -224,7 +224,7 @@
 
   /* Abas (links) */
   /* No celular, 2×2 (todas as abas visíveis); a partir de sm, em linha */
-  .abas { @apply grid grid-cols-2 gap-1 rounded-controle bg-superficie border border-linha p-1 sm:flex sm:w-fit; }
+  .abas { @apply grid grid-cols-2 gap-1 rounded-controle bg-superficie border border-linha p-1 sm:flex sm:flex-wrap sm:w-fit sm:max-w-full; }
   .aba { @apply rounded-lg px-3.5 py-2 text-center text-sm font-semibold text-tinta-suave whitespace-nowrap transition hover:text-tinta hover:bg-fundo; }
   .aba-ativa { @apply bg-marca-100 text-marca-700 hover:bg-marca-100 hover:text-marca-700; }
 

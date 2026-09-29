@@ -226,3 +226,81 @@ describe('regras finas dos gráficos (achadas pelo teste de mutação)', () => {
     });
 });
 
+
+describe('detalhes visuais (achados pelo teste de mutação)', () => {
+    test('lê todas as cores do tema, sem espaços sobrando', () => {
+        const nomes = { marca: 'marca', destaque: 'destaque', neutra: 'neutra', tinta: 'tinta', tintaSuave: 'tinta-suave',
+            tintaFraca: 'tinta-fraca', linha: 'linha', grade: 'grade', superficie: 'superficie' };
+        const elemento = document.createElement('div');
+        Object.entries(nomes).forEach(([chave, css], i) => elemento.style.setProperty(`--cor-${css}`, ` #00000${i} `));
+        document.body.append(elemento);
+
+        const lidos = g.lerTokens(elemento);
+
+        Object.keys(nomes).forEach((chave, i) => expect(lidos[chave]).toBe(`#00000${i}`));
+    });
+
+    test('linha: área preenchida clara, eixos discretos e tooltip pelo índice', () => {
+        const { options, data } = g.montarConfiguracao('linha', dados, tokens, 'moeda');
+
+        expect(data.datasets[0]).toMatchObject({ fill: true, backgroundColor: '#0d94881f' });
+        expect(options).toMatchObject({
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false }, border: { color: tokens.linha }, ticks: { color: tokens.tintaFraca, maxRotation: 0, autoSkipPadding: 14 } },
+                y: { beginAtZero: true, grid: { color: tokens.grade }, border: { display: false } },
+            },
+        });
+    });
+
+    test('barras: base reta, espaçamento entre grupos e tooltip pelo índice', () => {
+        const config = g.montarConfiguracao('barras-agrupadas', dados, tokens, 'moeda');
+
+        expect(config.type).toBe('bar');
+        expect(config.data.datasets[0].borderSkipped).toBe('start');
+        expect(config.options).toMatchObject({
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            datasets: { bar: { categoryPercentage: 0.72, barPercentage: 0.92 } },
+            plugins: { legend: { display: false } },
+        });
+    });
+
+    test('barras deitadas: valor no fim da barra, sem eixo de valores', () => {
+        const { options } = g.montarConfiguracao('barras-horizontais', dados, tokens, 'unidades');
+
+        expect(options).toMatchObject({
+            interaction: { mode: 'nearest', axis: 'y', intersect: false },
+            layout: { padding: { right: 56 } },
+            scales: {
+                x: { display: false, beginAtZero: true },
+                y: { grid: { display: false }, border: { display: false }, ticks: { color: tokens.tintaSuave } },
+            },
+        });
+    });
+
+    test('mira sem tooltip ativo não desenha nada', () => {
+        const ctx = contextoFalso();
+        g.pluginMira(tokens).afterDatasetsDraw({ tooltip: {}, ctx });
+        expect(ctx.stroke).not.toHaveBeenCalled();
+    });
+
+    test('rótulo no fim da barra centralizado na altura dela', () => {
+        const ctx = contextoFalso();
+        const grafico = { ctx, data: { datasets: [{ data: [3] }] }, getDatasetMeta: () => ({ data: [{ x: 10, y: 20 }] }) };
+        g.pluginRotulosNoFim(tokens, { eixo: (v) => `${v}` }).afterDatasetsDraw(grafico);
+        expect(ctx.textBaseline).toBe('middle');
+    });
+
+    test('pergunta ao aparelho exatamente por movimento reduzido e por tema escuro', () => {
+        const consultas = [];
+        window.matchMedia = jest.fn((consulta) => { consultas.push(consulta); return { matches: false, addEventListener: jest.fn() }; });
+        g.desenharGraficos(document.createElement('div'), { defaults: { font: {} } });
+        g.acompanharTemaDoAparelho([]);
+        expect(consultas).toEqual(['(prefers-reduced-motion: reduce)', '(prefers-color-scheme: dark)']);
+        expect(window.matchMedia.mock.results[1].value.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
+        delete window.matchMedia;
+    });
+});

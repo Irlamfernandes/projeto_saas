@@ -60,7 +60,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         {% for r in resumo_abc %}
         <div class="rounded-controle border border-linha p-4">
-            <p class="flex items-center gap-2"><span class="{% if r.classe == 'A' %}pilula-marca{% elif r.classe == 'B' %}pilula-neutra{% else %}pilula-neutra opacity-70{% endif %}">Classe {{ r.classe }}</span><span class="text-xs text-tinta-fraca">{% if r.classe == 'A' %}essenciais{% elif r.classe == 'B' %}intermediários{% else %}pouca venda{% endif %}</span></p>
+            <p class="flex items-center gap-2"><span class="{% if r.classe == 'A' %}pilula-marca{% elif r.classe == 'B' %}pilula-neutra{% else %}pilula-neutra{% endif %}">Classe {{ r.classe }}</span><span class="text-xs text-tinta-fraca">{% if r.classe == 'A' %}essenciais{% elif r.classe == 'B' %}intermediários{% else %}pouca venda{% endif %}</span></p>
             <p class="mt-2 text-sm"><b class="text-lg tabular-nums">{{ r.produtos }}</b> produto{{ r.produtos|pluralize }} · <b class="tabular-nums">{{ r.participacao }}%</b> do faturamento</p>
         </div>
         {% endfor %}
@@ -146,6 +146,6 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'vendor/chart.umd.min.js' %}"></script>
-<script src="{% static 'js/graficos.js' %}"></script>
+<script src="{% static 'vendor/chart.umd.min.js' %}" defer></script>
+<script src="{% static 'js/graficos.js' %}" defer></script>
 {% endblock %}

@@ -6,7 +6,6 @@ source = application
          infrastructure
          config
 omit = 
-    */static/sw.js
     tailwind.config.js
     */migrations/*
     */tests/*

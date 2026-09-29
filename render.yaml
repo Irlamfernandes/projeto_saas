@@ -5,10 +5,11 @@ services:
     region: ohio
     plan: free
     buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi:application"
+    startCommand: "gunicorn config.wsgi:application --threads 4"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.3
       # Processos do Gunicorn (lido automaticamente por ele). 2 cabe nos 512 MB do plano free.
+      # Com --threads 4, cada processo atende 4 pessoas ao mesmo tempo: um PDF ou o Mercado Pago não trava os outros.
       - key: WEB_CONCURRENCY
         value: 2

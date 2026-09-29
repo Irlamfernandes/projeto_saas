@@ -68,3 +68,21 @@ class UsuarioModel(AbstractUser):
     def __str__(self):
         loja_nome = self.loja.nome_loja if self.loja else 'Admin Global'
         return f"{self.username} ({loja_nome})"
+
+class TentativasDeLogin(models.Model):
+    """Senhas erradas seguidas de um nome de usuário (como foi digitado, sem diferença de maiúsculas).
+
+    Guardado no banco, e não na memória do servidor, para valer em todos os processos do gunicorn.
+    """
+    usuario = models.CharField(max_length=150, unique=True)
+    falhas = models.PositiveSmallIntegerField(default=0)
+    ultima_falha = models.DateTimeField(db_index=True)
+    bloqueado_ate = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'tentativas_de_login'
+        verbose_name = 'Tentativas de login'
+        verbose_name_plural = 'Tentativas de login'
+
+    def __str__(self):
+        return f"{self.usuario} · {self.falhas} erro(s)"
