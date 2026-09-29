@@ -13,8 +13,8 @@ TAMANHO_MAXIMO_MB = 15
 TAMANHO_MAXIMO_IMAGEM = TAMANHO_MAXIMO_MB * 1024 * 1024
 MAXIMO_DE_VALORES = 30
 TAMANHO_DO_NOME_NA_OPCAO = 40
-# "G + 5,00" ou "G +R$ 5": o valor G custa R$ 5 a mais.
-_VALOR_COM_ACRESCIMO = re.compile(r'^(?P<nome>.*?)\s*\+\s*(?:R\$\s*)?(?P<acrescimo>\d{1,7}(?:[.,]\d{1,2})?)$')
+# O que vem depois do último "+" em "G + 5,00" ou "G +R$ 5": o valor G custa R$ 5 a mais.
+_ACRESCIMO = re.compile(r'(?:R\$\s*)?(\d{1,7}(?:[.,]\d{1,2})?)')
 
 
 def validar_tamanho_da_imagem(arquivo):
@@ -65,11 +65,12 @@ def ler_opcoes(nomes, textos):
 
 
 def _ler_valor(linha):
-    achou = _VALOR_COM_ACRESCIMO.match(linha)
-    if not achou or not achou['nome']:
+    nome, mais, depois = linha.rpartition('+')
+    achou = _ACRESCIMO.fullmatch(depois.strip())
+    if not (mais and nome.strip() and achou):
         return {'nome': linha, 'acrescimo': '0.00'}
-    acrescimo = Decimal(achou['acrescimo'].replace(',', '.')).quantize(Decimal('0.01'))
-    return {'nome': achou['nome'], 'acrescimo': str(acrescimo)}
+    acrescimo = Decimal(achou[1].replace(',', '.')).quantize(Decimal('0.01'))
+    return {'nome': nome.strip(), 'acrescimo': str(acrescimo)}
 
 
 def _conferir_opcoes(opcoes):

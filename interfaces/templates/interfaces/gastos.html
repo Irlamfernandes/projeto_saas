@@ -80,7 +80,7 @@
             <p class="ajuda -mt-1">Mercadoria para revender: soma no estoque dos produtos.</p>
             <fieldset class="grid gap-2">
                 <legend class="rotulo mb-1.5">Produtos <span class="obrigatorio" aria-hidden="true">*</span></legend>
-                <ol class="grid gap-3" data-itens-compra>{% include 'interfaces/_item_de_compra.html' %}</ol>
+                <div class="grid gap-3" data-itens-compra>{% include 'interfaces/_item_de_compra.html' %}</div>
                 <template data-modelo-item-compra>{% include 'interfaces/_item_de_compra.html' %}</template>
                 <button type="button" class="btn-secundario btn-pequeno justify-self-start" data-adicionar-item-compra><svg class="ico ico-sm"><use href="#i-mais"/></svg>Outro produto</button>
             </fieldset>

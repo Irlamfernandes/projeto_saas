@@ -31,12 +31,14 @@ function unidadeVisivel(produto) {
 function descreverEstoque(produto) {
     if (produto.estoque === null) return 'sem controle de estoque';
     const unidade = unidadeVisivel(produto);
-    return `${quantidades.format(produto.estoque)}${unidade ? ` ${unidade}` : ''} em estoque`;
+    const sufixo = unidade ? ` ${unidade}` : '';
+    return `${quantidades.format(produto.estoque)}${sufixo} em estoque`;
 }
 
 function descreverPreco(produto, preco) {
     const unidade = unidadeVisivel(produto);
-    return `${formatarReais(preco)} ${unidade ? `por ${unidade}` : 'cada'}`;
+    const medida = unidade ? `por ${unidade}` : 'cada';
+    return `${formatarReais(preco)} ${medida}`;
 }
 
 function temOpcoes(produto) {
@@ -243,7 +245,8 @@ function iniciarCarrinho(raiz) {
         });
         if (limite !== Infinity) campo.max = limite;
         const unidade = unidadeVisivel(item.produto);
-        campo.setAttribute('aria-label', `Quantidade de ${item.produto.nome}${unidade ? ` em ${unidade}` : ''}`);
+        const emUnidade = unidade ? ` em ${unidade}` : '';
+        campo.setAttribute('aria-label', `Quantidade de ${item.produto.nome}${emUnidade}`);
         menos.disabled = item.quantidade <= passo;
         mais.disabled = item.quantidade >= limite;
         menos.addEventListener('click', () => mudarQuantidade(item, item.quantidade - 1));
@@ -393,7 +396,7 @@ function somarDias(data, dias) {
 function dividirEmParcelas(valor, partes) {
     const centavos = Math.round(valor * 100);
     const parte = Math.floor(centavos / partes);
-    return [...Array(partes - 1).fill(parte), centavos - parte * (partes - 1)].map((c) => c / 100);
+    return [...new Array(partes - 1).fill(parte), centavos - parte * (partes - 1)].map((c) => c / 100);
 }
 
 /* Datas das parcelas: a primeira e as seguintes a cada `intervalo` dias (texto aaaa-mm-dd). */
@@ -407,6 +410,17 @@ function resumoDasParcelas(valor, quantidade) {
     const ultima = valores.at(-1);
     const diferenca = ultima === valores[0] ? '' : ` (a última de ${formatarReais(ultima)})`;
     return `${quantidade} parcelas de ${formatarReais(valores[0])}${diferenca}`;
+}
+
+/* Campo de data da parcela `indice + 1` (a 1ª é o campo principal do "Vence em"). */
+function campoDaParcela(indice, valor) {
+    const linha = criarElemento('li', 'flex items-center gap-3');
+    const campo = criarElemento('input', 'entrada tabular-nums');
+    Object.assign(campo, { type: 'date', name: 'vencimento', value: valor, id: `vencimento-parcela-${indice + 1}` });
+    const rotulo = criarElemento('label', 'w-24 shrink-0 text-sm font-semibold text-tinta-suave', `${indice + 1}ª parcela`);
+    rotulo.htmlFor = campo.id;
+    linha.append(rotulo, campo);
+    return linha;
 }
 
 /* "Vence em" só aparece quando fica algo na caderneta: venda com cliente que não foi paga por completo no ato.
@@ -426,16 +440,6 @@ function iniciarVencimento(formulario, hoje = () => new Date()) {
     let total = 0;
 
     const aPrazo = () => total - (Number(pagoAgora ? pagoAgora.value : formulario.dataset.pagouNoAto) || 0);
-
-    function campoDaParcela(indice, valor) {
-        const linha = criarElemento('li', 'flex items-center gap-3');
-        const campo = criarElemento('input', 'entrada tabular-nums');
-        Object.assign(campo, { type: 'date', name: 'vencimento', value: valor, id: `vencimento-parcela-${indice + 1}` });
-        const rotulo = criarElemento('label', 'w-24 shrink-0 text-sm font-semibold text-tinta-suave', `${indice + 1}ª parcela`);
-        rotulo.htmlFor = campo.id;
-        linha.append(rotulo, campo);
-        return linha;
-    }
 
     /* Refaz os campos das parcelas 2 em diante com as datas dadas (a 1ª é o campo principal). */
     function desenharParcelas(datas) {

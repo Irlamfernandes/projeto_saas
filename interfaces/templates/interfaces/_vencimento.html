@@ -6,12 +6,13 @@ no ato, e cria os campos das parcelas seguintes (sugere as datas pelo intervalo;
 <div class="campo" data-vencimento data-vencimentos="{% for data in vencimentos %}{{ data|date:'Y-m-d' }} {% endfor %}">
     <label for="id_vencimento_venda" class="rotulo">Vence em <span class="rotulo-opcional">opcional</span></label>
     <input type="date" id="id_vencimento_venda" name="vencimento" value="{{ vencimentos.0|date:'Y-m-d' }}" class="entrada tabular-nums">
-    <div class="flex flex-wrap gap-1.5" role="group" aria-label="Prazos rápidos">
+    <fieldset class="flex flex-wrap gap-1.5">
+        <legend class="sr-only">Prazos rápidos</legend>
         <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="7">Em 7 dias</button>
         <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="15">Em 15 dias</button>
         <button type="button" class="btn-secundario btn-pequeno" data-prazo-dias="30">Em 30 dias</button>
         <button type="button" class="btn-fantasma btn-pequeno" data-prazo-dias="">Sem prazo</button>
-    </div>
+    </fieldset>
     <div class="hidden grid grid-cols-2 gap-3 mt-1" data-opcoes-parcelas>
         <div class="campo">
             <label for="id_numero_parcelas" class="rotulo">Pagar em</label>

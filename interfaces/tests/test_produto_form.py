@@ -131,6 +131,10 @@ class OpcoesDoProdutoTest(ProdutoFormTest):
 
     def test_mais_sem_nome_antes_e_parte_do_valor(self):
         self.assertEqual(self.opcoes(['Brinde'], ['+1'])[0]['valores'], [{'nome': '+1', 'acrescimo': '0.00'}])
+        self.assertEqual(
+            [valor['nome'] for valor in self.opcoes(['Tipo'], ['Tam + grande\nC++\nKit+2'])[0]['valores']],
+            ['Tam + grande', 'C++', 'Kit'],
+        )
 
     def test_mensagens_de_erro_das_opcoes(self):
         casos = {
