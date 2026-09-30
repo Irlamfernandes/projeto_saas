@@ -21,6 +21,7 @@ PALAVRAS_DE_CHANGELOG = ('changelog', 'changes', 'release', 'history', 'news', '
 PALAVRAS_DE_REPOSITORIO = ('source', 'repository', 'code', 'github', 'homepage')
 TIPOS = {'principal': 'Principal ⚠️', 'novidades': 'Novidades', 'correção': 'Correção', 'outra': 'Outra'}
 SO_JUNTAS = 'só juntas'  # cada uma passa sozinha, mas os testes falham com todas juntas
+HTTPS = 'https://'
 RESULTADOS = {'passam': '✅ passam', 'falham': '❌ falham', SO_JUNTAS: '⚠️ só falham juntas', '': '— não testado'}
 
 
@@ -84,7 +85,7 @@ def link_do_que_mudou(urls, padrao):
 
 
 def _baixar_json(url):
-    if not url.startswith('https://'):  # só HTTPS: file:// ou outro esquema leriam o disco ou falariam sem criptografia
+    if not url.startswith(HTTPS):  # só HTTPS: file:// ou outro esquema leriam o disco ou falariam sem criptografia
         raise ValueError(f"Endereço sem HTTPS: {url}")
     with urllib.request.urlopen(url, timeout=30) as resposta:  # nosec B310: esquema conferido acima
         return json.load(resposta)
@@ -104,7 +105,7 @@ def _repositorio_npm(repositorio):
         repositorio = repositorio.get('url')
     if not repositorio:
         return ''
-    url = re.sub(r'(?:^git\+)|(?:\.git$)', '', repositorio).replace('git://', 'https://').replace('ssh://git@', 'https://')
+    url = repositorio.removeprefix('git+').removesuffix('.git').replace('git://', HTTPS).replace('ssh://git@', HTTPS)
     return f'{url}/releases' if 'github.com' in url else ''
 
 

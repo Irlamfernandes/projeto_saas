@@ -3,8 +3,6 @@ comprimidos, Postgres — só que em HTTP, para abrir no navegador e no celular 
 
 Nunca use no Render: lá o HTTPS existe e estas exceções abririam mão dele.
 """
-import os
-
 from config import settings as producao
 
 # Começa com todas as configurações da produção (as de nome em maiúsculas, como o Django lê) e troca só as abaixo.
@@ -16,6 +14,5 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_HSTS_SECONDS = 0
 
-# O celular abre pelo IP da máquina (ex.: http://192.168.0.10:8000); o formulário precisa aceitar essa origem.
-PORTA = os.environ.get('PORTA', '8000')
-CSRF_TRUSTED_ORIGINS = [*producao.CSRF_TRUSTED_ORIGINS, *(f'http://{host}:{PORTA}' for host in producao.ALLOWED_HOSTS)]
+# O celular abre pelo IP da máquina (ex.: http://192.168.0.10:8000) e o formulário volta para o mesmo endereço:
+# o Django aceita a própria origem sem lista, então a lista da produção (só HTTPS) fica como está.

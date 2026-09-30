@@ -4,9 +4,10 @@ Render e a tela "Erros do sistema" do admin. A mensagem de um erro pode trazer o
 """
 import re
 
-# Quantificadores possessivos (++) e o início preso ao começo da palavra: o texto é lido uma vez só, sem voltar atrás
+# A busca começa no @ e o nome antes dele é lido de trás para frente: o texto é lido uma vez só, sem voltar atrás
 # (um erro com um texto enorme não trava o registro).
-EMAIL = re.compile(r'(?<![\w.+-])[\w.+-]++@[\w-]++(?:\.[\w-]++)+')
+DOMINIO = re.compile(r'@[\w-]++(?:\.[\w-]++)+')
+LETRA_DO_NOME = re.compile(r'[\w.+-]')
 # Um trecho de dígitos com espaço, ponto, hífen, barra e parênteses no meio: (24) 99999-8888, 123.456.789-00.
 TRECHO_NUMERICO = re.compile(r'\+?\(?\d[\d\s().\-/]*+')
 DIGITOS_DE_UM_NUMERO_LONGO = 8
@@ -23,5 +24,17 @@ def _numero(encontrado):
     return '[número]' + resto
 
 
+def _sem_emails(texto):
+    partes, inicio = [], 0
+    for dominio in DOMINIO.finditer(texto):
+        comeco = dominio.start()
+        while comeco > inicio and LETRA_DO_NOME.fullmatch(texto[comeco - 1]):
+            comeco -= 1
+        if comeco < dominio.start():  # "@loja.com" sem nome antes não é e-mail
+            partes += [texto[inicio:comeco], '[e-mail]']
+            inicio = dominio.end()
+    return ''.join(partes) + texto[inicio:]
+
+
 def mascarar(texto):
-    return TRECHO_NUMERICO.sub(_numero, EMAIL.sub('[e-mail]', texto or ''))
+    return TRECHO_NUMERICO.sub(_numero, _sem_emails(texto or ''))
