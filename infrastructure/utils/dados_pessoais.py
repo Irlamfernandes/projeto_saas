@@ -17,7 +17,8 @@ DATA = re.compile(r'\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2})?')
 
 def _numero(encontrado):
     trecho = encontrado.group()
-    fim = len(trecho.rstrip(' ().-/\t\n\r\f\v'))  # o número vai até o último dígito; o que sobra fica no texto
+    # O número vai até o último dígito; o que sobra (espaço, parêntese, hífen) fica no texto.
+    fim = max(posicao for posicao, letra in enumerate(trecho) if letra.isdigit()) + 1
     numero, resto = trecho[:fim], trecho[fim:]
     if sum(c.isdigit() for c in numero) < DIGITOS_DE_UM_NUMERO_LONGO or DATA.fullmatch(numero):
         return trecho

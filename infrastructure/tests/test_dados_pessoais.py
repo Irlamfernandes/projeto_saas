@@ -28,6 +28,9 @@ class MascararTest(SimpleTestCase):
                 self.assertEqual(mascarar(texto), texto)
         self.assertEqual(mascarar(None), '')
 
+    def test_oito_digitos_ja_e_numero_longo(self):
+        self.assertEqual(mascarar('cpf 1234567 e 12345678'), 'cpf 1234567 e [número]')
+
     def test_separador_depois_do_numero_fica_no_texto(self):
         self.assertEqual(mascarar('tel 24999998888 - (fim)'), 'tel [número] - (fim)')
 
