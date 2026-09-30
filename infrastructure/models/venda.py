@@ -82,6 +82,7 @@ class ItemVenda(models.Model):
         db_table = 'itens_venda'
         verbose_name = 'Item da Venda'
         verbose_name_plural = 'Itens das Vendas'
+        ordering = ['pk']  # ordem em que foram lançados (sem isso o Postgres devolve em qualquer ordem)
 
     def clean(self):
         super().clean()

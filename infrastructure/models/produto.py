@@ -127,3 +127,4 @@ class ProdutoImagem(models.Model):
         db_table = 'produto_imagens'
         verbose_name = 'Imagem do Produto'
         verbose_name_plural = 'Imagens dos Produtos'
+        ordering = ['pk']  # ordem em que foram enviadas (a primeira é a capa)
