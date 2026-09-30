@@ -51,7 +51,8 @@ class CriarPixTest(SimpleTestCase):
         self.assertEqual(chamada.kwargs['timeout'], MercadoPago.TIMEOUT_SEGUNDOS)
 
     def test_recusa_traz_a_explicacao_do_mercado_pago(self, requests_mock):
-        requests_mock.post.return_value = resposta(400, {'message': 'bad_request', 'cause': [{'code': 1, 'description': 'payer.email must be valid'}]})
+        causa = [{'code': 1, 'description': 'payer.email must be valid'}]
+        requests_mock.post.return_value = resposta(400, {'message': 'bad_request', 'cause': causa})
         with self.assertRaisesMessage(MercadoPagoRecusou, 'payer.email must be valid'):
             self.criar()
 

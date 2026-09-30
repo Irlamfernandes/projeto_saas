@@ -25,7 +25,7 @@ function prepararLinha(linha, atualizarTotal) {
         const opcao = produto.selectedOptions[0];
         linha.querySelector('[data-sigla-compra]').textContent = opcao.dataset.sigla || 'un.';
         // O mínimo acompanha o passo: com passo 1 e mínimo 0,001 o navegador só aceitaria 1,001, 2,001...
-        quantidade.step = opcao.dataset.casas > 0 ? String(10 ** -Number(opcao.dataset.casas)) : '1';
+        quantidade.step = String(10 ** -(Number(opcao.dataset.casas) || 0)); // sem casas (a opção vazia): passo 1
         quantidade.min = quantidade.step;
         // Só sugere o custo se ainda não foi digitado: não apaga o que a pessoa escreveu.
         if (!custo.value && Number(opcao.dataset.custo) > 0) custo.value = opcao.dataset.custo;
@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* istanbul ignore else */
+// Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { subtotalDaCompra, totalDaCompra, iniciarCompra };
 }

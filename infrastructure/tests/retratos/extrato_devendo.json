@@ -1,0 +1,267 @@
+{
+  "documento": {
+    "pagesize": [
+      612.0,
+      792.0
+    ],
+    "rightMargin": 30,
+    "leftMargin": 30,
+    "topMargin": 30,
+    "bottomMargin": 30
+  },
+  "conteudo": [
+    {
+      "paragrafo": "<b>Padaria Sol</b>",
+      "estilo": {
+        "name": "NomeDaLoja",
+        "fontName": "Helvetica-Bold",
+        "fontSize": 16,
+        "leading": 22,
+        "textColor": "0x1f2937",
+        "spaceBefore": 0,
+        "spaceAfter": 2,
+        "alignment": 0,
+        "parent": "Heading1"
+      }
+    },
+    {
+      "paragrafo": "Extrato Oficial de Conta / Caderneta",
+      "estilo": {
+        "name": "SubtituloDoPdf",
+        "fontName": "Helvetica",
+        "fontSize": 10,
+        "leading": 12,
+        "textColor": "0x4b5563",
+        "spaceBefore": 0,
+        "spaceAfter": 15,
+        "alignment": 0,
+        "parent": "Normal"
+      }
+    },
+    {
+      "paragrafo": "<b>Cliente:</b> Ana",
+      "estilo": {
+        "name": "Normal",
+        "fontName": "Helvetica",
+        "fontSize": 10,
+        "leading": 12,
+        "textColor": "0x000000",
+        "spaceBefore": 0,
+        "spaceAfter": 0,
+        "alignment": 0,
+        "parent": null
+      }
+    },
+    {
+      "paragrafo": "<b>Telefone:</b> 24 99999-0000",
+      "estilo": {
+        "name": "Normal",
+        "fontName": "Helvetica",
+        "fontSize": 10,
+        "leading": 12,
+        "textColor": "0x000000",
+        "spaceBefore": 0,
+        "spaceAfter": 0,
+        "alignment": 0,
+        "parent": null
+      }
+    },
+    {
+      "espaco": [
+        1,
+        10
+      ]
+    },
+    {
+      "paragrafo": "Situação: DEVENDO R$ 12,00 (Valor Pendente)",
+      "estilo": {
+        "name": "Normal-extrato",
+        "fontName": "Helvetica-Bold",
+        "fontSize": 11,
+        "leading": 12,
+        "textColor": "0xdc2626",
+        "spaceBefore": 0,
+        "spaceAfter": 15,
+        "alignment": 0,
+        "parent": "Normal"
+      }
+    },
+    {
+      "espaco": [
+        1,
+        5
+      ]
+    },
+    {
+      "paragrafo": "<b>Últimas 5 Compras Registradas no Sistema:</b>",
+      "estilo": {
+        "name": "Heading3",
+        "fontName": "Helvetica-BoldOblique",
+        "fontSize": 12,
+        "leading": 14,
+        "textColor": "0x000000",
+        "spaceBefore": 12,
+        "spaceAfter": 6,
+        "alignment": 0,
+        "parent": "Normal"
+      }
+    },
+    {
+      "espaco": [
+        1,
+        5
+      ]
+    },
+    {
+      "tabela": [
+        [
+          "Data",
+          "Descrição dos Produtos",
+          "Total (R$)"
+        ],
+        [
+          "06/03/2026 09:30",
+          "2× Pão, 1× Café · 2 parcelas: 01/04/2026, 01/05/2026",
+          "R$ 2,00"
+        ],
+        [
+          "05/03/2026 09:30",
+          "2× Pão · vence 02/04/2026",
+          "R$ 2,00"
+        ],
+        [
+          "04/03/2026 09:30",
+          "2× Pão",
+          "R$ 2,00"
+        ],
+        [
+          "03/03/2026 09:30",
+          "2× Pão",
+          "R$ 2,00"
+        ],
+        [
+          "02/03/2026 09:30",
+          "2× Pão",
+          "R$ 2,00"
+        ]
+      ],
+      "larguras": [
+        100,
+        320,
+        115
+      ],
+      "alinhamento": "CENTER",
+      "estilo": [
+        [
+          "BACKGROUND",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          "0xf3f4f6"
+        ],
+        [
+          "TEXTCOLOR",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          "0x1f2937"
+        ],
+        [
+          "FONTNAME",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          "Helvetica-Bold"
+        ],
+        [
+          "FONTSIZE",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          9
+        ],
+        [
+          "BOTTOMPADDING",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            0
+          ],
+          6
+        ],
+        [
+          "GRID",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            -1
+          ],
+          0.5,
+          "0xe5e7eb"
+        ],
+        [
+          "FONTNAME",
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            -1
+          ],
+          "Helvetica"
+        ],
+        [
+          "FONTSIZE",
+          [
+            0,
+            1
+          ],
+          [
+            -1,
+            -1
+          ],
+          8.5
+        ],
+        [
+          "VALIGN",
+          [
+            0,
+            0
+          ],
+          [
+            -1,
+            -1
+          ],
+          "MIDDLE"
+        ]
+      ]
+    }
+  ]
+}

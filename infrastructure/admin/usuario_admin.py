@@ -10,6 +10,8 @@ from unfold.admin import ModelAdmin
 from unfold.decorators import display
 from infrastructure.models.usuario_model import UsuarioModel
 
+SENHA_EM_DESTAQUE = "<strong style='background: #fff; color: #000; padding: 2px 6px; border-radius: 4px;'>{}</strong>"
+
 @admin.register(UsuarioModel)
 class CustomUserAdmin(ModelAdmin):
     list_display = ('username', 'loja', 'tipo_de_acesso', 'senha', 'is_active', 'last_login')
@@ -56,7 +58,7 @@ class CustomUserAdmin(ModelAdmin):
             raise PermissionDenied("Método não permitido para esta operação.")
 
         user = get_object_or_404(UsuarioModel, pk=user_id)
-        
+
         if not request.user.is_superuser and user.is_superuser:
             raise PermissionDenied("Você não tem permissão para alterar as credenciais de um superusuário.")
 
@@ -70,9 +72,9 @@ class CustomUserAdmin(ModelAdmin):
         user.save(update_fields=['password', 'deve_trocar_senha'])
 
         messages.success(
-            request, 
+            request,
             format_html(
-                "Senha do usuário <b>{}</b> resetada com sucesso! Nova senha temporária: <strong style='background: #fff; color: #000; padding: 2px 6px; border-radius: 4px;'>{}</strong>",
+                "Senha do usuário <b>{}</b> resetada com sucesso! Nova senha temporária: " + SENHA_EM_DESTAQUE,
                 user.username,
                 nova_senha
             )
@@ -83,16 +85,16 @@ class CustomUserAdmin(ModelAdmin):
         if not change and not request.user.is_superuser and (obj.is_superuser or obj.is_staff):
             raise PermissionDenied("Você não tem permissão para criar usuários com privilégios administrativos.")
 
-        if not change or not obj.pk or not obj.has_usable_password():
+        if not change or not obj.has_usable_password():  # usuário novo, ou antigo sem senha
             alphabet = string.ascii_letters + string.digits
             senha_temporaria = ''.join(secrets.choice(alphabet) for _ in range(8))
             obj.set_password(senha_temporaria)
             obj.deve_trocar_senha = True
-            
+
             messages.success(
-                request, 
+                request,
                 format_html(
-                    "Usuário <b>{}</b> criado com sucesso! Senha temporária gerada: <strong style='background: #fff; color: #000; padding: 2px 6px; border-radius: 4px;'>{}</strong>",
+                    "Usuário <b>{}</b> criado com sucesso! Senha temporária gerada: " + SENHA_EM_DESTAQUE,
                     obj.username,
                     senha_temporaria
                 )

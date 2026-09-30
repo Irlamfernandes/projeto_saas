@@ -1,5 +1,5 @@
 from django.contrib.messages import get_messages
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -25,7 +25,7 @@ class ClientesViewTest(TestCase):
             deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
-        
+
         # Cria usuário sem loja ignorando o full_clean do model para teste de permissão
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
@@ -34,14 +34,14 @@ class ClientesViewTest(TestCase):
             )
 
         self.cliente_loja1 = Cliente.objects.create(
-            loja=self.loja1, 
-            nome="Carlos Silva", 
-            telefone="11988887777", 
+            loja=self.loja1,
+            nome="Carlos Silva",
+            telefone="11988887777",
             email="carlos@email.com"
         )
         self.cliente_loja2 = Cliente.objects.create(
-            loja=self.loja2, 
-            nome="Ana Souza", 
+            loja=self.loja2,
+            nome="Ana Souza",
             telefone="21977776666"
         )
 
@@ -119,7 +119,7 @@ class ClientesViewTest(TestCase):
     def test_erro_validacao_model_ao_cadastrar(self):
         """Captura ValidationError lançado pelo model durante o cadastro."""
         self.client.force_login(self.user_loja1)
-        
+
         err = ValidationError({'nome': ['Erro customizado']})
         with patch('infrastructure.models.cliente.Cliente.full_clean', side_effect=err):
             response = self.client.post(self.url_clientes, {

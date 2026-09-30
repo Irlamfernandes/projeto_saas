@@ -45,7 +45,7 @@ def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), 
     registrar_alteracao(
         loja=loja, usuario=usuario, acao=Acao.VENDA_REGISTRADA,
         descricao=f"Venda #{venda.pk} · {_para_quem(venda)} · {reais(venda.valor_total)}",
-        detalhes={'venda': fotografar_venda(venda)},
+        detalhes={'venda': fotografar_venda(venda)}, clientes=[venda.cliente],
     )
     return venda
 
@@ -55,6 +55,7 @@ def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes=
     """Troca itens, cliente e observações. Itens que já estavam na venda (mesmo produto e mesmas opções)
     mantêm o preço e o custo da época."""
     antes = fotografar_venda(venda)
+    cliente_antes = venda.cliente
     da_epoca = {(item.produto_id, chave(escolhas_do_item(item.opcoes))): item for item in venda.itens.all()}
     _devolver_estoque(venda)
     venda.itens.all().delete()
@@ -72,7 +73,7 @@ def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes=
     registrar_alteracao(
         loja=venda.loja, usuario=usuario, acao=Acao.VENDA_EDITADA,
         descricao=f"Venda #{venda.pk} · {_para_quem(venda)} · {reais(antes['total'])} → {reais(venda.valor_total)}",
-        detalhes={'antes': antes, 'depois': fotografar_venda(venda)},
+        detalhes={'antes': antes, 'depois': fotografar_venda(venda)}, clientes=[cliente_antes, venda.cliente],
     )
     return venda
 
@@ -89,7 +90,7 @@ def cancelar_venda(venda, *, usuario, senha, motivo):
     registrar_alteracao(
         loja=venda.loja, usuario=usuario, acao=Acao.VENDA_CANCELADA,
         descricao=f"Venda #{venda.pk} · {_para_quem(venda)} · {reais(venda.valor_total)} · motivo: {motivo}",
-        detalhes={'venda': foto, 'motivo': motivo},
+        detalhes={'venda': foto, 'motivo': motivo}, clientes=[venda.cliente],
     )
     venda.delete()
 

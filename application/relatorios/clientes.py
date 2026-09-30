@@ -78,11 +78,12 @@ class ClienteRanqueado:
 
 def melhores_clientes(user, inicio=None, fim=None, limite=10):
     """Quem mais comprou (em reais) no período."""
-    no_periodo = Q()
+    filtros = {}
     if inicio:
-        no_periodo &= Q(vendas__data_venda__date__gte=inicio)
+        filtros['vendas__data_venda__date__gte'] = inicio
     if fim:
-        no_periodo &= Q(vendas__data_venda__date__lte=fim)
+        filtros['vendas__data_venda__date__lte'] = fim
+    no_periodo = Q(**filtros)
     clientes = (
         filtrar_por_loja(Cliente.objects.all(), user)
         .annotate(total=Sum('vendas__valor_total', filter=no_periodo), compras=Count('vendas', filter=no_periodo))

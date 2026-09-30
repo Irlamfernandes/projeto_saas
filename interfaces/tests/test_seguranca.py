@@ -6,7 +6,9 @@ from django.http import HttpResponse
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from infrastructure.models import LojaModel
-from interfaces.seguranca import CABECALHO, PERMISSOES, PoliticaDeSegurancaMiddleware, origem_do_storage, politica_do_site
+from interfaces.seguranca import (
+    CABECALHO, PERMISSOES, PoliticaDeSegurancaMiddleware, origem_do_storage, politica_do_admin, politica_do_site,
+)
 
 User = get_user_model()
 PASTAS_DE_TEMPLATES = [Path(settings.BASE_DIR) / 'interfaces' / 'templates' / 'interfaces']
@@ -31,6 +33,18 @@ class PoliticaDoSiteTest(SimpleTestCase):
     @override_settings(SUPABASE_URL='https://abc.supabase.co/storage/v1')
     def test_storage_entra_so_pela_origem(self):
         self.assertEqual(origem_do_storage(), 'https://abc.supabase.co')
+
+    @override_settings(SUPABASE_URL='https://abc.supabase.co')
+    def test_politicas_completas(self):
+        comum = ("default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://abc.supabase.co; "
+                 "connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; ")
+        self.assertEqual(politica_do_site(), comum + "script-src 'self'; font-src 'self'; manifest-src 'self'; worker-src 'self'")
+        self.assertEqual(politica_do_admin(), comum + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; font-src 'self' data:")
+
+    def test_endereco_incompleto_nao_vira_origem(self):
+        for endereco in ('https://', '//abc.supabase.co'):
+            with self.subTest(endereco), override_settings(SUPABASE_URL=endereco):
+                self.assertEqual(origem_do_storage(), '')
 
     @override_settings(SUPABASE_URL='')
     def test_sem_storage_configurado_so_o_proprio_site(self):

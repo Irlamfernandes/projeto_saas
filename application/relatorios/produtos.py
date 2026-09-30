@@ -14,7 +14,7 @@ from application.tenancy import filtrar_por_loja
 from infrastructure.models import Produto
 
 SEM_CATEGORIA = 'Sem categoria'
-QUANTIDADE = DecimalField(max_digits=15, decimal_places=3)
+QUANTIDADE = DecimalField(max_digits=15, decimal_places=3)  # pragma: no mutate (só o tipo da soma: não muda o valor)
 LIMITE_CLASSE_A = Decimal('80')
 LIMITE_CLASSE_B = Decimal('95')
 CUSTO_DO_ITEM = ExpressionWrapper(F('quantidade') * F('custo_unitario'), output_field=DINHEIRO)
@@ -70,17 +70,17 @@ def lucro_estimado(user, inicio=None, fim=None):
         produtos.append(lucro)
         por_categoria[linha['produto__categoria'] or SEM_CATEGORIA].append(lucro)
 
-    produtos.sort(key=lambda l: l.lucro, reverse=True)
-    categorias = sorted((_somar(nome, linhas) for nome, linhas in por_categoria.items()), key=lambda l: l.lucro, reverse=True)
-    return RelatorioDeLucro(produtos, categorias, _somar('Total', produtos), sum(l.sem_custo for l in produtos))
+    produtos.sort(key=lambda item: item.lucro, reverse=True)
+    categorias = sorted((_somar(nome, linhas) for nome, linhas in por_categoria.items()), key=lambda item: item.lucro, reverse=True)
+    return RelatorioDeLucro(produtos, categorias, _somar('Total', produtos), sum(item.sem_custo for item in produtos))
 
 
 def _somar(nome, linhas):
     return LinhaDeLucro(
         nome,
-        sum(l.quantidade for l in linhas),
-        sum((l.receita for l in linhas), ZERO),
-        sum((l.custo for l in linhas), ZERO),
+        sum(item.quantidade for item in linhas),
+        sum((item.receita for item in linhas), ZERO),
+        sum((item.custo for item in linhas), ZERO),
     )
 
 
@@ -132,8 +132,8 @@ def _classe(acumulado_antes):
 
 
 def _resumo_da_classe(classe, linhas, total):
-    da_classe = [l for l in linhas if l.classe == classe]
-    faturamento = sum((l.faturamento for l in da_classe), ZERO)
+    da_classe = [item for item in linhas if item.classe == classe]
+    faturamento = sum((item.faturamento for item in da_classe), ZERO)
     return ResumoDaClasse(classe, len(da_classe), faturamento, percentual(faturamento, total))
 
 
@@ -146,10 +146,10 @@ class ProdutoParado:
     valor_em_estoque: Decimal
     ultima_venda: datetime | None
     dias_parado: int | None  # None: nunca vendeu
-    unidade: str = 'un'
+    unidade: str
 
 
-def produtos_parados(user, dias=60, agora=None):
+def produtos_parados(user, dias, agora=None):
     """Produtos com estoque que não vendem há `dias` dias ou mais (ou nunca venderam)."""
     agora = timezone.localtime(agora)
     limite = inicio_do_dia(agora.date() - timedelta(days=dias))
@@ -180,7 +180,7 @@ class Reposicao:
     media_diaria: Decimal
     dias_restantes: int
     sugestao_de_compra: int
-    unidade: str = 'un'
+    unidade: str
 
 
 def previsao_de_reposicao(user, janela=30, horizonte=14, agora=None):

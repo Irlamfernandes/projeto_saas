@@ -24,7 +24,9 @@ class VendaEditarViewTestCase(TestCase):
 
         self.cliente = Cliente.objects.create(loja=self.loja1, nome="Cliente Alpha")
         self.outro_cliente = Cliente.objects.create(loja=self.loja1, nome="Outro")
-        self.arroz = Produto.objects.create(loja=self.loja1, nome="Arroz", codigo_interno="AR", preco_venda=Decimal('20.00'), quantidade_estoque=10)
+        self.arroz = Produto.objects.create(
+            loja=self.loja1, nome="Arroz", codigo_interno="AR", preco_venda=Decimal('20.00'), quantidade_estoque=10,
+        )
         self.cafe = Produto.objects.create(loja=self.loja1, nome="Café", preco_venda=Decimal('5.00'), quantidade_estoque=0)
         self.venda = registrar_venda(cliente=self.cliente, itens=[(self.arroz.pk, 2)], valor_pago=Decimal('40'), forma_pagamento='pix')
         self.url = reverse('venda_editar', args=[self.venda.pk])

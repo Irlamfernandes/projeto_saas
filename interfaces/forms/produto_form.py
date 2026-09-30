@@ -50,7 +50,7 @@ class ImagensField(forms.ImageField):
 def ler_opcoes(nomes, textos):
     """Campos repetidos opcao_nome e opcao_valores (um valor por linha) -> opções do produto. Blocos vazios são ignorados."""
     opcoes = []
-    for nome, texto in zip(nomes, textos):
+    for nome, texto in zip(nomes, textos, strict=False):  # listas vindas do POST: sobra adulterada é ignorada
         nome = nome.strip()
         valores = [_ler_valor(linha.strip()) for linha in texto.splitlines() if linha.strip()]
         if not nome and not valores:

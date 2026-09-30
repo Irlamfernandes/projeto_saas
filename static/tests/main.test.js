@@ -754,3 +754,88 @@ describe('áreas com rolagem acessíveis pelo teclado', () => {
         expect([jaFocavel.getAttribute('tabindex'), jaFocavel.hasAttribute('role')]).toEqual(['-1', false]);
     });
 });
+
+describe('detalhes que o teste de mutação cobra', () => {
+    beforeEach(() => {
+        jest.resetModules();
+        document.body.innerHTML = '';
+    });
+
+    test('em tela de toque, o campo focado rola suavemente para o centro', () => {
+        document.body.innerHTML = '<input>';
+        jest.useFakeTimers();
+        const rolar = jest.fn();
+        window.HTMLElement.prototype.scrollIntoView = rolar;
+        window.matchMedia = jest.fn(() => ({ matches: true }));
+        require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        document.querySelector('input').dispatchEvent(new Event('focus'));
+        jest.advanceTimersByTime(300);
+        expect(window.matchMedia).toHaveBeenCalledWith('(pointer: coarse)');
+        expect(rolar).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+        jest.useRealTimers();
+        delete window.matchMedia;
+    });
+
+    test('preço abaixo do custo (prejuízo) não mexe no lucro', () => {
+        document.body.innerHTML = `
+            <input id="id_preco_custo" value="100"><input id="id_margem_lucro" value="30"><input id="id_preco_venda" value="130">`;
+        require('../js/main.js');
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+        const venda = document.getElementById('id_preco_venda');
+        venda.value = '80';
+        venda.dispatchEvent(new Event('input'));
+        expect(document.getElementById('id_margem_lucro').value).toBe('30');
+    });
+
+    test('voltar da categoria nova para a lista tira o nome e limpa o campo novo', () => {
+        const { tratarMudancaCategoria } = require('../js/main.js');
+        document.body.innerHTML = `
+            <select><option value="doces">Doces</option><option value="__novo__">Nova</option></select><input id="input-nova-categoria">`;
+        const select = document.querySelector('select');
+        const nova = document.getElementById('input-nova-categoria');
+        select.value = '__novo__';
+        tratarMudancaCategoria(select, false);
+        nova.value = 'Salgados';
+        select.value = 'doces';
+        tratarMudancaCategoria(select);
+        expect([nova.hasAttribute('name'), nova.value, nova.classList.contains('hidden')]).toEqual([false, '', true]);
+    });
+
+    test('fotos marcadas para remover: ids separados por vírgula, com some suave', () => {
+        document.body.innerHTML = `
+            <input id="remover_imagens" value="">
+            <div id="container-imagens-atuais"><div data-id="12"></div><div data-id="34"></div></div>
+            <input type="file" data-maximo-fotos="2">`;
+        const { marcarParaRemover } = require('../js/main.js');
+        const fotos = document.querySelector('[data-maximo-fotos]');
+        Object.defineProperty(fotos, 'files', { value: { length: 1 } });
+        fotos.reportValidity = jest.fn();
+        jest.useFakeTimers();
+        const foto = document.querySelector('[data-id="12"]');
+
+        marcarParaRemover('12', foto);
+        expect(fotos.validationMessage).toBe(''); // a de id 12 (dois dígitos) saiu da conta: sobra espaço
+        marcarParaRemover('34', document.querySelector('[data-id="34"]'));
+        expect(document.getElementById('remover_imagens').value).toBe('12,34');
+        expect([foto.style.transition, foto.style.opacity, foto.style.transform]).toEqual(['all 0.3s ease', '0', 'scale(0.8)']);
+        jest.advanceTimersByTime(300);
+        expect(document.querySelector('[data-id]')).toBeNull();
+        jest.useRealTimers();
+    });
+
+    test('setas sem nenhuma galeria aberta não fazem nada', () => {
+        document.body.innerHTML = '<img id="modal-imagem-src" src="antes.webp">';
+        require('../js/main.js').mudarImagem(1);
+        expect(document.getElementById('modal-imagem-src').getAttribute('src')).toBe('antes.webp');
+    });
+
+    test('o nome da área usa o título da seção sem espaços sobrando', () => {
+        document.body.innerHTML = '<section><h2>  Curva ABC \n</h2><div class="overflow-x-auto"><table></table></div></section>';
+        const area = document.querySelector('.overflow-x-auto');
+        Object.defineProperty(area, 'scrollWidth', { value: 900 });
+        Object.defineProperty(area, 'clientWidth', { value: 300 });
+        require('../js/main.js').inicializarRolagemAcessivel(document);
+        expect(area.getAttribute('aria-label')).toBe('Tabela: Curva ABC');
+    });
+});

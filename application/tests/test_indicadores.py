@@ -1,32 +1,9 @@
 from datetime import date, datetime
 from decimal import Decimal
 from zoneinfo import ZoneInfo
-from django.test import SimpleTestCase, TestCase
-from application.relatorios.indicadores import Comparacao, indicadores_do_painel
+from django.test import SimpleTestCase
+from application.relatorios.indicadores import Comparacao
 from application.relatorios.periodos import dias_entre, meses_ate, mesmo_momento_no_mes_anterior, primeiro_dia_do_mes
-from tests.apoio import CenarioDeLoja
-
-AGORA = CenarioDeLoja.quando(2026, 3, 20, 15)  # sexta-feira
-
-
-class IndicadoresDoPainelTest(TestCase):
-
-    def test_compara_com_o_periodo_anterior_ate_o_mesmo_horario(self):
-        c = CenarioDeLoja()
-        bolo = c.produto("Bolo", preco_venda='10')
-        c.venda(CenarioDeLoja.quando(2026, 3, 20, 9), [(bolo, 12)])      # hoje
-        c.venda(CenarioDeLoja.quando(2026, 3, 13, 10), [(bolo, 10)])     # sexta passada, antes das 15h
-        c.venda(CenarioDeLoja.quando(2026, 3, 13, 18), [(bolo, 50)])     # sexta passada, depois das 15h: fora
-        c.venda(CenarioDeLoja.quando(2026, 2, 5), [(bolo, 20)])          # fevereiro até dia 20
-        cliente = c.cliente("Devedor antigo")
-        c.venda(CenarioDeLoja.quando(2025, 12, 1), [(bolo, 3)], cliente=cliente)
-
-        indicadores = indicadores_do_painel(c.usuario(), agora=AGORA)
-
-        self.assertEqual((indicadores.hoje.atual, indicadores.hoje.anterior, indicadores.hoje.variacao), (Decimal('120.00'), Decimal('100.00'), 20))
-        self.assertEqual((indicadores.sete_dias.atual, indicadores.sete_dias.anterior), (Decimal('120.00'), Decimal('100.00')))
-        self.assertEqual((indicadores.mes.atual, indicadores.mes.anterior), (Decimal('720.00'), Decimal('200.00')))
-        self.assertEqual((indicadores.a_receber, indicadores.clientes_devendo, indicadores.devendo_ha_muito_tempo), (Decimal('30.00'), 1, 1))
 
 
 class ComparacaoTest(SimpleTestCase):

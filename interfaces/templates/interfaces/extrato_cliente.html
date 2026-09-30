@@ -34,7 +34,7 @@
             <div class="cartao-cabecalho">
                 <div><h2 id="t-pagamento" class="titulo-cartao">Registrar pagamento</h2><p class="subtitulo">O valor é abatido do que o cliente deve</p></div>
             </div>
-            <form method="POST" class="grid gap-4">
+            <form method="POST" class="grid gap-4">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
                 {% csrf_token %}
                 <div class="campo">
                     <label for="id_valor_pagamento" class="rotulo">Valor recebido <span class="obrigatorio" aria-hidden="true">*</span></label>
@@ -48,6 +48,20 @@
                 </div>
                 <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Confirmar pagamento</button>
             </form>
+        </section>
+
+        <section class="cartao cartao-corpo" aria-labelledby="t-dados-pessoais">
+            <h2 id="t-dados-pessoais" class="titulo-cartao">Dados pessoais</h2>
+            {% if cliente.dados_apagados %}
+                <p class="subtitulo mt-1">Os dados pessoais deste cliente foram apagados a pedido dele. As compras e os pagamentos continuam aqui, sem o nome.</p>
+            {% else %}
+                <p class="subtitulo mt-1">Se o cliente pedir (direito garantido pela LGPD), apague o nome, o telefone, o e-mail e o endereço. As compras e os pagamentos continuam nos relatórios, sem o nome.</p>
+                {% if cliente.saldo_geral %}
+                <p class="mt-3 flex items-start gap-1.5 text-sm font-semibold text-tinta-suave"><svg class="ico ico-sm mt-0.5"><use href="#i-info"/></svg>Para apagar, acerte antes o saldo da caderneta: enquanto houver valor a receber ou a devolver, a lei permite guardar os dados.</p>
+                {% else %}
+                <button type="button" class="btn-perigo mt-3" data-abrir-dialogo="modal-apagar-dados" aria-haspopup="dialog"><svg class="ico"><use href="#i-lixeira"/></svg>Apagar dados pessoais</button>
+                {% endif %}
+            {% endif %}
         </section>
     </div>
 
@@ -78,4 +92,25 @@
         </ol>
     </section>
 </div>
+
+{% if not cliente.dados_apagados and not cliente.saldo_geral %}
+<dialog id="modal-apagar-dados" class="w-full max-w-md rounded-cartao border border-linha p-0 shadow-xl backdrop:bg-veu/50" aria-labelledby="t-modal-apagar-dados">
+    <form method="POST" action="{% url 'cliente_apagar_dados' cliente.id %}" class="grid gap-4 p-6">{# nosemgrep: django-no-csrf-token -- o {% csrf_token %} vem logo abaixo #}
+        {% csrf_token %}
+        <div>
+            <h2 id="t-modal-apagar-dados" class="text-lg font-bold">Apagar os dados pessoais de {{ cliente.nome }}?</h2>
+            <p class="text-sm text-tinta-suave mt-1">Nome, telefone, e-mail e endereço somem do cadastro e do histórico. O cliente passa a aparecer como "Cliente removido #{{ cliente.id }}". Isso não pode ser desfeito.</p>
+        </div>
+        <div class="campo">
+            <label for="id_senha_apagar_dados" class="rotulo">Sua senha <span class="obrigatorio" aria-hidden="true">*</span></label>
+            <input type="password" id="id_senha_apagar_dados" name="senha" required autocomplete="current-password" class="entrada">
+            <p class="ajuda">A mesma senha que você usa para entrar no sistema.</p>
+        </div>
+        <div class="flex flex-wrap justify-end gap-2">
+            <button type="button" class="btn-secundario" data-fechar-dialogo>Voltar</button>
+            <button type="submit" class="btn-perigo bg-critico text-white hover:bg-critico/85"><svg class="ico"><use href="#i-lixeira"/></svg>Apagar dados</button>
+        </div>
+    </form>
+</dialog>
+{% endif %}
 {% endblock %}

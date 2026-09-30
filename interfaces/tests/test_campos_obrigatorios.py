@@ -34,7 +34,7 @@ class CamposObrigatoriosTest(TestCase):
             (reverse('produtos'), 3),               # nome, preço de venda, estoque
             (reverse('editar_produto', args=[self.arroz.pk]), 3),
             (reverse('clientes'), 2),               # nome no cadastro e no modal de edição
-            (reverse('extrato_cliente', args=[self.ana.pk]), 2),  # valor e forma de pagamento
+            (reverse('extrato_cliente', args=[self.ana.pk]), 3),  # valor, forma de pagamento e senha para apagar os dados
             (reverse('vendas'), 2),                 # produtos e forma de pagamento (balcão)
         ]
         for url, quantidade in casos:

@@ -1,4 +1,5 @@
 """Formatação de valores em reais e de quantidades, usada nas telas e nos textos gerados pelas regras de negócio."""
+import unicodedata
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from infrastructure.models.produto import Unidade, sigla
 
@@ -48,3 +49,9 @@ def com_opcoes(nome, opcoes):
     """Nome do produto com o que foi escolhido nas opções: 'Camiseta (G, Azul)'."""
     valores = ", ".join(opcao['valor'] for opcao in opcoes or ())
     return f"{nome} ({valores})" if valores else nome
+
+
+def chave_alfabetica(texto):
+    """Chave para ordenar como no dicionário, sem separar maiúsculas nem acentos: 'Água' vem antes de 'Aluguel'."""
+    decomposto = unicodedata.normalize('NFD', texto.casefold())
+    return ''.join(letra for letra in decomposto if not unicodedata.combining(letra))

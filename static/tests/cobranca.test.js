@@ -62,7 +62,7 @@ describe('acompanhar a cobrança', () => {
         await esperarVolta();
 
         expect(global.fetch).toHaveBeenCalledTimes(2);
-        expect(global.fetch).toHaveBeenCalledWith('/situacao/', expect.objectContaining({ cache: 'no-store' }));
+        expect(global.fetch).toHaveBeenCalledWith('/situacao/', { headers: { Accept: 'application/json' }, cache: 'no-store' });
         expect(recarregar).not.toHaveBeenCalled();
         parar();
     });

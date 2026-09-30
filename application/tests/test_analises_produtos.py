@@ -20,12 +20,13 @@ class LucroEstimadoTest(TestCase):
 
         relatorio = lucro_estimado(c.usuario(), inicio=date(2026, 3, 1))
 
-        self.assertEqual([(l.nome, l.receita, l.custo, l.lucro, l.margem) for l in relatorio.produtos], [
+        self.assertEqual([(item.nome, item.receita, item.custo, item.lucro, item.margem) for item in relatorio.produtos], [
             ("Sonho", Decimal('60.00'), Decimal('20.00'), Decimal('40.00'), Decimal('66.7')),
             ("Bolo", Decimal('60.00'), Decimal('36.00'), Decimal('24.00'), Decimal('40.0')),
             ("Café", Decimal('20.00'), Decimal('0.00'), Decimal('20.00'), Decimal('100.0')),
         ])
-        self.assertEqual([(l.nome, l.lucro) for l in relatorio.categorias], [("Doces", Decimal('64.00')), ("Sem categoria", Decimal('20.00'))])
+        self.assertEqual([(item.nome, item.lucro) for item in relatorio.categorias],
+                         [("Doces", Decimal('64.00')), ("Sem categoria", Decimal('20.00'))])
         self.assertEqual((relatorio.total.receita, relatorio.total.lucro), (Decimal('140.00'), Decimal('84.00')))
         self.assertEqual(relatorio.produtos_sem_custo, 1)
 
@@ -47,7 +48,7 @@ class CurvaABCTest(TestCase):
 
         linhas, resumo = curva_abc(c.usuario())
 
-        self.assertEqual([(l.nome, l.classe, l.participacao, l.acumulado) for l in linhas], [
+        self.assertEqual([(item.nome, item.classe, item.participacao, item.acumulado) for item in linhas], [
             ("A1", "A", Decimal('70.0'), Decimal('70.0')),
             ("A2", "A", Decimal('15.0'), Decimal('85.0')),  # cruzou 80%: ainda A
             ("B1", "B", Decimal('8.0'), Decimal('93.0')),
@@ -70,7 +71,7 @@ class ProdutosParadosTest(TestCase):
         c = CenarioDeLoja()
         vende_sempre = c.produto("Pão", estoque=10)
         parado = c.produto("Forma de bolo", preco_custo='40', estoque=3)
-        nunca = c.produto("Vela", preco_custo='2', estoque=5)
+        c.produto("Vela", preco_custo='2', estoque=5)
         c.produto("Sem estoque", estoque=0)
         c.produto("Sob encomenda", estoque=5, controla_estoque=False)
         c.venda(CenarioDeLoja.quando(2026, 3, 19), [(vende_sempre, 1)])

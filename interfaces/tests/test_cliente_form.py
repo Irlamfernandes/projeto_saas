@@ -49,7 +49,10 @@ class PagamentoFormTest(SimpleTestCase):
             'negativo': ({'valor': '-10'}, "O valor do pagamento deve ser maior que zero."),
             'centavos demais': ({'valor': '1.999'}, "Use no máximo duas casas decimais."),
             'alto demais': ({'valor': '123456789'}, "O valor do pagamento é alto demais."),
-            'observação longa': ({'valor': '1', 'forma_pagamento': 'pix', 'observacao': 'a' * 256}, "A observação excede o limite máximo de 255 caracteres."),
+            'observação longa': (
+                {'valor': '1', 'forma_pagamento': 'pix', 'observacao': 'a' * 256},
+                "A observação excede o limite máximo de 255 caracteres.",
+            ),
             'sem forma': ({'valor': '1'}, "Informe como foi pago."),
             'forma inválida': ({'valor': '1', 'forma_pagamento': 'cheque'}, "Forma de pagamento inválida."),
         }

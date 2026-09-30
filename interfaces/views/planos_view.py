@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_GET
 from django.utils import timezone
 from application.assinatura.selectors import cobrancas_da_loja, planos_disponiveis
 from application.assinatura.services import conferir_cobranca, conferir_pendentes, gerar_cobranca
@@ -43,7 +44,8 @@ def planos_view(request):
     return redirect('cobranca', pk=cobranca.pk)
 
 
-@loja_required(trava_plano_vencido=False)
+@require_GET
+@loja_required
 def cobranca_view(request, pk):
     cobranca = conferir_cobranca(_cobranca_da_loja(request, pk))
     request.user.loja.refresh_from_db(fields=['vencimento'])  # a confirmação acabou de mudar o vencimento
@@ -53,7 +55,8 @@ def cobranca_view(request, pk):
     })
 
 
-@loja_required(trava_plano_vencido=False)
+@require_GET
+@loja_required
 def cobranca_situacao_view(request, pk):
     """Consultada pela tela do Pix a cada poucos segundos até o pagamento ser confirmado."""
     cobranca = conferir_cobranca(_cobranca_da_loja(request, pk))

@@ -1,0 +1,836 @@
+{
+  "site": {
+    "index_template": "admin/painel.html",
+    "index_title": "Painel"
+  },
+  "admins": {
+    "auth.Group": {
+      "classe": "GroupAdmin",
+      "list_display": [
+        "__str__"
+      ],
+      "list_display_links": [],
+      "list_filter": [],
+      "list_editable": [],
+      "search_fields": [
+        "name"
+      ],
+      "list_select_related": false,
+      "date_hierarchy": null,
+      "ordering": [
+        "name"
+      ],
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [],
+      "fieldsets": null,
+      "add_fieldsets": null,
+      "filter_horizontal": [
+        "permissions"
+      ],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": null,
+      "actions_row": null,
+      "actions_detail": null,
+      "actions_submit_line": null,
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "__str__": {}
+      }
+    },
+    "infrastructure.Backup": {
+      "classe": "BackupAdmin",
+      "list_display": [
+        "criado_em",
+        "situacao",
+        "origem",
+        "tamanho_legivel",
+        "registros",
+        "duracao",
+        "baixar"
+      ],
+      "list_display_links": [],
+      "list_filter": [
+        "sucesso",
+        "origem"
+      ],
+      "list_editable": [],
+      "search_fields": [],
+      "list_select_related": false,
+      "date_hierarchy": null,
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [
+        "criado_em",
+        "origem",
+        "arquivo",
+        "tamanho",
+        "registros",
+        "duracao",
+        "sucesso",
+        "erro"
+      ],
+      "fieldsets": null,
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [
+        "fazer_agora",
+        "configurar"
+      ],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "situacao": {
+          "short_description": "Situação",
+          "admin_order_field": "sucesso",
+          "label": {
+            "Guardado": "success",
+            "Falhou": "danger"
+          }
+        },
+        "tamanho_legivel": {
+          "short_description": "Tamanho",
+          "admin_order_field": "tamanho"
+        },
+        "baixar": {
+          "short_description": "Arquivo"
+        },
+        "fazer_agora": {
+          "short_description": "Fazer backup agora",
+          "url_path": "fazer-agora",
+          "icon": "backup",
+          "attrs": {}
+        },
+        "configurar": {
+          "short_description": "Configurar",
+          "url_path": "configurar",
+          "icon": "settings",
+          "attrs": {}
+        }
+      }
+    },
+    "infrastructure.Cobranca": {
+      "classe": "CobrancaAdmin",
+      "list_display": [
+        "criada_em",
+        "loja",
+        "plano_nome",
+        "valor_em_reais",
+        "situacao",
+        "vencimento_novo"
+      ],
+      "list_display_links": [],
+      "list_filter": [
+        "status",
+        "loja",
+        "criada_em"
+      ],
+      "list_editable": [],
+      "search_fields": [
+        "pagamento_id",
+        "referencia",
+        "email_pagador",
+        "loja__nome_loja"
+      ],
+      "list_select_related": [
+        "loja"
+      ],
+      "date_hierarchy": "criada_em",
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": [
+        "pix_qr_code"
+      ],
+      "fields": null,
+      "readonly_fields": [],
+      "fieldsets": null,
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "valor_em_reais": {
+          "short_description": "Valor",
+          "admin_order_field": "valor"
+        },
+        "situacao": {
+          "short_description": "Situação",
+          "admin_order_field": "status",
+          "label": {
+            "paga": "success",
+            "pendente": "info",
+            "expirada": null
+          }
+        }
+      }
+    },
+    "infrastructure.ConfiguracaoDeBackup": {
+      "classe": "ConfiguracaoDeBackupAdmin",
+      "list_display": [
+        "__str__"
+      ],
+      "list_display_links": [],
+      "list_filter": [],
+      "list_editable": [],
+      "search_fields": [],
+      "list_select_related": false,
+      "date_hierarchy": null,
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": [
+        "ativo",
+        "a_cada",
+        "unidade",
+        "manter",
+        "ultimo",
+        "proximo"
+      ],
+      "readonly_fields": [
+        "ultimo",
+        "proximo"
+      ],
+      "fieldsets": null,
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "__str__": {},
+        "ultimo": {
+          "short_description": "Último backup que deu certo"
+        },
+        "proximo": {
+          "short_description": "Próximo backup automático"
+        }
+      }
+    },
+    "infrastructure.ErroDoSistema": {
+      "classe": "ErroDoSistemaAdmin",
+      "list_display": [
+        "ultima_vez",
+        "situacao",
+        "tipo",
+        "local",
+        "caminho",
+        "ocorrencias",
+        "loja"
+      ],
+      "list_display_links": [],
+      "list_filter": [
+        "resolvido",
+        "tipo",
+        "loja"
+      ],
+      "list_editable": [],
+      "search_fields": [
+        "tipo",
+        "mensagem",
+        "local",
+        "caminho"
+      ],
+      "list_select_related": [
+        "loja"
+      ],
+      "date_hierarchy": "ultima_vez",
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [
+        "tipo",
+        "mensagem",
+        "local",
+        "caminho",
+        "metodo",
+        "loja",
+        "usuario",
+        "ocorrencias",
+        "primeira_vez",
+        "ultima_vez",
+        "caminho_do_erro"
+      ],
+      "fieldsets": [
+        [
+          null,
+          {
+            "fields": [
+              "resolvido",
+              "tipo",
+              "mensagem",
+              "local"
+            ]
+          }
+        ],
+        [
+          "Onde e quando",
+          {
+            "fields": [
+              "caminho",
+              "metodo",
+              "loja",
+              "usuario",
+              "ocorrencias",
+              "primeira_vez",
+              "ultima_vez"
+            ]
+          }
+        ],
+        [
+          "Caminho do erro pelo código",
+          {
+            "fields": [
+              "caminho_do_erro"
+            ]
+          }
+        ]
+      ],
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [
+        "marcar_resolvidos",
+        "reabrir"
+      ],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "situacao": {
+          "short_description": "Situação",
+          "admin_order_field": "resolvido",
+          "label": {
+            "Em aberto": "danger",
+            "Resolvido": "success"
+          }
+        },
+        "caminho_do_erro": {
+          "short_description": "Traceback"
+        },
+        "marcar_resolvidos": {
+          "short_description": "Marcar como resolvido"
+        },
+        "reabrir": {
+          "short_description": "Reabrir"
+        }
+      }
+    },
+    "infrastructure.LojaModel": {
+      "classe": "LojaAdmin",
+      "list_display": [
+        "marca",
+        "nome_loja",
+        "situacao_do_plano",
+        "vencimento",
+        "usuarios",
+        "ativo",
+        "criado_em"
+      ],
+      "list_display_links": [
+        "marca",
+        "nome_loja"
+      ],
+      "list_filter": [
+        "ativo",
+        "DadosParaApagar",
+        "vencimento",
+        "criado_em"
+      ],
+      "list_editable": [],
+      "search_fields": [
+        "nome_loja"
+      ],
+      "list_select_related": false,
+      "date_hierarchy": null,
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [],
+      "fieldsets": [
+        [
+          "Loja",
+          {
+            "fields": [
+              "nome_loja",
+              "ativo"
+            ]
+          }
+        ],
+        [
+          "Plano",
+          {
+            "fields": [
+              "vencimento",
+              "email_cobranca"
+            ],
+            "description": "O vencimento muda sozinho quando um pagamento é confirmado."
+          }
+        ],
+        [
+          "Marca",
+          {
+            "fields": [
+              "logo_url"
+            ],
+            "description": "A própria loja envia a marca em Configurações."
+          }
+        ]
+      ],
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {
+        "DadosParaApagar": {
+          "title": "dados",
+          "parameter_name": "dados",
+          "lookups": [
+            [
+              "apagar",
+              "Plano vencido há mais de 90 dias"
+            ]
+          ]
+        }
+      },
+      "funcoes": {
+        "marca": {
+          "short_description": "Marca",
+          "image": true
+        },
+        "situacao_do_plano": {
+          "short_description": "Plano",
+          "label": {
+            "em_dia": "success",
+            "vencendo": "warning",
+            "vencido": "danger",
+            "inativa": null
+          }
+        },
+        "usuarios": {
+          "short_description": "Usuários",
+          "admin_order_field": "total_de_usuarios"
+        }
+      }
+    },
+    "infrastructure.Plano": {
+      "classe": "PlanoAdmin",
+      "list_display": [
+        "nome",
+        "duracao",
+        "preco",
+        "ativo",
+        "ordem"
+      ],
+      "list_display_links": [],
+      "list_filter": [],
+      "list_editable": [
+        "preco",
+        "ativo",
+        "ordem"
+      ],
+      "search_fields": [],
+      "list_select_related": false,
+      "date_hierarchy": null,
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [],
+      "fieldsets": [
+        [
+          "Plano",
+          {
+            "fields": [
+              "nome",
+              [
+                "quantidade",
+                "unidade"
+              ],
+              "preco"
+            ]
+          }
+        ],
+        [
+          "Exibição",
+          {
+            "fields": [
+              "ativo",
+              "ordem"
+            ],
+            "description": "Plano desativado some da tela de renovação; a ordem define a posição."
+          }
+        ]
+      ],
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "duracao": {
+          "short_description": "Soma ao vencimento"
+        }
+      }
+    },
+    "infrastructure.RegistroDeAlteracao": {
+      "classe": "RegistroDeAlteracaoAdmin",
+      "list_display": [
+        "data",
+        "loja",
+        "usuario",
+        "tipo",
+        "descricao"
+      ],
+      "list_display_links": [],
+      "list_filter": [
+        "acao",
+        "loja",
+        "data"
+      ],
+      "list_editable": [],
+      "search_fields": [
+        "descricao"
+      ],
+      "list_select_related": [
+        "loja",
+        "usuario"
+      ],
+      "date_hierarchy": "data",
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": [
+        "data",
+        "loja",
+        "usuario",
+        "acao",
+        "descricao",
+        "detalhes_sem_contatos"
+      ],
+      "readonly_fields": [],
+      "fieldsets": null,
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {
+        "tipo": {
+          "short_description": "Ação",
+          "admin_order_field": "acao",
+          "label": {
+            "venda_cancelada": "danger",
+            "plano_renovado": "success",
+            "pagamento_registrado": "success",
+            "venda_editada": "warning",
+            "produto_editado": "warning",
+            "cliente_editado": "warning"
+          }
+        },
+        "detalhes_sem_contatos": {
+          "short_description": "Detalhes"
+        }
+      }
+    },
+    "infrastructure.TentativasDeLogin": {
+      "classe": "TentativasDeLoginAdmin",
+      "list_display": [
+        "usuario",
+        "falhas",
+        "ultima_falha",
+        "bloqueado_ate"
+      ],
+      "list_display_links": [],
+      "list_filter": [],
+      "list_editable": [],
+      "search_fields": [
+        "usuario"
+      ],
+      "list_select_related": false,
+      "date_hierarchy": null,
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [
+        "usuario",
+        "falhas",
+        "ultima_falha",
+        "bloqueado_ate"
+      ],
+      "fieldsets": null,
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": null,
+      "filtros_proprios": {},
+      "funcoes": {}
+    },
+    "infrastructure.UsuarioModel": {
+      "classe": "CustomUserAdmin",
+      "list_display": [
+        "username",
+        "loja",
+        "tipo_de_acesso",
+        "senha",
+        "is_active",
+        "last_login"
+      ],
+      "list_display_links": [],
+      "list_filter": [
+        "loja",
+        "deve_trocar_senha",
+        "is_active",
+        "is_staff",
+        "is_superuser"
+      ],
+      "list_editable": [],
+      "search_fields": [
+        "username",
+        "email",
+        "loja__nome_loja"
+      ],
+      "list_select_related": [
+        "loja"
+      ],
+      "date_hierarchy": null,
+      "ordering": null,
+      "list_per_page": 100,
+      "exclude": null,
+      "fields": null,
+      "readonly_fields": [],
+      "fieldsets": [
+        [
+          "Acesso",
+          {
+            "fields": [
+              "username",
+              "loja",
+              "is_active"
+            ],
+            "description": "Ao criar o usuário, o sistema gera uma senha temporária e mostra aqui em cima."
+          }
+        ],
+        [
+          "Senha",
+          {
+            "fields": [
+              "deve_trocar_senha"
+            ]
+          }
+        ],
+        [
+          "Permissões",
+          {
+            "fields": [
+              "is_staff",
+              "is_superuser"
+            ],
+            "description": "Equipe acessa este admin; superusuário acessa tudo, de todas as lojas."
+          }
+        ]
+      ],
+      "add_fieldsets": [],
+      "filter_horizontal": [],
+      "autocomplete_fields": [],
+      "raw_id_fields": [],
+      "actions": [],
+      "actions_list": [],
+      "actions_row": [],
+      "actions_detail": [],
+      "actions_submit_line": [],
+      "inlines": [],
+      "change_form_template": null,
+      "change_list_template": null,
+      "change_form_outer_after_template": "admin/usuario_resetar_senha.html",
+      "filtros_proprios": {},
+      "funcoes": {
+        "tipo_de_acesso": {
+          "short_description": "Acesso",
+          "label": {
+            "superusuario": "danger",
+            "equipe": "info",
+            "loja": "success"
+          }
+        },
+        "senha": {
+          "short_description": "Senha",
+          "label": {
+            "trocar": "warning",
+            "ok": null
+          }
+        }
+      }
+    }
+  },
+  "menu": [
+    {
+      "title": null,
+      "items": [
+        {
+          "title": "Painel",
+          "icon": "dashboard",
+          "link": "/admin/",
+          "permission": null
+        }
+      ]
+    },
+    {
+      "title": "Lojas",
+      "items": [
+        {
+          "title": "Lojas",
+          "icon": "storefront",
+          "link": "/admin/infrastructure/lojamodel/",
+          "permission": "infrastructure.view_lojamodel"
+        },
+        {
+          "title": "Usuários",
+          "icon": "group",
+          "link": "/admin/infrastructure/usuariomodel/",
+          "permission": "infrastructure.view_usuariomodel"
+        }
+      ]
+    },
+    {
+      "title": "Assinaturas",
+      "items": [
+        {
+          "title": "Planos",
+          "icon": "sell",
+          "link": "/admin/infrastructure/plano/",
+          "permission": "infrastructure.view_plano"
+        },
+        {
+          "title": "Cobranças",
+          "icon": "receipt_long",
+          "link": "/admin/infrastructure/cobranca/",
+          "permission": "infrastructure.view_cobranca"
+        }
+      ]
+    },
+    {
+      "title": "Auditoria",
+      "items": [
+        {
+          "title": "Histórico de alterações",
+          "icon": "history",
+          "link": "/admin/infrastructure/registrodealteracao/",
+          "permission": "infrastructure.view_registrodealteracao"
+        }
+      ]
+    },
+    {
+      "title": "Sistema",
+      "items": [
+        {
+          "title": "Erros do sistema",
+          "icon": "bug_report",
+          "link": "/admin/infrastructure/errodosistema/",
+          "permission": "infrastructure.view_errodosistema"
+        },
+        {
+          "title": "Backups",
+          "icon": "backup",
+          "link": "/admin/infrastructure/backup/",
+          "permission": "infrastructure.view_backup"
+        },
+        {
+          "title": "Tentativas de login",
+          "icon": "lock_person",
+          "link": "/admin/infrastructure/tentativasdelogin/",
+          "permission": "infrastructure.view_tentativasdelogin"
+        }
+      ]
+    }
+  ],
+  "favicons": [
+    {
+      "rel": "icon",
+      "type": "image/png",
+      "href": "/static/images/icon-192.png"
+    }
+  ]
+}

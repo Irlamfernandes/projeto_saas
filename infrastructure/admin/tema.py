@@ -19,6 +19,12 @@ def menu_lateral(_request):
             _item('Histórico de alterações', 'history', 'admin:infrastructure_registrodealteracao_changelist',
                   'view_registrodealteracao'),
         ]},
+        {'title': 'Sistema', 'items': [
+            _item('Erros do sistema', 'bug_report', 'admin:infrastructure_errodosistema_changelist', 'view_errodosistema'),
+            _item('Backups', 'backup', 'admin:infrastructure_backup_changelist', 'view_backup'),
+            _item('Tentativas de login', 'lock_person', 'admin:infrastructure_tentativasdelogin_changelist',
+                  'view_tentativasdelogin'),
+        ]},
     ]
 
 

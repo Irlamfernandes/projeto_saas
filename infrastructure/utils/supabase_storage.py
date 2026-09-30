@@ -22,7 +22,7 @@ class SupabaseAPIError(StorageError):
 
 def gerar_nome_unico(nome_original):
     """Nome aleatório que preserva só a extensão: evita sobrescrita e caracteres perigosos na URL."""
-    extensao = PurePath(nome_original or '').suffix.lower()
+    extensao = PurePath(str(nome_original)).suffix.lower()  # None vira 'None': sem extensão
     if not extensao[1:].isalnum():
         extensao = ''
     return f"{uuid.uuid4().hex}{extensao}"
@@ -80,7 +80,7 @@ class SupabaseStorage:
     def baixar(self, url_publica):
         """Conteúdo de um arquivo deste bucket, ou None. Recusa URLs de fora (o servidor não busca endereços quaisquer)."""
         prefixo = f"{self._base_url}/storage/v1/object/public/{self.BUCKET}/"
-        if not self._base_url or not (url_publica or '').startswith(prefixo) or url_publica == prefixo:
+        if not self._base_url or not url_publica or not url_publica.startswith(prefixo) or url_publica == prefixo:
             return None
         try:
             resposta = requests.get(url_publica, timeout=self.TIMEOUT_SEGUNDOS)
@@ -103,8 +103,10 @@ class SupabaseStorage:
         return f"{self._base_url}/storage/v1/object/{self.BUCKET}/{caminho}"
 
     def _caminho_da_url(self, url_publica):
+        if not url_publica:
+            return None
         prefixo = f"/storage/v1/object/public/{self.BUCKET}/"
-        _, encontrado, caminho = (url_publica or '').partition(prefixo)
+        _, encontrado, caminho = url_publica.partition(prefixo)
         return caminho if encontrado and caminho else None
 
     @staticmethod

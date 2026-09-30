@@ -45,6 +45,7 @@ class ItemCompra(models.Model):
         db_table = 'itens_compra'
         verbose_name = 'Item da compra'
         verbose_name_plural = 'Itens das compras'
+        ordering = ['pk']  # ordem em que foram lançados (sem isso o Postgres devolve em qualquer ordem)
 
     def __str__(self):
         return item(self.quantidade, self.produto.unidade, self.produto.nome)

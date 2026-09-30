@@ -81,7 +81,9 @@ a trocá-la.
 ## Testes e qualidade
 
 ```bash
-make test        # pytest com cobertura + jest
+make test        # pytest com cobertura + jest (falha abaixo de 100%)
+make lint        # ruff (Python) + ESLint (JS)
+make verificar   # o mesmo que o CI confere: lint, testes, segurança, migrações e CSS
 ```
 
 - A suíte usa `config/settings_test.py` (configurado no `pytest.ini`): hasher de senha rápido e
@@ -172,11 +174,46 @@ As regras e permissões são as mesmas de antes; mudou o visual.
 - **Painel** (`infrastructure/admin/painel.py`, só para o superusuário): lojas ativas e em teste, vencendo em
   7 dias, vencidas, recebido no mês; gráficos de recebido e de lojas novas por mês e da situação dos planos;
   listas de lojas que vencem logo e das últimas cobranças.
-- **Menu lateral** em grupos (Lojas, Assinaturas, Auditoria), em `infrastructure/admin/tema.py`.
+- **Menu lateral** em grupos (Lojas, Assinaturas, Auditoria, Sistema), em `infrastructure/admin/tema.py`.
+- **Erros do sistema** (Sistema): toda página que quebra em produção (erro 500) e todo `logger.error`/
+  `logger.exception` do código vira um registro com tipo, mensagem, ponto do código, tela, loja, usuário e o
+  traceback — o mesmo erro soma em "ocorrências". Corrigiu? Marque como resolvido; se voltar, reabre como novo.
+  O painel avisa no topo quando há erro em aberto. Os erros também saem no console (log do Render).
+  Configuração em `LOGGING` (`config/settings.py`) e `infrastructure/registro_de_erros.py`. Não guarda o que foi
+  digitado nem os parâmetros do endereço. Nos testes o registro no banco fica desligado (`config/settings_test.py`).
+- **Backups** (Sistema, só o superusuário): *Configurar* liga/desliga o automático, define de quanto em quanto
+  tempo (horas, dias ou meses) e quantas cópias guardar; *Fazer backup agora* faz na hora; cada cópia tem *Baixar*.
+  - O arquivo é o `dumpdata` do Django compactado e criptografado (AES-256-GCM, senha `BACKUP_CHAVE`): não depende
+    do `pg_dump` e restaura em qualquer banco. Fica no bucket **privado** `backups` do Supabase (criado sozinho na
+    primeira vez; se alguém deixá-lo público, o backup recusa). As fotos não entram: já ficam no Storage.
+  - Quem dispara é o `.github/workflows/backup.yml`, de hora em hora, chamando `POST /interno/backup/` com o
+    `BACKUP_TOKEN`; o sistema só faz se estiver ligado e na hora (com 30 min de folga para o atraso do agendador).
+    Num servidor próprio, o mesmo pelo cron: `python manage.py fazer_backup --agendado`.
+  - **Restaurar** (num banco novo): `python manage.py migrate` e depois
+    `python manage.py restaurar_backup backup-AAAAMMDD-HHMMSS.json.gz.enc` (senha: `BACKUP_CHAVE` ou `--chave`).
+  - Para ligar: no Render, `BACKUP_CHAVE` e `BACKUP_TOKEN` (valores longos e aleatórios; guarde a chave também fora
+    do Render — sem ela nenhum backup abre); no GitHub, os segredos `SITE_URL` e `BACKUP_TOKEN` (o mesmo do Render).
 - **Listas** com pílulas coloridas (situação do plano, tipo de acesso, senha a trocar, status da cobrança).
 - **Resetar senha** do usuário fica num formulário próprio abaixo da edição (`admin/usuario_resetar_senha.html`).
 - **Tradução:** o Unfold não vem em português; as frases dele estão em `locale/pt_BR/LC_MESSAGES/django.po`.
   Depois de editar, rode `make traducoes` (usa o Babel do `requirements-dev.txt`) e versione o `.mo`.
+
+## Privacidade (LGPD)
+
+- **Termos de uso e política de privacidade** em `/termos/` e `/privacidade/` (abertos sem login, com link no rodapé
+  de todas as telas). Os textos ficam em `interfaces/templates/interfaces/legal/`: a loja é a controladora dos
+  dados dos clientes dela; a CorsariosCode, a operadora. Revise com um advogado antes do lançamento.
+- **Apagar os dados de um cliente** (direito do titular): na caderneta, *Apagar dados pessoais*, com a senha de
+  quem pede. Nome, telefone, e-mail e endereço — os de hoje e os que já passaram pelo histórico — saem do cadastro
+  e do histórico; as vendas ficam, como "Cliente removido #id". Com saldo na caderneta, não deixa (a lei permite
+  guardar enquanto há valor a acertar). Vale mesmo com o plano vencido. Código: `apagar_dados_pessoais`
+  (`application/clientes/services.py`); o histórico sabe quem cita pelo campo `clientes` de `RegistroDeAlteracao`.
+- **Fim do contrato:** 90 dias depois do fim do plano os dados da loja são apagados. No admin, em Lojas, o filtro
+  *Plano vencido há mais de 90 dias* mostra quem passou do prazo; apagar a loja leva tudo (vendas, clientes,
+  usuários, histórico) e as fotos e a marca no Storage (`application/lojas/encerramento.py`).
+- **O que sai do alcance da loja vai sem dados pessoais:** o log do console e a tela *Erros do sistema* mascaram
+  telefones, documentos e e-mails (`infrastructure/utils/dados_pessoais.py`); o histórico no admin mostra
+  "(oculto)" no lugar do telefone, e-mail e endereço dos clientes.
 
 ## CSS (Tailwind)
 
@@ -194,6 +231,42 @@ make css         # ou: npm run watch:css durante o desenvolvimento
 - `dvh` para altura de tela cheia (`min-h-dvh`), que desconta a barra de endereço do celular;
 - `px` só em bordas, anéis de foco e sombras. `width`/`height` de `<img>` são números sem unidade (só a proporção).
 - Nos gráficos (canvas só aceita px), o texto é convertido de `rem` na hora (`remEmPx` em `graficos.js`).
+
+## Homologação e produção
+
+```
+homologacao ──PR──▶ main ──▶ Render (produção)
+```
+
+- **`homologacao`**: onde o trabalho acontece. Commit e push direto, à vontade; a cada push o CI roda e mostra
+  ✓ ou ✗ no GitHub, sem travar nada.
+- **`main`**: só a produção. Recebe um PR vindo da `homologacao`, aceito apenas com o CI verde. Cada merge
+  vira deploy no Render (e o Render guarda os anteriores: *Rollback* volta um deploy com um clique).
+- **Testar antes de liberar**: `make homologar` sobe o sistema na sua máquina **em modo produção**
+  (DEBUG desligado, gunicorn, estáticos comprimidos, Postgres em container). Abre em `http://localhost:8000`
+  e no celular pela mesma rede Wi-Fi. Primeira vez: `make homologar-admin` cria seu usuário;
+  `make homologar-parar` desliga o banco (os dados continuam lá para a próxima vez).
+  Fotos e Pix só funcionam se `SUPABASE_*` e `MERCADO_PAGO_ACCESS_TOKEN` estiverem no ambiente — use
+  credenciais de teste, nunca as de produção.
+
+**CI** (`.github/workflows/ci.yml`), em todo push e PR da `homologacao` e da `main`:
+
+| Parte | O que confere |
+|---|---|
+| Python | ruff; testes no Postgres 17 com 100% de cobertura; `check --deploy` com DEBUG desligado; migrações em dia e indo e voltando; `collectstatic` |
+| JavaScript | ESLint; testes com 100% de cobertura; `output.css` em dia com os templates |
+| Segurança | Bandit, Semgrep (OWASP, Django, Python, JS, segredos), pip-audit, npm audit, gitleaks no histórico |
+
+**Atualizações** (`.github/workflows/atualizacoes.yml`): toda segunda, lista as bibliotecas com versão nova,
+roda os testes com elas (todas juntas e, se quebrar, uma por uma) e publica na issue *Atualizações das
+bibliotecas*: o que é "só atualizar", o que "precisa mexer no código" e o link do que mudou. Não abre PR.
+Localmente: `make atualizacoes` (a lista) e `make atualizar PACOTES="nome outro"` (aplica no requirements).
+O Dependabot fica pausado; se religado, abre os PRs na `homologacao` e espera 7 dias de cada versão.
+
+**Proteção da `main`** (uma vez, no GitHub: *Settings → Branches → Add branch ruleset*): alvo `main`;
+marque *Require a pull request before merging* e *Require status checks to pass* com os três checks do CI
+(`Python · testes no Postgres, lint e Django`, `JavaScript · testes, lint e CSS`,
+`Segurança · código, bibliotecas e segredos`); e *Block force pushes*.
 
 ## Deploy (Render)
 

@@ -6,7 +6,7 @@
 
 const LIMITE_DE_RESULTADOS = 8;
 const reais = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const quantidades = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 3 });
+const quantidades = new Intl.NumberFormat('pt-BR'); // até 3 casas, o padrão do formato
 const POR_UNIDADE = 'un.';
 
 function formatarReais(valor) {
@@ -73,7 +73,7 @@ function rotuloDoValor(valor) {
 function valoresDaOpcao(opcao, item) {
     const daEpoca = item.original?.escolhas[opcao.nome];
     const existe = opcao.valores.some((valor) => valor.nome === daEpoca);
-    return daEpoca && !existe ? [...opcao.valores, { nome: daEpoca, acrescimo: '0' }] : opcao.valores;
+    return daEpoca && !existe ? [...opcao.valores, { nome: daEpoca, acrescimo: 0 }] : opcao.valores;
 }
 
 /* Quantidade × preço em centavos, com contas inteiras (0,35 kg × R$ 39,90 = R$ 13,97, como no servidor). */
@@ -110,10 +110,10 @@ function totalDoCarrinho(itens) {
     return itens.reduce((soma, item) => soma + subtotal(item), 0);
 }
 
-function criarElemento(tag, classes, texto) {
+function criarElemento(tag, classes, texto = '') {
     const elemento = document.createElement(tag);
     if (classes) elemento.className = classes;
-    if (texto !== undefined) elemento.textContent = texto;
+    elemento.textContent = texto;
     return elemento;
 }
 
@@ -126,8 +126,7 @@ function botaoIcone(icone, rotulo, classes) {
 }
 
 function lerJson(id) {
-    const fonte = id && document.getElementById(id);
-    return fonte ? JSON.parse(fonte.textContent) : [];
+    return JSON.parse(document.getElementById(id)?.textContent ?? '[]');
 }
 
 function iniciarCarrinho(raiz) {
@@ -143,6 +142,7 @@ function iniciarCarrinho(raiz) {
     // A lista de sugestões só existe com este script (as opções também ganham o papel aqui).
     resultados.setAttribute('role', 'listbox');
     resultados.setAttribute('aria-label', 'Produtos encontrados');
+    // Stryker disable next-line UnaryOperator: antes da 1ª busca não há opções: -1 e +1 apontam para fora da lista igual.
     let ativo = -1;
 
     lerJson(raiz.dataset.itens).forEach((inicial) => {
@@ -273,6 +273,7 @@ function iniciarCarrinho(raiz) {
 
     function desenharResultados() {
         encontrados = buscarProdutos(catalogo, busca.value);
+        // Stryker disable next-line UnaryOperator: sem resultados, -1 e +1 apontam para fora da lista do mesmo jeito.
         ativo = encontrados.length ? 0 : -1;
         if (!busca.value.trim()) return fecharResultados();
 
@@ -311,7 +312,7 @@ function iniciarCarrinho(raiz) {
         const opcao = resultados.children[ativo];
         if (opcao?.id) {
             busca.setAttribute('aria-activedescendant', opcao.id);
-            opcao.scrollIntoView?.({ block: 'nearest' });
+            opcao.scrollIntoView({ block: 'nearest' });
         } else {
             busca.removeAttribute('aria-activedescendant');
         }
@@ -330,6 +331,7 @@ function iniciarCarrinho(raiz) {
     busca.addEventListener('keydown', (evento) => {
         if (evento.key === 'ArrowDown' || evento.key === 'ArrowUp') {
             evento.preventDefault();
+            // Stryker disable next-line ConditionalExpression: sem resultados a conta daria NaN, que também não marca nenhuma opção; fica pela clareza.
             if (!encontrados.length) return;
             const passo = evento.key === 'ArrowDown' ? 1 : -1;
             ativo = (ativo + passo + encontrados.length) % encontrados.length;
@@ -443,15 +445,14 @@ function iniciarVencimento(formulario, hoje = () => new Date()) {
 
     const aPrazo = () => total - (Number(pagoAgora ? pagoAgora.value : formulario.dataset.pagouNoAto) || 0);
 
-    /* Refaz os campos das parcelas 2 em diante com as datas dadas (a 1ª é o campo principal). */
-    function desenharParcelas(datas) {
-        lista.replaceChildren(...datas.slice(1).map((valor, indice) => campoDaParcela(indice + 1, valor)));
+    /* Refaz os campos das parcelas 2 em diante (a 1ª é o campo principal). */
+    function desenharParcelas(seguintes) {
+        lista.replaceChildren(...seguintes.map((valor, indice) => campoDaParcela(indice + 1, valor)));
         atualizarResumo();
     }
 
     function sugerirDatas() {
-        const quantidade = Number(numero.value);
-        desenharParcelas(data.value && quantidade > 1 ? datasDasParcelas(data.value, quantidade, Number(intervalo.value)) : []);
+        desenharParcelas(data.value ? datasDasParcelas(data.value, Number(numero.value), Number(intervalo.value)).slice(1) : []);
     }
 
     function atualizarResumo() {
@@ -467,6 +468,7 @@ function iniciarVencimento(formulario, hoje = () => new Date()) {
 
     bloco.querySelectorAll('[data-prazo-dias]').forEach((botao) => {
         botao.addEventListener('click', () => {
+            // Stryker disable next-line StringLiteral: o campo de data descarta texto que não é data, então qualquer texto vira ''.
             data.value = botao.dataset.prazoDias ? somarDias(hoje(), Number(botao.dataset.prazoDias)) : '';
             if (!data.value) numero.value = '1';
             sugerirDatas();
@@ -481,10 +483,12 @@ function iniciarVencimento(formulario, hoje = () => new Date()) {
     pagoAgora?.addEventListener('input', atualizar);
 
     // Na edição, começa com as parcelas que a venda já tem.
-    const atuais = (bloco.dataset.vencimentos || '').split(' ').filter(Boolean);
+    // Stryker disable next-line StringLiteral: sem o atributo, qualquer texto vira uma data só, e uma data só não parcela.
+    const atuais = (bloco.dataset.vencimentos || '').split(' ').filter(Boolean); // o template deixa um espaço no fim
+    // Stryker disable next-line ConditionalExpression,EqualityOperator: com uma data só, o número já é 1 e não há parcelas a desenhar.
     if (atuais.length > 1) {
         numero.value = String(atuais.length);
-        desenharParcelas(atuais);
+        desenharParcelas(atuais.slice(1));
     }
     atualizar();
 }
@@ -526,6 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* istanbul ignore else */
+// Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         normalizar, buscarProdutos, totalDoCarrinho, precoComOpcoes, precoDoItem, mesmasEscolhas, rotuloDoValor, formatarReais, subtotal, descreverEstoque, descreverPreco, iniciarCarrinho, iniciarResumoDePagamento,

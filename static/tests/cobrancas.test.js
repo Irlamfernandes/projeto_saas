@@ -43,7 +43,7 @@ describe('anotar lembrete', () => {
 
         await anotarLembrete(li, enviar);
 
-        expect('lembrado' in li.dataset).toBe(true);
+        expect(li.dataset.lembrado).toBe('');
         expect(li.querySelector('[data-selo-lembrado]').classList.contains('hidden')).toBe(false);
         expect(enviar).toHaveBeenCalledWith('/clientes/Ana/lembrete/', {
             method: 'POST', headers: { 'X-CSRFToken': 'tok' }, credentials: 'same-origin',

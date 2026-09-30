@@ -39,7 +39,9 @@ def gerar_extrato_pdf_cliente(cliente, caminho_arquivo, loja_usuario=None, stora
         Paragraph(f"<b>Cliente:</b> {escape(cliente.nome)}", estilos['Normal']),
         Paragraph(f"<b>Telefone:</b> {escape(cliente.telefone or 'Não informado')}", estilos['Normal']),
         Spacer(1, 10),
-        Paragraph(texto_situacao, _estilo(estilos['Normal'], fontSize=11, textColor=cor_situacao, spaceAfter=15, fontName='Helvetica-Bold')),
+        Paragraph(texto_situacao, _estilo(
+            estilos['Normal'], fontSize=11, textColor=cor_situacao, spaceAfter=15, fontName='Helvetica-Bold',
+        )),
         Spacer(1, 5),
         Paragraph(f"<b>Últimas {QUANTIDADE_DE_COMPRAS_NO_EXTRATO} Compras Registradas no Sistema:</b>", estilos['Heading3']),
         Spacer(1, 5),
@@ -82,7 +84,7 @@ def _vencimentos(venda):
     datas = [f"{parcela.vencimento:%d/%m/%Y}" for parcela in venda.parcelas.all()]
     if len(datas) > 1:
         return f" · {len(datas)} parcelas: {', '.join(datas)}"
-    return "".join(f" · vence {data}" for data in datas)
+    return f" · vence {datas[0]}" if datas else ""
 
 
 def _tabela_de_compras(cliente):

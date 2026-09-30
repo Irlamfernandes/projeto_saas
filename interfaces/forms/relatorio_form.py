@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django import forms
 from application.relatorios.periodos import hoje_local
-from application.relatorios.selectors import LIMITE_ESTOQUE_BAIXO_PADRAO
+from application.relatorios.painel import LIMITE_ESTOQUE_BAIXO_PADRAO
 
 
 class PeriodoForm(forms.Form):

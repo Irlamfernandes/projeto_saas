@@ -97,7 +97,7 @@ function tratarMudancaCategoria(select, focar = true) {
 /* Avisa antes do envio se as fotos escolhidas passam do limite do produto (o servidor também confere). */
 function limitarFotos(input) {
     const maximo = Number(input.dataset.maximoFotos);
-    const removidas = new Set((document.getElementById('remover_imagens')?.value || '').split(','));
+    const removidas = new Set(document.getElementById('remover_imagens')?.value.split(',')); // sem o campo: nenhuma
     const atuais = [...document.querySelectorAll('#container-imagens-atuais [data-id]')]
         .filter((foto) => !removidas.has(foto.dataset.id)).length;
     const disponiveis = Math.max(0, maximo - atuais);
@@ -178,15 +178,9 @@ function abrirModalGaleria(listaUrls, indiceInicial = 0) {
 }
 
 function mudarImagem(direcao) {
-    if (imagensGaleria.length <= 1) return;
-
-    indiceImagemAtual += direcao;
-    if (indiceImagemAtual < 0) {
-        indiceImagemAtual = imagensGaleria.length - 1;
-    } else if (indiceImagemAtual >= imagensGaleria.length) {
-        indiceImagemAtual = 0;
-    }
-
+    const total = imagensGaleria.length;
+    if (!total) return; // nenhuma galeria aberta ainda
+    indiceImagemAtual = (indiceImagemAtual + direcao + total) % total; // da última volta para a primeira e vice-versa
     atualizarExibicaoGaleria();
 }
 
@@ -217,10 +211,10 @@ function fecharModalDireto() {
    um toque fora da janela também fecha (o Esc já fecha por padrão). */
 function inicializarDialogos(raiz = document) {
     raiz.querySelectorAll('[data-abrir-dialogo]').forEach((botao) => {
-        botao.addEventListener('click', () => document.getElementById(botao.dataset.abrirDialogo)?.showModal?.());
+        botao.addEventListener('click', () => document.getElementById(botao.dataset.abrirDialogo)?.showModal());
     });
     raiz.querySelectorAll('[data-fechar-dialogo]').forEach((botao) => {
-        botao.addEventListener('click', () => botao.closest('dialog')?.close());
+        botao.addEventListener('click', () => botao.closest('dialog').close());
     });
     raiz.querySelectorAll('dialog[data-fechar-fora]').forEach((dialogo) => {
         // O conteúdo ocupa a janela inteira: clique no próprio <dialog> só acontece no fundo escurecido.
@@ -346,7 +340,8 @@ function nomeDaArea(area) {
 }
 
 /* istanbul ignore else */
-if (typeof module !== 'undefined') {
+// Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
+if (typeof module !== 'undefined' && module.exports) {
     module.exports = { 
         tratarMudancaCategoria, 
         marcarParaRemover, 

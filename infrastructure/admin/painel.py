@@ -10,7 +10,7 @@ from django.db.models.functions import TruncMonth
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
-from infrastructure.models import Cobranca, LojaModel, StatusDaCobranca
+from infrastructure.models import Cobranca, ErroDoSistema, LojaModel, StatusDaCobranca
 from infrastructure.utils.formatacao import reais
 
 MESES_NOS_GRAFICOS = 6
@@ -27,7 +27,7 @@ class Cartao:
     titulo: str
     valor: str
     detalhe: str
-    link: str = ''
+    link: str
 
 
 def painel_do_admin(request, context):
@@ -38,6 +38,7 @@ def painel_do_admin(request, context):
     return {
         **context,
         'painel': {
+            'erros': erros_em_aberto(),
             'cartoes': cartoes(ativas, hoje),
             'grafico_recebido': json.dumps(grafico_recebido_por_mes(hoje)),
             'grafico_lojas_novas': json.dumps(grafico_lojas_novas_por_mes(hoje)),
@@ -46,6 +47,12 @@ def painel_do_admin(request, context):
             'ultimas_cobrancas': tabela_ultimas_cobrancas(),
         },
     }
+
+
+def erros_em_aberto():
+    """Aviso no topo do painel quando alguma tela quebrou em produção (tela "Erros do sistema")."""
+    link = reverse('admin:infrastructure_errodosistema_changelist')
+    return {'quantidade': ErroDoSistema.objects.filter(resolvido=False).count(), 'link': f"{link}?resolvido__exact=0"}
 
 
 def cartoes(ativas, hoje):

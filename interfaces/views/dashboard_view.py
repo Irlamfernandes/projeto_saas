@@ -2,10 +2,9 @@ from datetime import timedelta
 from django.shortcuts import render
 from application.a_receber.selectors import clientes_a_cobrar
 from application.gastos.selectors import Mes, resultado_do_mes
-from application.relatorios.indicadores import indicadores_do_painel
+from application.relatorios.painel import montar_painel
 from application.relatorios.periodos import hoje_local
 from application.relatorios.produtos import previsao_de_reposicao
-from application.relatorios.selectors import montar_painel
 from application.relatorios.vendas import faturamento_por_dia, mais_vendidos, mapa_de_horarios, vendido_x_recebido
 from interfaces import graficos
 from interfaces.cobrancas import cobrancas_na_tela
@@ -30,7 +29,6 @@ def dashboard_view(request):
         'limite_estoque': limite,
         'opcoes_de_limite': OPCOES_DE_LIMITE,
         'hoje_por_extenso': graficos.data_por_extenso(hoje_local()),
-        'indicadores': indicadores_do_painel(user),
         'grafico_faturamento': graficos.diario(faturamento_por_dia(user, DIAS_DO_GRAFICO)),
         'mais_vendidos': top,
         'grafico_mais_vendidos': graficos.ranking([p.nome for p in top], [float(p.quantidade) for p in top], 'Quantidade'),

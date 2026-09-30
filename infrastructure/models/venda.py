@@ -27,8 +27,8 @@ class Venda(models.Model):
     data_venda = models.DateTimeField(default=timezone.now, db_index=True)
     data_atualizacao = models.DateTimeField(auto_now=True, db_index=True)
     valor_total = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=Decimal('0.00'),
         validators=[MinValueValidator(Decimal('0.00'))]
     )
@@ -69,7 +69,7 @@ class ItemVenda(models.Model):
         validators=[MinValueValidator(Decimal('0.001'))]
     )
     preco_unitario = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
@@ -82,6 +82,7 @@ class ItemVenda(models.Model):
         db_table = 'itens_venda'
         verbose_name = 'Item da Venda'
         verbose_name_plural = 'Itens das Vendas'
+        ordering = ['pk']  # ordem em que foram lançados (sem isso o Postgres devolve em qualquer ordem)
 
     def clean(self):
         super().clean()
@@ -103,8 +104,7 @@ class ItemVenda(models.Model):
         return com_opcoes(self.produto.nome, self.opcoes)
 
     def __str__(self):
-        produto_nome = self.produto.nome if self.produto else 'Produto Removido'
-        return f"{self.quantidade}x {produto_nome} (Venda #{self.venda_id})"
+        return f"{self.quantidade}x {self.produto.nome} (Venda #{self.venda_id})"  # produto é obrigatório (PROTECT)
 
 
 class PagamentoCliente(models.Model):
@@ -112,7 +112,7 @@ class PagamentoCliente(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='pagamentos_cliente', db_index=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='pagamentos', db_index=True)
     valor = models.DecimalField(
-        max_digits=10, 
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))]
     )
@@ -141,8 +141,7 @@ class PagamentoCliente(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        cliente_nome = self.cliente.nome if self.cliente else 'Cliente Não Identificado'
-        return f"Pagamento - {cliente_nome} (R$ {self.valor})"
+        return f"Pagamento - {self.cliente.nome} (R$ {self.valor})"  # cliente é obrigatório
 
 class Parcela(models.Model):
     """Data combinada para pagar a parte da venda que ficou na caderneta. Venda a prazo sem data = sem parcela.

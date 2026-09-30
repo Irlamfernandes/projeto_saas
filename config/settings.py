@@ -188,3 +188,32 @@ UNFOLD = {
         'navigation': 'infrastructure.admin.tema.menu_lateral',
     },
 }
+
+# Log: tudo para o console (é o que aparece no log do Render) e os erros também para a tela "Erros do sistema"
+# do admin (infrastructure/registro_de_erros.py). Sem isto, com DEBUG desligado, o Django não escreve em lugar
+# nenhum o erro das páginas que quebram (erro 500).
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {'padrao': {
+        '()': 'infrastructure.registro_de_erros.SemDadosPessoais', 'format': '{levelname} {name}: {message}', 'style': '{',
+    }},
+    'filters': {'sem_avisos_de_seguranca': {'()': 'infrastructure.registro_de_erros.SemAvisosDeSeguranca'}},
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'padrao'},
+        'erros_do_sistema': {
+            'class': 'infrastructure.registro_de_erros.GuardarErroNoBanco',
+            'level': 'ERROR',
+            'filters': ['sem_avisos_de_seguranca'],
+        },
+    },
+    'root': {'handlers': ['console', 'erros_do_sistema'], 'level': 'INFO'},
+    # Os do Django passam a seguir para a raiz (o padrão dele só escreve no console com DEBUG ligado).
+    'loggers': {'django': {'handlers': [], 'level': 'INFO', 'propagate': True}},
+}
+
+# Backup (infrastructure/admin/backup_admin.py e application/backup/services.py).
+# BACKUP_CHAVE criptografa os arquivos: guarde-a também fora do Render — sem ela, nenhum backup abre.
+# BACKUP_TOKEN autoriza o agendador a chamar /interno/backup/ (vazio = endereço desligado).
+BACKUP_CHAVE = os.environ.get('BACKUP_CHAVE', '')
+BACKUP_TOKEN = os.environ.get('BACKUP_TOKEN', '')

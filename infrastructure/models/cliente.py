@@ -7,7 +7,7 @@ from django.db.models.functions import Coalesce
 from django.utils import timezone
 from infrastructure.models.loja_model import LojaModel
 
-_DINHEIRO = DecimalField(max_digits=12, decimal_places=2)
+_DINHEIRO = DecimalField(max_digits=12, decimal_places=2)  # pragma: no mutate (só o tipo da soma: não muda o valor)
 
 
 def _total_por_cliente(nome_modelo, campo):
@@ -56,6 +56,11 @@ class Cliente(models.Model):
             return self.saldo_calculado
         return Cliente.objects.com_saldo().values_list('saldo_calculado', flat=True).get(pk=self.pk)
 
+    @property
+    def dados_apagados(self):
+        """Já passou por "apagar dados pessoais" (LGPD): sobrou só o nome genérico."""
+        return self.nome == f"Cliente removido #{self.pk}"
+
     def __str__(self):
         return self.nome
 
@@ -78,4 +83,4 @@ class LembreteDePagamento(models.Model):
         indexes = [models.Index(fields=['loja', '-enviado_em'], name='lembrete_loja_data_idx')]
 
     def __str__(self):
-        return f"{self.cliente.nome} · {self.enviado_em:%d/%m/%Y}"
+        return f"{self.cliente.nome} · {timezone.localtime(self.enviado_em):%d/%m/%Y}"

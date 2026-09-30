@@ -10,6 +10,6 @@ def registrar_lembrete(cliente, *, valor, usuario=None):
     lembrete = LembreteDePagamento.objects.create(loja=cliente.loja, cliente=cliente, usuario=usuario, valor=valor)
     registrar_alteracao(
         loja=cliente.loja, usuario=usuario, acao=Acao.LEMBRETE_ENVIADO,
-        descricao=f"{cliente.nome} · {reais(valor)}",
+        descricao=f"{cliente.nome} · {reais(valor)}", clientes=[cliente],
     )
     return lembrete

@@ -26,7 +26,7 @@ class RelatorioViewTest(TestCase):
             deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
-        
+
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
                 deve_trocar_senha=False,
@@ -41,7 +41,7 @@ class RelatorioViewTest(TestCase):
         self.venda_hoje = Venda.objects.create(
             loja=self.loja1, cliente=self.cliente_loja1, valor_total=Decimal('200.00'), data_venda=hoje
         )
-        
+
         data_antiga = hoje - timedelta(days=15)
         self.venda_antiga = Venda.objects.create(
             loja=self.loja1, cliente=self.cliente_loja1, valor_total=Decimal('100.00'), data_venda=data_antiga
@@ -65,7 +65,7 @@ class RelatorioViewTest(TestCase):
         """Usuário comum visualiza apenas os relatórios e métricas da sua respectiva loja."""
         self.client.force_login(self.user_loja1)
         response = self.client.get(self.url_relatorio)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_geral_vendas'], Decimal('300.00'))
 
@@ -73,20 +73,20 @@ class RelatorioViewTest(TestCase):
         """Superusuário visualiza a somatória e dados consolidados de todas as lojas."""
         self.client.force_login(self.superuser)
         response = self.client.get(self.url_relatorio)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_geral_vendas'], Decimal('800.00'))
 
     def test_filtrar_relatorio_por_data(self):
         """Filtra as vendas do relatório com base nas datas de início e fim fornecidas."""
         self.client.force_login(self.user_loja1)
-        
+
         hoje_str = date.today().strftime('%Y-%m-%d')
         response = self.client.get(self.url_relatorio, {
             'data_inicio': hoje_str,
             'data_fim': hoje_str
         })
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_geral_vendas'], Decimal('200.00'))
 
@@ -97,6 +97,6 @@ class RelatorioViewTest(TestCase):
             'data_inicio': 'data-errada',
             'data_fim': '99/99/9999'
         })
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_geral_vendas'], Decimal('300.00'))

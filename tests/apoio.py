@@ -1,7 +1,26 @@
+import dataclasses
+import importlib
 import io
+from pathlib import Path
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from infrastructure.utils.supabase_storage import SupabaseAPIError
+
+def dataclasses_do_pacote(pacote):
+    """Dataclasses definidas em `pacote` (fora testes e migrações). Acha os módulos pelos arquivos .py, então uma
+    pasta sem __init__.py também entra (o pkgutil.walk_packages pularia a pasta inteira)."""
+    raiz = Path(pacote.__path__[0])
+    classes = set()
+    for arquivo in sorted(raiz.rglob('*.py')):
+        partes = arquivo.relative_to(raiz.parent).with_suffix('').parts
+        if 'tests' in partes or 'migrations' in partes:
+            continue
+        nome = '.'.join(partes[:-1] if partes[-1] == '__init__' else partes)
+        modulo = importlib.import_module(nome)
+        classes |= {objeto for objeto in vars(modulo).values() if isinstance(objeto, type)
+                    and dataclasses.is_dataclass(objeto) and objeto.__module__ == nome}
+    return classes
+
 
 URL_PUBLICA = "https://exemplo.supabase.co/storage/v1/object/public/imagens"
 
@@ -138,3 +157,28 @@ class MercadoPagoFalso:
         from infrastructure.pagamentos.mercado_pago import PagamentoConsultado
         self.consultas.append(pagamento_id)
         return self.pagamentos.get(pagamento_id) or PagamentoConsultado(pagamento_id, 'pending', None, 'BRL', '')
+
+
+class BackupsFalsos:
+    """No lugar do bucket `backups` do Supabase: guarda os arquivos enviados na memória."""
+
+    def __init__(self, falhar_no_envio=False, falhar_ao_remover=()):
+        self.arquivos = {}
+        self.removidos = []
+        self._falhar_no_envio = falhar_no_envio
+        self._falhar_ao_remover = falhar_ao_remover
+
+    def enviar(self, caminho_local, nome):
+        if self._falhar_no_envio:
+            raise SupabaseAPIError("Supabase fora do ar")
+        with open(caminho_local, 'rb') as arquivo:
+            self.arquivos[nome] = arquivo.read()
+
+    def baixar(self, nome, destino):
+        destino.write(self.arquivos[nome])
+
+    def remover(self, nome):
+        if nome in self._falhar_ao_remover:
+            raise SupabaseAPIError("não removeu")
+        self.removidos.append(nome)
+        self.arquivos.pop(nome, None)

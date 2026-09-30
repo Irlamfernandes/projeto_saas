@@ -1,4 +1,5 @@
-.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test sonar seguranca css traducoes
+.PHONY: build up down restart logs shell migrate makemigrations superuser collectstatic test sonar seguranca css traducoes \
+	lint verificar homologar homologacao-banco homologar-admin homologar-parar atualizacoes atualizar
 
 # Sobe os containers em background fazendo build
 up:
@@ -67,3 +68,52 @@ css:
 # Compila as traduções (locale/pt_BR/.../django.po -> .mo, versionado). Requer requirements-dev.
 traducoes:
 	pybabel compile -D django -d locale
+
+# Linters: ruff (Python) e ESLint (JS). Os dois também rodam no CI.
+lint:
+	ruff check .
+	npm run -s lint
+
+# O mesmo que o CI confere, na sua máquina (menos o Postgres: aqui os testes usam SQLite).
+verificar: lint test seguranca
+	DJANGO_DEBUG=True python manage.py makemigrations --check --dry-run
+	npm run -s build:css && git diff --exit-code static/css/output.css
+
+# ---------- Homologação local ----------
+# Sobe o sistema em MODO PRODUÇÃO na sua máquina: Postgres em container (os dados ficam entre uma vez e outra),
+# gunicorn, DEBUG desligado e estáticos comprimidos. Abre no PC e no celular (mesma rede Wi-Fi).
+# Primeira vez: `make homologar-admin` para criar seu usuário. Para parar o banco: `make homologar-parar`.
+IP_LOCAL = $(shell hostname -I 2>/dev/null | awk '{print $$1}')
+HOMOLOGACAO = DJANGO_SETTINGS_MODULE=config.settings_homologacao \
+	DATABASE_URL=postgresql://postgres:homologacao@localhost:55432/postgres DATABASE_SSL_REQUIRE=False \
+	DJANGO_ALLOWED_HOSTS="localhost,127.0.0.1,$(IP_LOCAL)" \
+	DJANGO_SECRET_KEY=homologacao-local-$(shell cat /etc/machine-id 2>/dev/null || hostname)
+
+homologacao-banco:
+	@docker start homologacao-db >/dev/null 2>&1 || \
+		docker run -d --name homologacao-db -e POSTGRES_PASSWORD=homologacao -p 55432:5432 postgres:17-alpine >/dev/null
+	@until docker exec homologacao-db pg_isready -U postgres >/dev/null 2>&1; do sleep 1; done
+
+homologar: homologacao-banco
+	$(HOMOLOGACAO) python manage.py migrate --no-input
+	$(HOMOLOGACAO) python manage.py collectstatic --no-input --ignore tests -v0
+	@echo "Abra http://localhost:8000 ou, no celular, http://$(IP_LOCAL):8000  (Ctrl+C para parar)"
+	$(HOMOLOGACAO) gunicorn config.wsgi:application --bind 0.0.0.0:8000 --threads 4
+
+homologar-admin: homologacao-banco
+	$(HOMOLOGACAO) python manage.py migrate --no-input
+	$(HOMOLOGACAO) python manage.py createsuperuser
+
+homologar-parar:
+	docker stop homologacao-db
+
+# ---------- Atualizações ----------
+# O que tem versão nova (a verificação semanal no GitHub também roda os testes com elas: `relatorio --testar`).
+atualizacoes:
+	python scripts/atualizacoes.py relatorio
+
+# Troca a versão fixada nos requirements pela mais nova: make atualizar PACOTES="django coverage"
+atualizar:
+	@test -n "$(PACOTES)" || (echo 'Informe os pacotes: make atualizar PACOTES="nome outro"'; exit 1)
+	python scripts/atualizacoes.py aplicar $(PACOTES)
+	pip install -r requirements-dev.txt

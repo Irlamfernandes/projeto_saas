@@ -57,7 +57,8 @@ class CompraForm(forms.Form):
     def _linhas_preenchidas(self):
         """Linhas (produto, quantidade, custo) com algo escrito; linhas totalmente em branco são ignoradas."""
         colunas = [self.data.getlist(nome) for nome in ('item_produto', 'item_quantidade', 'item_custo')]
-        linhas = [linha for linha in zip(*colunas) if any(parte.strip() for parte in linha)]
+        # strict=False: colunas de tamanhos diferentes (POST adulterado) viram ERRO_ITEM logo abaixo, não erro 500
+        linhas = [linha for linha in zip(*colunas, strict=False) if any(parte.strip() for parte in linha)]
         if not linhas:
             raise ValidationError("Adicione pelo menos um produto à compra.")
         if len(set(map(len, colunas))) != 1 or len(linhas) > MAXIMO_DE_ITENS:

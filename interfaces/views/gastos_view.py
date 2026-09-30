@@ -1,6 +1,6 @@
 """Gastos e resultado do mês: lançar compras, despesas e perdas, e ver quanto sobrou."""
 from dataclasses import dataclass
-from typing import Callable
+from collections.abc import Callable
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -52,7 +52,7 @@ TIPOS = {
 @loja_required
 def gastos_view(request):
     hoje = hoje_local()
-    mes = mes_escolhido(request.GET.get('mes', ''), hoje)
+    mes = mes_escolhido(request.GET.get('mes'), hoje)
     aba = request.GET.get('aba') if request.GET.get('aba') in TIPOS else ABA_PADRAO
     user = request.user
     context = {

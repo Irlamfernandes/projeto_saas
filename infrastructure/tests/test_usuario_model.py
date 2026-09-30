@@ -32,7 +32,8 @@ class UsuarioModelTest(TestCase):
         )
         with self.assertRaises(ValidationError) as ctx:
             user.full_clean()
-        self.assertIn('username', ctx.exception.error_dict)
+        self.assertEqual(ctx.exception.message_dict['username'], [
+            'Insira um nome válido. O nome pode conter letras, números, espaços e os caracteres @/./+/-/_.'])
 
     # ---------------------------------------------------------
     # Testes de Validação da Loja (clean)
@@ -47,7 +48,8 @@ class UsuarioModelTest(TestCase):
         )
         with self.assertRaises(ValidationError) as ctx:
             user.full_clean()
-        self.assertIn('loja', ctx.exception.error_dict)
+        self.assertEqual(ctx.exception.message_dict['loja'],
+                         ['Usuários comuns do sistema devem estar obrigatoriamente associados a uma loja.'])
 
     def test_staff_user_can_have_no_loja(self):
         """Usuário staff sem loja não deve disparar erro de validação."""

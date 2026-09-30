@@ -2,15 +2,14 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from django.db.models import Count, DateField, DecimalField, ExpressionWrapper, F, Sum
+from django.db.models import Count, DateField, ExpressionWrapper, F, Sum
 from django.db.models.functions import ExtractHour, ExtractIsoWeekDay, TruncDate, TruncMonth
 from application.relatorios.periodos import dias_entre, hoje_local, meses_ate
-from application.relatorios.selectors import filtrar_por_intervalo
+from application.relatorios.selectors import DINHEIRO, filtrar_por_intervalo
 from application.tenancy import filtrar_por_loja
 from infrastructure.models import ItemVenda, PagamentoCliente, Venda
 
 ZERO = Decimal('0.00')
-DINHEIRO = DecimalField(max_digits=14, decimal_places=2)
 RECEITA_DO_ITEM = ExpressionWrapper(F('quantidade') * F('preco_unitario'), output_field=DINHEIRO)
 DIAS_DA_SEMANA = ('Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom')  # ISO: 1 = segunda
 HORARIO_PADRAO = (7, 20)
@@ -27,7 +26,7 @@ class ProdutoVendido:
     nome: str
     quantidade: Decimal
     faturamento: Decimal
-    unidade: str = 'un'
+    unidade: str
 
 
 @dataclass(frozen=True)
@@ -61,7 +60,7 @@ def itens_do_usuario(user):
     return filtrar_por_loja(ItemVenda.objects.all(), user, campo='venda__loja')
 
 
-def faturamento_por_dia(user, dias=30, agora=None):
+def faturamento_por_dia(user, dias, agora=None):
     """Faturamento de cada um dos últimos `dias` dias (dias sem venda aparecem com zero)."""
     hoje = hoje_local(agora)
     inicio = hoje - timedelta(days=dias - 1)
@@ -69,14 +68,14 @@ def faturamento_por_dia(user, dias=30, agora=None):
     return [Ponto(dia, totais.get(dia, ZERO)) for dia in dias_entre(inicio, hoje)]
 
 
-def faturamento_por_mes(user, meses=12, agora=None):
+def faturamento_por_mes(user, meses, agora=None):
     competencias = meses_ate(hoje_local(agora), meses)
     vendas = vendas_do_usuario(user).filter(data_venda__date__gte=competencias[0])
     totais = _somar_por(vendas, _mes('data_venda'), 'valor_total')
     return [Ponto(mes, totais.get(mes, ZERO)) for mes in competencias]
 
 
-def vendido_x_recebido(user, meses=6, agora=None):
+def vendido_x_recebido(user, meses, agora=None):
     """Por mês: quanto foi vendido NA CADERNETA (vendas com cliente) e quanto entrou de pagamento.
 
     Vendas de balcão (sem cliente) ficam de fora: não geram fiado, então compará-las com os
@@ -90,14 +89,14 @@ def vendido_x_recebido(user, meses=6, agora=None):
     return [FluxoDoMes(mes, vendido.get(mes, ZERO), recebido.get(mes, ZERO)) for mes in competencias]
 
 
-def mais_vendidos(user, inicio=None, fim=None, limite=10):
+def mais_vendidos(user, inicio=None, fim=None, *, limite):
     itens = filtrar_por_intervalo(itens_do_usuario(user), inicio, fim, campo='venda__data_venda')
     linhas = (
         itens.values('produto_id', 'produto__nome', 'produto__unidade')
         .annotate(unidades=Sum('quantidade'), faturamento=Sum(RECEITA_DO_ITEM))
         .order_by('-unidades', 'produto__nome')[:limite]
     )
-    return [ProdutoVendido(l['produto__nome'], l['unidades'], l['faturamento'], l['produto__unidade']) for l in linhas]
+    return [ProdutoVendido(item['produto__nome'], item['unidades'], item['faturamento'], item['produto__unidade']) for item in linhas]
 
 
 def mapa_de_horarios(user, dias=90, agora=None):
@@ -110,7 +109,7 @@ def mapa_de_horarios(user, dias=90, agora=None):
     )
     celulas = {(g['dia'], g['hora']): (g['total'], g['vendas']) for g in agrupado}
     maximo = max((total for total, _ in celulas.values()), default=ZERO)
-    horas = _faixa_de_horas(hora for _, hora in celulas.keys())
+    horas = _faixa_de_horas(hora for _, hora in celulas)
     linhas = [(hora, [_celula(celulas, dia, hora, maximo) for dia in range(1, 8)]) for hora in horas]
     melhor = max((c for _, linha in linhas for c in linha if c.vendas), key=lambda c: c.total, default=None)
     return MapaDeHorarios(DIAS_DA_SEMANA, linhas, melhor)

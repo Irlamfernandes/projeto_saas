@@ -7,7 +7,7 @@ ORDENACOES_PERMITIDAS = frozenset({
     'nome', '-nome',
     'preco_venda', '-preco_venda',
     'quantidade_estoque', '-quantidade_estoque',
-    'data_criacao', '-data_criacao',
+    'data_criacao', ORDEM_PADRAO,
 })
 LIMITE_ESTOQUE_BAIXO = 5
 MAXIMO_DE_FOTOS = 5

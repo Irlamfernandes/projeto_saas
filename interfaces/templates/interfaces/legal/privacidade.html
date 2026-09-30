@@ -1,0 +1,68 @@
+{% extends 'interfaces/legal/_documento.html' %}
+{% block titulo %}Política de privacidade{% endblock %}
+{% block cabecalho %}Política de privacidade{% endblock %}
+{% block documento %}
+<p>Esta política explica quais dados pessoais o sistema <b>Gestão da Loja</b>, da {{ desenvolvedor.nome }}, trata, para quê, com quem, por quanto tempo e como cada pessoa pode exercer os seus direitos, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018, a LGPD).</p>
+
+<h2>Quem decide e quem cuida dos dados</h2>
+<ul>
+    <li><b>Dados dos clientes de cada loja</b> (quem compra na loja): a <b>loja</b> é a controladora — é ela quem decide o que cadastrar e para quê. A {{ desenvolvedor.nome }} é a <b>operadora</b>: guarda e processa esses dados em nome da loja, só para o sistema funcionar.</li>
+    <li><b>Dados das lojas e de quem usa o sistema</b> (usuários, assinatura do plano): a {{ desenvolvedor.nome }} é a controladora.</li>
+</ul>
+
+<h2>Quais dados</h2>
+<ul>
+    <li><b>Da loja:</b> nome, marca (logo), e-mail usado na cobrança do plano e o histórico de pagamentos do plano. Os dados do Pix são tratados pelo Mercado Pago; o sistema não guarda dados bancários nem de cartão.</li>
+    <li><b>De quem usa o sistema:</b> nome de usuário, senha (guardada de forma cifrada, que nem a {{ desenvolvedor.nome }} consegue ler), preferência de tema e o histórico do que cada um fez (vendas, edições, cancelamentos).</li>
+    <li><b>Dos clientes das lojas:</b> o que a loja cadastrar — nome, telefone, e-mail e endereço — e as compras, pagamentos e vencimentos na caderneta.</li>
+    <li><b>Dados técnicos de segurança:</b> tentativas de entrar com senha errada (guardadas por 1 dia, para bloquear quem tenta adivinhar senhas) e registros de erros do sistema, sem o que foi digitado nos formulários e com telefones e e-mails mascarados.</li>
+</ul>
+
+<h2>Para que usamos</h2>
+<ul>
+    <li>Fazer o sistema funcionar: registrar vendas, controlar estoque e caderneta, montar relatórios e mensagens de cobrança.</li>
+    <li>Cobrar e liberar o plano da loja.</li>
+    <li>Proteger o sistema e as contas (bloqueio de senhas erradas, registro de erros, cópias de segurança).</li>
+    <li>Dar suporte quando a loja pedir.</li>
+</ul>
+<p>Não vendemos dados, não usamos dados para publicidade e não montamos perfis de ninguém.</p>
+
+<h2>Com quem compartilhamos</h2>
+<p>Só com os fornecedores necessários para o sistema funcionar, que tratam os dados conforme as nossas instruções:</p>
+<ul>
+    <li><b>Render</b>, que roda o sistema, e <b>Cloudflare</b>, que entrega o site de forma segura;</li>
+    <li><b>Supabase</b>, onde ficam o banco de dados, as fotos dos produtos e as cópias de segurança;</li>
+    <li><b>Mercado Pago</b>, para o pagamento do plano por Pix.</li>
+</ul>
+<p>Esses serviços ficam em servidores nos Estados Unidos, com as garantias de proteção previstas nos contratos de cada fornecedor. As mensagens de cobrança pelo WhatsApp são abertas no aparelho da própria loja, que decide enviar: o sistema não manda mensagens sozinho.</p>
+
+<h2>Como protegemos</h2>
+<ul>
+    <li>Conexão sempre criptografada (HTTPS) e senhas guardadas de forma cifrada.</li>
+    <li>Cada loja só vê os próprios dados: isso é testado a cada mudança no sistema.</li>
+    <li>Bloqueio de 15 minutos depois de 5 senhas erradas seguidas.</li>
+    <li>Cópias de segurança criptografadas, guardadas num local privado.</li>
+    <li>A equipe da {{ desenvolvedor.nome }} não vê telefone, e-mail nem endereço dos clientes das lojas nas telas de administração.</li>
+</ul>
+
+<h2>Cookies</h2>
+<p>O sistema usa só os cookies necessários para funcionar: o que mantém a pessoa conectada depois de entrar e o que protege os formulários contra envios forjados. Não há cookies de publicidade, de rastreamento nem de estatísticas.</p>
+
+<h2>Por quanto tempo</h2>
+<ul>
+    <li>Enquanto a loja usa o sistema.</li>
+    <li>Se a loja cancelar ou o plano ficar vencido sem renovação, os dados ficam guardados por <b>90 dias</b> — para a loja voltar ou pedir uma cópia — e depois são apagados, inclusive as fotos.</li>
+    <li>As cópias de segurança são substituídas automaticamente pelas mais novas; as antigas somem nessa troca.</li>
+    <li>Registros que a lei manda guardar podem ficar pelo prazo que ela exige.</li>
+</ul>
+
+<h2>Direitos de cada pessoa</h2>
+<p>A LGPD garante, entre outros, os direitos de saber se os seus dados são tratados, ver e corrigir esses dados, pedir que sejam apagados e saber com quem são compartilhados.</p>
+<ul>
+    <li><b>Clientes das lojas:</b> façam o pedido à própria loja. No sistema, a loja corrige o cadastro e pode <b>apagar os dados pessoais</b> do cliente; as compras continuam nos relatórios da loja, sem o nome. Enquanto houver valor a receber ou a devolver na caderneta, a loja pode manter os dados, como a lei permite. Se o pedido chegar à {{ desenvolvedor.nome }}, ele é encaminhado à loja.</li>
+    <li><b>Lojas e usuários:</b> falem com a {{ desenvolvedor.nome }} pelo contato abaixo.</li>
+</ul>
+
+<h2>Mudanças nesta política</h2>
+<p>Quando esta política mudar, a data de atualização no topo muda também, e as mudanças importantes são avisadas no sistema.</p>
+{% endblock %}

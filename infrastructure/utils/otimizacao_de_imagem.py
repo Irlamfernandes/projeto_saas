@@ -20,8 +20,7 @@ def otimizar_imagem(arquivo, lado_maximo=LADO_MAXIMO, qualidade=QUALIDADE_WEBP):
     - preserva a transparência de PNGs.
     """
     try:
-        arquivo.seek(0)
-        with Image.open(arquivo) as original:
+        with Image.open(arquivo) as original:  # o Pillow volta ao início do arquivo sozinho
             # JPEG: decodifica já reduzido (1/2, 1/4, 1/8), sem abrir a foto inteira na memória.
             original.draft(None, (lado_maximo, lado_maximo))
             imagem = ImageOps.exif_transpose(original)

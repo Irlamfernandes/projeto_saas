@@ -1,6 +1,6 @@
 from infrastructure.utils.pdf_generator import COR_CREDITO, COR_DEVENDO, COR_NEUTRA, linhas_de_compras, situacao_financeira
 from django.utils import timezone
-from datetime import date, datetime, timezone as dt_timezone
+from datetime import date, datetime, UTC
 import io
 import os
 import tempfile
@@ -36,7 +36,7 @@ class PdfGeneratorTest(TestCase):
         )
 
         # Arquivo temporário para salvar os PDFs durante os testes
-        self.temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+        self.temp_file = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)  # noqa: SIM115 (fechado logo abaixo; apagado no tearDown)
         self.temp_file.close()
         self.caminho_pdf = self.temp_file.name
 
@@ -106,7 +106,7 @@ class PdfGeneratorTest(TestCase):
 
     def test_datas_das_compras_no_fuso_local(self):
         """Regressão: o horário saía em UTC (3h adiantado em relação a Brasília)."""
-        meio_dia_utc = datetime(2026, 1, 10, 12, 0, tzinfo=dt_timezone.utc)
+        meio_dia_utc = datetime(2026, 1, 10, 12, 0, tzinfo=UTC)
         venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente, valor_total=Decimal('50.00'), data_venda=meio_dia_utc)
         ItemVenda.objects.create(venda=venda, produto=self.produto, quantidade=2, preco_unitario=Decimal('25.00'))
 

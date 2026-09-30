@@ -11,7 +11,6 @@ GIRADA_90_GRAUS = 6
 
 def _foto(tamanho, formato='JPEG', modo='RGB', nome=None, exif=None, **opcoes):
     """Imagem com degradê (parece uma foto: comprime como uma, ao contrário de uma cor lisa)."""
-    largura, altura = tamanho
     imagem = Image.linear_gradient('L').resize(tamanho).convert(modo)
     if modo == 'RGBA':
         imagem.putalpha(Image.new('L', tamanho, 0))

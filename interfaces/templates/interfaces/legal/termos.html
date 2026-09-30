@@ -1,0 +1,55 @@
+{% extends 'interfaces/legal/_documento.html' %}
+{% block titulo %}Termos de uso{% endblock %}
+{% block cabecalho %}Termos de uso{% endblock %}
+{% block documento %}
+<p>Estes termos valem para o uso do sistema <b>Gestão da Loja</b>, oferecido pela {{ desenvolvedor.nome }} às lojas cadastradas. Ao usar o sistema, a loja e os seus usuários concordam com eles e com a <a href="{% url 'privacidade' %}">política de privacidade</a>.</p>
+
+<h2>O serviço</h2>
+<p>Um sistema online para a loja registrar vendas, controlar estoque, acompanhar a caderneta dos clientes, organizar cobranças, anotar gastos e ver relatórios, pelo celular ou pelo computador.</p>
+
+<h2>Acesso</h2>
+<ul>
+    <li>As contas são criadas pela {{ desenvolvedor.nome }} para cada loja.</li>
+    <li>Cada usuário tem a sua senha, que é pessoal. A loja responde pelo que for feito com as contas dela.</li>
+    <li>Se suspeitar de uso indevido, avise a {{ desenvolvedor.nome }} para trocar a senha na hora.</li>
+</ul>
+
+<h2>Plano e pagamento</h2>
+<ul>
+    <li>O acesso é por período (os planos aparecem em Configurações), pago por Pix pelo Mercado Pago.</li>
+    <li>Com o plano vencido, o sistema continua aberto <b>só para consulta</b> até a renovação.</li>
+    <li>Os preços podem mudar, com aviso antes; o preço novo vale a partir da renovação seguinte.</li>
+</ul>
+
+<h2>O que cabe à loja</h2>
+<ul>
+    <li>Cadastrar dados corretos e ter motivo legítimo para registrar os seus clientes (por exemplo, a venda a prazo), informando-os disso.</li>
+    <li>Atender os pedidos dos seus clientes sobre os dados deles, como corrigir ou apagar (a <a href="{% url 'privacidade' %}">política de privacidade</a> explica como).</li>
+    <li>Usar o sistema e as mensagens de cobrança dentro da lei, sem constranger ninguém.</li>
+</ul>
+
+<h2>O que o sistema não é</h2>
+<ul>
+    <li>Não emite nota fiscal nem documento fiscal. Extratos e recibos servem para o controle da loja.</li>
+    <li>Não substitui a contabilidade da loja.</li>
+</ul>
+
+<h2>Disponibilidade e cópias de segurança</h2>
+<p>A {{ desenvolvedor.nome }} trabalha para manter o sistema no ar e faz cópias de segurança dos dados, mas pode haver paradas para manutenção ou por falhas de fornecedores e da internet. Não há garantia de funcionamento sem nenhuma interrupção.</p>
+
+<h2>Responsabilidade</h2>
+<p>Na medida permitida pela lei, a {{ desenvolvedor.nome }} não responde por dados cadastrados de forma errada, por decisões tomadas pela loja a partir dos relatórios, nem por falhas de serviços de terceiros, como internet, WhatsApp e Mercado Pago.</p>
+
+<h2>Cancelamento e dados da loja</h2>
+<ul>
+    <li>A loja pode deixar de usar o sistema quando quiser; sem renovação, o acesso fica só para consulta.</li>
+    <li>Os dados continuam guardados por <b>90 dias</b> depois do fim do plano. Nesse prazo, a loja pode voltar ou tirar uma cópia (os relatórios exportam para Excel e PDF). Depois, os dados são apagados.</li>
+    <li>Os dados cadastrados pertencem à loja. O sistema pertence à {{ desenvolvedor.nome }}.</li>
+</ul>
+
+<h2>Mudanças nos termos</h2>
+<p>Quando estes termos mudarem, a data de atualização no topo muda também, e as mudanças importantes são avisadas no sistema. Continuar usando o sistema depois do aviso significa concordar com a versão nova.</p>
+
+<h2>Lei aplicável</h2>
+<p>Estes termos seguem as leis do Brasil.</p>
+{% endblock %}

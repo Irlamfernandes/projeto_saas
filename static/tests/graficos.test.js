@@ -9,7 +9,7 @@ const tokens = {
     tintaFraca: '#7c8a87', linha: '#e2e9e7', grade: '#edf1f0', superficie: '#ffffff',
 };
 const dados = { rotulos: ['18/03', '19/03', '20/03'], detalhes: ['quarta', 'quinta', 'sexta'], series: [{ nome: 'Faturamento', valores: [10, 0, 1500.5], cor: 'marca' }] };
-const semEspacoDuro = (t) => t.replace(/ /g, ' ');
+const semEspacoDuro = (t) => t.replace(/\u00a0/g, ' ');
 
 function contextoFalso() {
     return {
@@ -22,6 +22,7 @@ describe('formatação', () => {
     test('moeda, moeda curta e unidades em pt-BR', () => {
         expect(semEspacoDuro(g.formatarMoeda(1234.5))).toBe('R$ 1.234,50');
         expect(g.formatarMoedaCurta(1500)).toBe('R$ 1,5 mil');
+        expect(g.formatarMoedaCurta(1234)).toBe('R$ 1,2 mil'); // uma casa depois da vírgula
         expect(g.formatarMoedaCurta(-2500)).toBe('R$ -2,5 mil');
         expect(g.formatarMoedaCurta(999.6)).toBe('R$ 1.000');
         expect(g.formatarUnidades(1200)).toBe('1.200 un.');
@@ -187,8 +188,12 @@ describe('desenharGraficos', () => {
         delete window.matchMedia;
     });
 
-    test('lerTokens lê as variáveis CSS', () => {
+    test('lerTokens lê as variáveis CSS, sem os espaços em volta', () => {
         expect(g.lerTokens().marca).toBe('#0d9488');
+        const elemento = document.createElement('div');
+        elemento.style.setProperty('--cor-marca', '  #123456  ');
+        document.body.append(elemento);
+        expect(g.lerTokens(elemento).marca).toBe('#123456');
     });
 
     test('texto dos gráficos acompanha a letra da página (rem)', () => {
@@ -232,7 +237,7 @@ describe('detalhes visuais (achados pelo teste de mutação)', () => {
         const nomes = { marca: 'marca', destaque: 'destaque', neutra: 'neutra', tinta: 'tinta', tintaSuave: 'tinta-suave',
             tintaFraca: 'tinta-fraca', linha: 'linha', grade: 'grade', superficie: 'superficie' };
         const elemento = document.createElement('div');
-        Object.entries(nomes).forEach(([chave, css], i) => elemento.style.setProperty(`--cor-${css}`, ` #00000${i} `));
+        Object.entries(nomes).forEach(([, css], i) => elemento.style.setProperty(`--cor-${css}`, ` #00000${i} `));
         document.body.append(elemento);
 
         const lidos = g.lerTokens(elemento);

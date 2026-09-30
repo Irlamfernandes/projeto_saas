@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* istanbul ignore else */
+// Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { copiarPix, acompanharCobranca };
 }

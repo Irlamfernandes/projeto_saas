@@ -7,7 +7,7 @@ from django.utils import timezone
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto
-from infrastructure.models.venda import Venda
+from infrastructure.models.venda import ItemVenda, Parcela, Venda
 
 User = get_user_model()
 
@@ -26,7 +26,7 @@ class DashboardViewTest(TestCase):
             deve_trocar_senha=False,
             username="user_loja1", password="password", loja=self.loja1
         )
-        
+
         # Cria usuário sem loja ignorando o full_clean para testar a exceção de permissão
         with patch('django.db.models.Model.full_clean'):
             self.user_sem_loja = User.objects.create_user(
@@ -42,7 +42,7 @@ class DashboardViewTest(TestCase):
         self.produto_l1_normal = Produto.objects.create(
             loja=self.loja1, nome="Produto Normal", preco_venda=20.0, quantidade_estoque=15
         )
-        
+
         agora = timezone.now()
         self.venda_l1_hoje = Venda.objects.create(
             loja=self.loja1, cliente=self.cliente_l1, valor_total=100.0, data_venda=agora
@@ -70,18 +70,36 @@ class DashboardViewTest(TestCase):
         """Usuário comum vê métricas e totais estritamente da sua loja."""
         self.client.force_login(self.user_loja1)
         response = self.client.get(self.url_dashboard)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_produtos'], 2)
         self.assertEqual(response.context['total_clientes'], 1)
         self.assertEqual(response.context['total_geral'], 100.0)
         self.assertEqual(response.context['vendas_hoje'], 100.0)
 
+    def test_consultas_nao_crescem_com_clientes_vendas_e_produtos(self):
+        """O Início faz sempre as mesmas consultas, com 1 ou com muitos clientes devendo."""
+        self.client.force_login(self.user_loja1)
+
+        def consultas():
+            with self.assertNumQueries(26):
+                self.client.get(self.url_dashboard)
+
+        ItemVenda.objects.create(venda=self.venda_l1_hoje, produto=self.produto_l1_normal, quantidade=1, preco_unitario=100)
+        Parcela.objects.create(venda=self.venda_l1_hoje, vencimento=timezone.localdate())
+        consultas()
+        for numero in range(5):
+            cliente = Cliente.objects.create(loja=self.loja1, nome=f"Cliente {numero}")
+            venda = Venda.objects.create(loja=self.loja1, cliente=cliente, valor_total=10)
+            ItemVenda.objects.create(venda=venda, produto=self.produto_l1_baixo, quantidade=1, preco_unitario=10)
+            Parcela.objects.create(venda=venda, vencimento=timezone.localdate())
+        consultas()
+
     def test_superuser_visualiza_dados_de_todas_as_lojas(self):
         """Superusuário vê a soma de métricas e cadastros de todas as lojas."""
         self.client.force_login(self.superuser)
         response = self.client.get(self.url_dashboard)
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['total_produtos'], 3)
         self.assertEqual(response.context['total_clientes'], 2)
@@ -91,7 +109,7 @@ class DashboardViewTest(TestCase):
     def test_filtro_limite_estoque_customizado(self):
         """Parâmetro GET 'limite_estoque' filtra corretamente os produtos com baixo estoque."""
         self.client.force_login(self.user_loja1)
-        
+
         # Com limite padrão (5), apenas 'Produto Escasso' (estoque 2) deve aparecer
         response = self.client.get(self.url_dashboard)
         baixos = response.context['produtos_baixo_estoque']
@@ -107,19 +125,19 @@ class DashboardViewTest(TestCase):
         """Parâmetro GET 'limite_estoque' inválido não quebra a view e assume o padrão (5)."""
         self.client.force_login(self.user_loja1)
         response = self.client.get(self.url_dashboard, {'limite_estoque': 'abc'})
-        
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['limite_estoque'], 5)
 
     def test_calculo_vendas_por_periodos_antigos(self):
         """Verifica se vendas em períodos anteriores são somadas corretamente nas faixas correspondentes."""
         agora = timezone.now()
-        
+
         # Venda antiga (ex: 10 dias atrás -> entra na quinzena, mês, bimestre, trimestre, ano e total geral)
         Venda.objects.create(
-            loja=self.loja1, 
-            cliente=self.cliente_l1, 
-            valor_total=250.0, 
+            loja=self.loja1,
+            cliente=self.cliente_l1,
+            valor_total=250.0,
             data_venda=agora - timedelta(days=10)
         )
 

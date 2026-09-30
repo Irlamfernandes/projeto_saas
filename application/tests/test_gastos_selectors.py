@@ -54,7 +54,8 @@ class GastosDoMesTest(TestCase):
         compra = Compra.objects.create(loja=self.loja, data=date(2026, 9, 2), valor_total=Decimal('200'))
         ItemCompra.objects.create(compra=compra, produto=self.bolo, quantidade=20, custo_unitario=Decimal('10'))
 
-        resultado = resultado_do_mes(self.usuario, SETEMBRO)
+        with self.assertNumQueries(5):  # vendas, itens vendidos (custo e sem custo juntos), despesas, perdas, compras
+            resultado = resultado_do_mes(self.usuario, SETEMBRO)
 
         self.assertEqual(resultado, Resultado(
             vendas=Decimal('100.00'), custo_do_vendido=Decimal('30.00'), despesas=Decimal('50.00'),
@@ -79,7 +80,5 @@ class GastosDoMesTest(TestCase):
     def test_categorias_sugeridas_mais_as_da_loja_em_ordem(self):
         Despesa.objects.create(loja=self.loja, data=HOJE, categoria="Gás", valor=Decimal('10'))
         categorias = categorias_usadas(self.usuario)
-        self.assertIn("Gás", categorias)
-        self.assertIn("Aluguel", categorias)
         self.assertNotIn("Da outra", categorias)
-        self.assertEqual(categorias, sorted(categorias, key=str.casefold))
+        self.assertEqual(categorias[:4], ["Água", "Aluguel", "Embalagens", "Gás"])  # acento não joga para o fim

@@ -46,7 +46,7 @@ class ClienteModelTest(TestCase):
 
     def test_saldo_geral_com_compras_e_pagamentos(self):
         """O saldo geral deve calcular corretamente (total_compras - total_pagamentos)."""
-        
+
         # Criação de vendas reais para o cliente na mesma loja
         Venda.objects.create(
             loja=self.loja1,

@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from django.contrib.auth import get_user_model
@@ -8,7 +8,7 @@ from application.a_receber.selectors import clientes_a_cobrar, cobranca_do_clien
 from application.a_receber.services import registrar_lembrete
 from application.vendas.pendencias import Situacao
 from infrastructure.models import (
-    Acao, Cliente, LembreteDePagamento, LojaModel, PagamentoCliente, Parcela, RegistroDeAlteracao, Venda,
+    Acao, Cliente, ItemVenda, LembreteDePagamento, LojaModel, PagamentoCliente, Parcela, Produto, RegistroDeAlteracao, Venda,
 )
 
 HOJE = timezone.localdate()
@@ -102,11 +102,13 @@ class ClientesACobrarTest(ACobrarTestCase):
 
     def test_numero_de_consultas_nao_cresce_com_os_clientes(self):
         def consultas():
-            # clientes, lembretes e os prefetches (vendas, parcelas, pagos no ato, itens, produtos, pagamentos)
+            # clientes, lembretes e os prefetches (vendas, parcelas, pagos no ato, itens com produto, pagamentos)
             with self.assertNumQueries(7):
                 clientes_a_cobrar(self.usuario, HOJE)
 
-        self.venda(self.cliente("Ana"), '10', HOJE)
+        venda = self.venda(self.cliente("Ana"), '10', HOJE)
+        bolo = Produto.objects.create(loja=self.loja, nome="Bolo", preco_venda=Decimal('10'))
+        ItemVenda.objects.create(venda=venda, produto=bolo, quantidade=1, preco_unitario=Decimal('10'))
         consultas()
         for numero in range(5):
             self.venda(self.cliente(f"Cliente {numero}"), '10', HOJE - timedelta(days=numero))
@@ -135,3 +137,7 @@ class RegistrarLembreteTest(TestCase):
         self.assertEqual(str(lembrete), f"Ana · {HOJE:%d/%m/%Y}")
         registro = RegistroDeAlteracao.objects.get()
         self.assertEqual((registro.acao, registro.descricao), (Acao.LEMBRETE_ENVIADO, "Ana · R$ 25,50"))
+
+    def test_data_do_lembrete_no_horario_de_brasilia(self):
+        lembrete = LembreteDePagamento(cliente=Cliente(nome="Ana"), enviado_em=datetime(2026, 9, 30, 0, 30, tzinfo=UTC))
+        self.assertEqual(str(lembrete), "Ana · 29/09/2026")
