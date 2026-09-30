@@ -93,6 +93,11 @@ class TestOndeLerOQueMudou:
             assert at._baixar_json('https://pypi.org/pypi/x/json') == {'ok': 1}
         abrir.assert_called_once_with('https://pypi.org/pypi/x/json', timeout=30)
 
+    def test_baixar_so_por_https(self):
+        with patch('urllib.request.urlopen') as abrir, pytest.raises(ValueError, match="sem HTTPS: file:///etc/passwd"):
+            at._baixar_json('file:///etc/passwd')
+        abrir.assert_not_called()
+
 
 class TestPendentes:
 
