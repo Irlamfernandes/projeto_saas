@@ -1,4 +1,5 @@
 import logging
+import time
 from django.contrib.admin.sites import AdminSite
 from django.test import SimpleTestCase, TestCase
 from application.erros.services import Ocorrencia, registrar_erro
@@ -26,6 +27,31 @@ class MascararTest(SimpleTestCase):
             with self.subTest(texto):
                 self.assertEqual(mascarar(texto), texto)
         self.assertEqual(mascarar(None), '')
+
+    def test_oito_digitos_ja_e_numero_longo(self):
+        self.assertEqual(mascarar('cpf 1234567 e 12345678'), 'cpf 1234567 e [número]')
+
+    def test_separador_depois_do_numero_fica_no_texto(self):
+        self.assertEqual(mascarar('tel 24999998888 - (fim)'), 'tel [número] - (fim)')
+
+    def test_emails_no_comeco_colados_e_arroba_sem_nome(self):
+        casos = {
+            'a@b.com x': '[e-mail] x',
+            'x a@b.com': 'x [e-mail]',
+            'a@b.com+c@d.com.br!': '[e-mail][e-mail]!',
+            'siga @loja.com e a@b': 'siga @loja.com e a@b',
+            'joão@x.com (ana_1@y.org)': '[e-mail] ([e-mail])',
+        }
+        for texto, esperado in casos.items():
+            with self.subTest(texto):
+                self.assertEqual(mascarar(texto), esperado)
+
+    def test_texto_enorme_sem_dado_pessoal_nao_trava(self):
+        """Lido uma vez só: com a busca que volta atrás, estes 400 mil caracteres levariam minutos."""
+        texto = 'a' * 200_000 + ' ' + '1 ' * 3 + 'x' * 199_993 + '@x' * 100_000
+        inicio = time.perf_counter()
+        self.assertEqual(mascarar(texto), texto)
+        self.assertLess(time.perf_counter() - inicio, 1)
 
     def test_console_sai_mascarado(self):
         formato = SemDadosPessoais('{levelname}: {message}', style='{')

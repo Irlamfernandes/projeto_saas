@@ -188,6 +188,61 @@ describe('desenharGraficos', () => {
         delete window.matchMedia;
     });
 
+    test('só desenha o gráfico quando ele chega perto da tela', () => {
+        const ChartFalso = jest.fn();
+        ChartFalso.defaults = { font: {} };
+        const observadores = [];
+        const Observador = jest.fn(function (avisar, opcoes) {
+            this.avisar = avisar;
+            this.opcoes = opcoes;
+            this.observe = jest.fn();
+            this.disconnect = jest.fn();
+            observadores.push(this);
+        });
+
+        const graficos = g.desenharGraficos(document, ChartFalso, Observador);
+        const [observador] = observadores;
+
+        expect(observadores).toHaveLength(1);
+        expect(observador.observe).toHaveBeenCalledWith(document.querySelector('canvas[data-grafico]'));
+        expect(observador.opcoes).toEqual({ rootMargin: '50% 0px' });
+        expect(ChartFalso).not.toHaveBeenCalled();
+
+        observador.avisar([{ isIntersecting: false }], observador);
+        expect(ChartFalso).not.toHaveBeenCalled();
+        expect(observador.disconnect).not.toHaveBeenCalled();
+
+        observador.avisar([{ isIntersecting: false }, { isIntersecting: true }], observador);
+        expect(ChartFalso).toHaveBeenCalledTimes(1);
+        expect(observador.disconnect).toHaveBeenCalledTimes(1);
+        expect(graficos).toHaveLength(1);
+
+        graficos.parar();
+        expect(observador.disconnect).toHaveBeenCalledTimes(2);
+    });
+
+    test('sem IntersectionObserver desenha na hora, e parar não tem o que desligar', () => {
+        const ChartFalso = jest.fn();
+        ChartFalso.defaults = { font: {} };
+        const graficos = g.desenharGraficos(document, ChartFalso, undefined);
+        expect(ChartFalso).toHaveBeenCalledTimes(1);
+        expect(() => graficos.parar()).not.toThrow();
+    });
+
+    test('na troca de tema, os gráficos que ainda esperavam a tela deixam de esperar', () => {
+        let aoTrocar;
+        window.matchMedia = jest.fn(() => ({ matches: false, addEventListener: (_evento, funcao) => { aoTrocar = funcao; } }));
+        const antigos = [{ destroy: jest.fn() }];
+        antigos.parar = jest.fn();
+
+        g.acompanharTemaDoAparelho(antigos, jest.fn(() => []));
+        aoTrocar();
+
+        expect(antigos.parar).toHaveBeenCalledTimes(1);
+        expect(antigos[0].destroy).toHaveBeenCalledTimes(1);
+        delete window.matchMedia;
+    });
+
     test('lerTokens lê as variáveis CSS, sem os espaços em volta', () => {
         expect(g.lerTokens().marca).toBe('#0d9488');
         const elemento = document.createElement('div');

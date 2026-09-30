@@ -20,8 +20,7 @@ def test_funciona_em_http_na_rede_local(monkeypatch):
     assert homologacao.SESSION_COOKIE_SECURE is False
     assert homologacao.CSRF_COOKIE_SECURE is False
     assert homologacao.SECURE_HSTS_SECONDS == 0
-    for host in homologacao.ALLOWED_HOSTS:
-        assert f'http://{host}:8000' in homologacao.CSRF_TRUSTED_ORIGINS
+    assert homologacao.CSRF_TRUSTED_ORIGINS == config.settings.CSRF_TRUSTED_ORIGINS  # nenhuma origem em HTTP
 
 
 def test_resto_igual_a_producao(monkeypatch):
@@ -29,7 +28,3 @@ def test_resto_igual_a_producao(monkeypatch):
     assert homologacao.MIDDLEWARE == config.settings.MIDDLEWARE
     assert homologacao.STORAGES['staticfiles'] == config.settings.STORAGES['staticfiles']
 
-
-def test_porta_configuravel(monkeypatch):
-    homologacao = _carregar(monkeypatch, PORTA='9000')
-    assert f'http://{homologacao.ALLOWED_HOSTS[0]}:9000' in homologacao.CSRF_TRUSTED_ORIGINS

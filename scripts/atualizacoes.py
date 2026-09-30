@@ -20,7 +20,9 @@ FIXADA = re.compile(r'^(?P<nome>[A-Za-z0-9][A-Za-z0-9._-]*)==(?P<versao>[^\s#;]+
 PALAVRAS_DE_CHANGELOG = ('changelog', 'changes', 'release', 'history', 'news', 'what')
 PALAVRAS_DE_REPOSITORIO = ('source', 'repository', 'code', 'github', 'homepage')
 TIPOS = {'principal': 'Principal ⚠️', 'novidades': 'Novidades', 'correção': 'Correção', 'outra': 'Outra'}
-RESULTADOS = {'passam': '✅ passam', 'falham': '❌ falham', 'só juntas': '⚠️ só falham juntas', '': '— não testado'}
+SO_JUNTAS = 'só juntas'  # cada uma passa sozinha, mas os testes falham com todas juntas
+HTTPS = 'https://'
+RESULTADOS = {'passam': '✅ passam', 'falham': '❌ falham', SO_JUNTAS: '⚠️ só falham juntas', '': '— não testado'}
 
 
 @dataclass
@@ -83,7 +85,9 @@ def link_do_que_mudou(urls, padrao):
 
 
 def _baixar_json(url):
-    with urllib.request.urlopen(url, timeout=30) as resposta:
+    if not url.startswith(HTTPS):  # só HTTPS: file:// ou outro esquema leriam o disco ou falariam sem criptografia
+        raise ValueError(f"Endereço sem HTTPS: {url}")
+    with urllib.request.urlopen(url, timeout=30) as resposta:  # nosec B310: esquema conferido acima
         return json.load(resposta)
 
 
@@ -101,7 +105,7 @@ def _repositorio_npm(repositorio):
         repositorio = repositorio.get('url')
     if not repositorio:
         return ''
-    url = re.sub(r'^git\+|\.git$', '', repositorio).replace('git://', 'https://').replace('ssh://git@', 'https://')
+    url = repositorio.removeprefix('git+').removesuffix('.git').replace('git://', HTTPS).replace('ssh://git@', HTTPS)
     return f'{url}/releases' if 'github.com' in url else ''
 
 
@@ -181,7 +185,7 @@ def verificar(atualizacoes, testar):
         atualizacao.testes = 'passam' if testar([atualizacao]) else 'falham'
     if all(a.testes == 'passam' for a in atualizacoes):
         for atualizacao in atualizacoes:
-            atualizacao.testes = 'só juntas'
+            atualizacao.testes = SO_JUNTAS
 
 
 # ---------- relatório ----------
@@ -193,31 +197,38 @@ def _data(momento, agora):
     return f"{momento:%d/%m/%Y} ({dias} dia{'s' if dias != 1 else ''})"
 
 
+CABECALHO_DA_TABELA = ['| Biblioteca | Atual | Nova | Tipo | Publicada | Testes | O que mudou |', '|---|---|---|---|---|---|---|']
+RODAPE = [
+    '',
+    '**Tipo:** *Principal* pode exigir mudança no código (leia o que mudou); *Novidades* e *Correção* normalmente não.',
+    '**Publicada há menos de 7 dias:** vale esperar — versões com problema costumam ser retiradas nos primeiros dias.',
+    '',
+    'Para aplicar na `homologacao`: `make atualizar PACOTES="nome outro"` (Python) ou `npm install -D nome@versão` (JS).',
+]
+
+
+def _nomes(atualizacoes, resultados):
+    """`a`, `b` das bibliotecas com um destes resultados de teste, ou "nenhuma"."""
+    return ', '.join(f'`{a.nome}`' for a in atualizacoes if a.testes in resultados) or 'nenhuma'
+
+
+def _linha_da_tabela(a, agora):
+    return (f"| {a.ecossistema} · `{a.nome}` | {a.atual} | **{a.nova}** | {TIPOS[a.tipo]} | {_data(a.publicada_em, agora)} "
+            f"| {RESULTADOS[a.testes]} | [ler]({a.link}) |")
+
+
 def relatorio(atualizacoes, agora):
     if not atualizacoes:
         return f"## Tudo em dia ✅\n\nNenhuma biblioteca com versão nova em {agora:%d/%m/%Y}.\n"
-    so_atualizar = [a for a in atualizacoes if a.testes == 'passam']
-    mexer = [a for a in atualizacoes if a.testes in ('falham', 'só juntas')]
     linhas = [
         f"## {len(atualizacoes)} biblioteca(s) com versão nova — {agora:%d/%m/%Y}",
         '',
-        f"- **Só atualizar** (testes passam): {', '.join(f'`{a.nome}`' for a in so_atualizar) or 'nenhuma'}",
-        f"- **Precisa mexer no código** (testes falham): {', '.join(f'`{a.nome}`' for a in mexer) or 'nenhuma'}",
+        f"- **Só atualizar** (testes passam): {_nomes(atualizacoes, ('passam',))}",
+        f"- **Precisa mexer no código** (testes falham): {_nomes(atualizacoes, ('falham', SO_JUNTAS))}",
         '',
-        '| Biblioteca | Atual | Nova | Tipo | Publicada | Testes | O que mudou |',
-        '|---|---|---|---|---|---|---|',
-    ]
-    for a in atualizacoes:
-        linhas.append(
-            f"| {a.ecossistema} · `{a.nome}` | {a.atual} | **{a.nova}** | {TIPOS[a.tipo]} | {_data(a.publicada_em, agora)} "
-            f"| {RESULTADOS[a.testes]} | [ler]({a.link}) |"
-        )
-    linhas += [
-        '',
-        '**Tipo:** *Principal* pode exigir mudança no código (leia o que mudou); *Novidades* e *Correção* normalmente não.',
-        '**Publicada há menos de 7 dias:** vale esperar — versões com problema costumam ser retiradas nos primeiros dias.',
-        '',
-        'Para aplicar na `homologacao`: `make atualizar PACOTES="nome outro"` (Python) ou `npm install -D nome@versão` (JS).',
+        *CABECALHO_DA_TABELA,
+        *(_linha_da_tabela(a, agora) for a in atualizacoes),
+        *RODAPE,
     ]
     return '\n'.join(linhas) + '\n'
 

@@ -18,8 +18,10 @@ from infrastructure.models import Backup, ConfiguracaoDeBackup, OrigemDoBackup
 from infrastructure.utils.supabase_backups import BackupsNoSupabase
 from infrastructure.utils.supabase_storage import StorageError
 
+LISTA_DE_BACKUPS = 'admin:infrastructure_backup_changelist'
 
-class SoSuperusuario:
+
+class SoSuperusuario(ModelAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
@@ -38,7 +40,7 @@ def _data(momento):
 
 
 @admin.register(ConfiguracaoDeBackup)
-class ConfiguracaoDeBackupAdmin(SoSuperusuario, ModelAdmin):
+class ConfiguracaoDeBackupAdmin(SoSuperusuario):
     fields = ('ativo', 'a_cada', 'unidade', 'manter', 'ultimo', 'proximo')
     readonly_fields = ('ultimo', 'proximo')
 
@@ -51,7 +53,7 @@ class ConfiguracaoDeBackupAdmin(SoSuperusuario, ModelAdmin):
 
     def response_change(self, request, obj):
         messages.success(request, "Configuração de backup salva.")
-        return redirect('admin:infrastructure_backup_changelist')
+        return redirect(LISTA_DE_BACKUPS)
 
     @display(description="Último backup que deu certo")
     def ultimo(self, config):
@@ -65,7 +67,7 @@ class ConfiguracaoDeBackupAdmin(SoSuperusuario, ModelAdmin):
 
 
 @admin.register(Backup)
-class BackupAdmin(SoSuperusuario, ModelAdmin):
+class BackupAdmin(SoSuperusuario):
     list_display = ('criado_em', 'situacao', 'origem', 'tamanho_legivel', 'registros', 'duracao', 'baixar')
     list_filter = ('sucesso', 'origem')
     actions_list = ('fazer_agora', 'configurar')
@@ -107,7 +109,7 @@ class BackupAdmin(SoSuperusuario, ModelAdmin):
         except StorageError as erro:
             arquivo.close()
             messages.error(request, f"Não deu para baixar o backup: {erro}")
-            return redirect('admin:infrastructure_backup_changelist')
+            return redirect(LISTA_DE_BACKUPS)
         arquivo.seek(0)
         return FileResponse(arquivo, as_attachment=True, filename=backup.arquivo, content_type='application/octet-stream')
 
@@ -118,7 +120,7 @@ class BackupAdmin(SoSuperusuario, ModelAdmin):
             messages.success(request, "Backup iniciado. Em instantes ele aparece aqui (atualize a página).")
         else:
             messages.warning(request, motivo)
-        return redirect('admin:infrastructure_backup_changelist')
+        return redirect(LISTA_DE_BACKUPS)
 
     @action(description="Configurar", icon='settings', url_path='configurar')
     def configurar(self, request):

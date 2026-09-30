@@ -55,8 +55,9 @@ def test_dentro_e_um_gzip_comum(tmp_path):
 
 
 def test_senha_errada(tmp_path):
+    caminho = _cifrado(tmp_path)
     with pytest.raises(ChaveDeBackupInvalida, match="Senha errada"):
-        _aberto(_cifrado(tmp_path), senha='outra')
+        _aberto(caminho, senha='outra')
 
 
 @pytest.mark.parametrize('posicao', [3, 20, 60, -5])  # cabeçalho, sal, dados, tag

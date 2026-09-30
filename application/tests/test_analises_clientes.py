@@ -1,6 +1,8 @@
 from datetime import date
 from decimal import Decimal
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from application.relatorios.clientes import clientes_sumidos, idade_das_dividas, melhores_clientes
 from tests.apoio import CenarioDeLoja
 
@@ -33,6 +35,24 @@ class AnalisesDeClientesTest(TestCase):
             ("61 a 90 dias", 0, Decimal('0.00')), ("Mais de 90 dias", 1, Decimal('50.00')),
         ])
         self.assertEqual((dividas.total, dividas.acima_de(60)), (Decimal('130.00'), 1))
+
+    def test_varias_compras_e_pagamentos_contam_o_ultimo_pagamento_sem_juntar_as_tabelas(self):
+        fiel = self.c.cliente("Fiel")
+        for dia in (1, 2, 3):
+            self.c.venda(CenarioDeLoja.quando(2026, 1, dia), [(self.bolo, 1)], cliente=fiel)
+        for dia in (10, 20, 5):
+            self.c.pagamento(fiel, '10', CenarioDeLoja.quando(2026, 2, dia))
+        nunca_pagou = self.c.cliente("Nunca pagou")
+        for dia in (9, 4, 6):
+            self.c.venda(CenarioDeLoja.quando(2026, 3, dia), [(self.bolo, 1)], cliente=nunca_pagou)
+
+        with CaptureQueriesContext(connection) as consultas:
+            dividas = idade_das_dividas(self.c.usuario(), agora=AGORA)
+
+        self.assertEqual([(d.cliente.nome, d.saldo, d.dias_sem_pagar) for d in dividas.devedores], [
+            ("Fiel", Decimal('120.00'), 28), ("Nunca pagou", Decimal('150.00'), 16),
+        ])
+        self.assertNotIn('JOIN', consultas[0]['sql'])  # compras × pagamentos multiplicaria as linhas
 
     def test_melhores_clientes_no_periodo(self):
         ana, bia = self.c.cliente("Ana"), self.c.cliente("Bia")

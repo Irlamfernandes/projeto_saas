@@ -109,7 +109,7 @@ def mapa_de_horarios(user, dias=90, agora=None):
     )
     celulas = {(g['dia'], g['hora']): (g['total'], g['vendas']) for g in agrupado}
     maximo = max((total for total, _ in celulas.values()), default=ZERO)
-    horas = _faixa_de_horas(hora for _, hora in celulas)
+    horas = _faixa_de_horas(g['hora'] for g in agrupado)  # a consulta já foi feita: reaproveita o resultado
     linhas = [(hora, [_celula(celulas, dia, hora, maximo) for dia in range(1, 8)]) for hora in horas]
     melhor = max((c for _, linha in linhas for c in linha if c.vendas), key=lambda c: c.total, default=None)
     return MapaDeHorarios(DIAS_DA_SEMANA, linhas, melhor)

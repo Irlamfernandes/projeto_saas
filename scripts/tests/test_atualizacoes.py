@@ -93,6 +93,11 @@ class TestOndeLerOQueMudou:
             assert at._baixar_json('https://pypi.org/pypi/x/json') == {'ok': 1}
         abrir.assert_called_once_with('https://pypi.org/pypi/x/json', timeout=30)
 
+    def test_baixar_so_por_https(self):
+        with patch('urllib.request.urlopen') as abrir, pytest.raises(ValueError, match=r"^Endereço sem HTTPS: file:///etc/passwd$"):
+            at._baixar_json('file:///etc/passwd')
+        abrir.assert_not_called()
+
 
 class TestPendentes:
 
@@ -216,7 +221,8 @@ class TestRelatorio:
 
     def test_nenhuma_em_cada_grupo(self):
         texto = at.relatorio([Atualizacao('Python', 'x', '1', '2')], AGORA)
-        assert "(testes passam): nenhuma" in texto and "(testes falham): nenhuma" in texto
+        assert "(testes passam): nenhuma" in texto
+        assert "(testes falham): nenhuma" in texto
 
 
 class TestAplicar:

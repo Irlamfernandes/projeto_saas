@@ -20,7 +20,9 @@ def _autorizado(request):
     return hmac.compare_digest(enviado.removeprefix('Bearer ').encode(), token.encode())
 
 
-@csrf_exempt  # NOSONAR: quem chama é o agendador (sem navegador, sem cookie de sessão); a proteção é o token
+# Sem CSRF de propósito: quem chama é o agendador (sem navegador, sem cookie de sessão, então não há sessão a
+# forjar). A proteção é o BACKUP_TOKEN no cabeçalho, comparado em tempo constante.
+@csrf_exempt
 @require_POST
 def backup_agendado_view(request):
     if not _autorizado(request):
