@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, URLField
+from django.db.models import Count
 from django.utils import timezone
 from unfold.admin import ModelAdmin
 from unfold.decorators import display
@@ -44,11 +44,6 @@ class LojaAdmin(ModelAdmin):
             return qs.filter(pk=request.user.loja.pk)
 
         return qs.none()
-
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if isinstance(db_field, URLField):
-            kwargs['assume_scheme'] = 'https'  # endereço sem esquema vira https (padrão do Django 6)
-        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_readonly_fields(self, request, obj=None):
         # O vencimento só muda por pagamento confirmado; à mão, só o superusuário (casos especiais).

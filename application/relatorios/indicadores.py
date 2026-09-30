@@ -25,7 +25,7 @@ class Comparacao:
 
     @property
     def subiu(self):
-        return (self.variacao or 0) >= 0
+        return self.variacao is None or self.variacao >= 0  # sem base de comparação não mostra queda
 
     @property
     def variacao_absoluta(self):

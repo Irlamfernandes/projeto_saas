@@ -15,7 +15,6 @@ from infrastructure.utils.pdf_marca import cabecalho_da_loja
 
 FORMATO_MOEDA_EXCEL = '#,##0.00'
 COR_RODAPE = colors.HexColor('#9ca3af')
-PREFIXOS_DE_FORMULA = ('=', '+', '-', '@')
 
 
 @dataclass(frozen=True)
@@ -155,6 +154,7 @@ def _preencher_aba(aba, secao, relatorio):
 def _formatar_celula(celula):
     if isinstance(celula.value, Decimal):
         celula.number_format = FORMATO_MOEDA_EXCEL
-    elif isinstance(celula.value, str) and celula.value.startswith(PREFIXOS_DE_FORMULA):
-        # Nome digitado pelo usuário nunca pode virar fórmula ao abrir a planilha.
+    elif isinstance(celula.value, str) and celula.value.startswith('='):
+        # Nome digitado pelo usuário nunca pode virar fórmula ao abrir a planilha. O openpyxl só trata como fórmula
+        # o texto que começa com '='; '+', '-' e '@' já ficam como texto (o teste de regressão confere os quatro).
         celula.data_type = 's'

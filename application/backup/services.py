@@ -71,9 +71,10 @@ def fazer_backup(origem, armazenamento=None, senha=None, agora=None):
     try:
         armazenamento = armazenamento or BackupsNoSupabase.from_settings()
         with tempfile.TemporaryDirectory() as pasta:
-            dados, cifrado = Path(pasta) / 'dados.json', Path(pasta) / nome
+            dados = Path(pasta) / 'dados.json'  # pragma: no mutate (arquivo de passagem: some com a pasta)
+            cifrado = Path(pasta) / nome
             call_command('dumpdata', exclude=list(FORA_DO_BACKUP), natural_foreign=True, natural_primary=True,
-                         output=str(dados), verbosity=0)
+                         output=str(dados), verbosity=0)  # pragma: no mutate (a barra de progresso só aparece em terminal)
             with open(dados, 'rb') as entrada, open(cifrado, 'wb') as saida:
                 criptografar(entrada, saida, senha if senha is not None else settings.BACKUP_CHAVE)
             armazenamento.enviar(cifrado, nome)

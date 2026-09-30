@@ -2,6 +2,7 @@ import calendar
 from datetime import timedelta
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 
 # O agendador chama de hora em hora, mas às vezes atrasa alguns minutos. Sem folga, um backup "a cada 1 hora"
@@ -84,4 +85,4 @@ class Backup(models.Model):
         ordering = ['-criado_em']
 
     def __str__(self):
-        return self.arquivo or f"Backup de {self.criado_em:%d/%m/%Y %H:%M}"
+        return self.arquivo or f"Backup de {timezone.localtime(self.criado_em):%d/%m/%Y %H:%M}"

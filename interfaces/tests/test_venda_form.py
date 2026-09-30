@@ -137,6 +137,7 @@ class NovaVendaFormTest(TestCase):
         post.setlist('item_quantidade', ['1', '2'])
         form = NovaVendaForm(post, clientes=self.clientes)
         self.assertFalse(form.is_valid())
+        self.assertEqual(primeiro_erro(form), ERRO_ITEM)
 
 
 class EditarVendaFormTest(TestCase):

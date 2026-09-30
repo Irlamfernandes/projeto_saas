@@ -25,7 +25,7 @@ DADOS = 'data:'
 
 def origem_do_storage():
     """Fotos dos produtos e marcas das lojas ficam no Storage do Supabase (outro endereço)."""
-    partes = urlsplit(settings.SUPABASE_URL or '')
+    partes = urlsplit(settings.SUPABASE_URL)
     return f"{partes.scheme}://{partes.netloc}" if partes.scheme and partes.netloc else ''
 
 

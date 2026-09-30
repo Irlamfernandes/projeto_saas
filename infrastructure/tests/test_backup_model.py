@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 from django.test import TestCase
 from infrastructure.models import Backup, ConfiguracaoDeBackup, UnidadeDoIntervalo
-from infrastructure.models.backup import FOLGA, somar_intervalo
+from infrastructure.models.backup import somar_intervalo
 
 FUSO = ZoneInfo('America/Sao_Paulo')
 BASE = datetime(2026, 1, 31, 10, 7, tzinfo=FUSO)
@@ -42,7 +42,8 @@ class ConfiguracaoDeBackupTest(TestCase):
         config.ultimo_em = BASE
         self.assertEqual(config.proximo_em(), BASE + timedelta(hours=6))
         self.assertFalse(config.esta_na_hora(BASE + timedelta(hours=5)))
-        self.assertTrue(config.esta_na_hora(BASE + timedelta(hours=6) - FOLGA))  # o agendador chegou um pouco antes
+        self.assertTrue(config.esta_na_hora(BASE + timedelta(hours=6, minutes=-30)))  # o agendador chegou um pouco antes
+        self.assertFalse(config.esta_na_hora(BASE + timedelta(hours=6, minutes=-31)))
         self.assertTrue(config.esta_na_hora(BASE + timedelta(hours=7)))
 
 
@@ -51,3 +52,6 @@ class BackupTest(TestCase):
     def test_nome(self):
         self.assertEqual(str(Backup(criado_em=BASE, arquivo='backup-1.json.gz.enc')), 'backup-1.json.gz.enc')
         self.assertEqual(str(Backup(criado_em=BASE)), 'Backup de 31/01/2026 10:07')
+
+    def test_nome_no_horario_de_brasilia(self):
+        self.assertEqual(str(Backup(criado_em=datetime(2026, 2, 1, 1, 7, tzinfo=UTC))), 'Backup de 31/01/2026 22:07')

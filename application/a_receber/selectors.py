@@ -17,7 +17,7 @@ class ClienteACobrar:
     cliente: Cliente
     pendencias: tuple  # só as que vencem até o limite, da mais antiga para a mais nova
     hoje: date
-    lembrado_hoje: bool = False
+    lembrado_hoje: bool
 
     @property
     def total(self):

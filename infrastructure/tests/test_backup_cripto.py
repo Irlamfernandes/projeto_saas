@@ -30,8 +30,9 @@ def test_ida_e_volta(tmp_path):
     assert _aberto(caminho) == DADOS
 
 
-def test_arquivo_grande_passa_em_varios_blocos(tmp_path):
-    with patch.object(backup_cripto, 'BLOCO', 7):
+@pytest.mark.parametrize('bloco', [1, 7])  # 1: o último bloco sempre tem 1 byte só
+def test_arquivo_grande_passa_em_varios_blocos(tmp_path, bloco):
+    with patch.object(backup_cripto, 'BLOCO', bloco):
         assert _aberto(_cifrado(tmp_path)) == DADOS
 
 

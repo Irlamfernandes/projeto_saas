@@ -31,7 +31,7 @@ def dias_entre(inicio, fim):
     return [inicio + timedelta(days=i) for i in range((fim - inicio).days + 1)]
 
 
-def primeiro_dia_do_mes(data, meses_atras=0):
+def primeiro_dia_do_mes(data, meses_atras):
     ano, mes = divmod(data.year * 12 + data.month - 1 - meses_atras, 12)
     return data.replace(year=ano, month=mes + 1, day=1)
 

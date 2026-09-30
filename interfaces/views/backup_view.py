@@ -14,8 +14,10 @@ from infrastructure.models import OrigemDoBackup
 
 def _autorizado(request):
     token = settings.BACKUP_TOKEN
-    enviado = request.headers.get('Authorization', '').removeprefix('Bearer ')
-    return bool(token) and hmac.compare_digest(enviado.encode(), token.encode())
+    enviado = request.headers.get('Authorization')
+    if not token or not enviado:
+        return False
+    return hmac.compare_digest(enviado.removeprefix('Bearer ').encode(), token.encode())
 
 
 @csrf_exempt  # NOSONAR: quem chama é o agendador (sem navegador, sem cookie de sessão); a proteção é o token

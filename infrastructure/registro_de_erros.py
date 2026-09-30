@@ -52,14 +52,16 @@ def ocorrencia_do_registro(record):
         'caminho': getattr(request, 'path', ''), 'metodo': getattr(request, 'method', ''),
         'loja_id': loja_id, 'usuario_id': usuario_id,
     }
+    linha_do_log = f"{_relativo(record.pathname)}:{record.lineno}"
     if record.exc_info and record.exc_info[1] is not None:
         _, excecao, tb = record.exc_info
         return Ocorrencia(
-            tipo=_tipo(excecao), mensagem=str(excecao), local=_local_da_excecao(tb),
+            # exceção passada ao log sem ter sido lançada não tem caminho: vale a linha do log
+            tipo=_tipo(excecao), mensagem=str(excecao), local=_local_da_excecao(tb) if tb else linha_do_log,
             detalhes=''.join(traceback.format_exception(excecao)), **tela,
         )
     return Ocorrencia(
-        tipo=record.name, mensagem=record.getMessage(), local=f"{_relativo(record.pathname)}:{record.lineno}", **tela,
+        tipo=record.name, mensagem=record.getMessage(), local=linha_do_log, **tela,
     )
 
 
@@ -78,7 +80,7 @@ class GuardarErroNoBanco(logging.Handler):
         except Exception:  # noqa: BLE001 - registrar o erro nunca pode derrubar a página
             self.handleError(record)
         finally:
-            self._gravando.ativo = False
+            del self._gravando.ativo
 
 
 class SemDadosPessoais(logging.Formatter):

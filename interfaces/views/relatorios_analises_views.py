@@ -77,7 +77,7 @@ def relatorios_clientes_view(request):
 
 @loja_required
 def relatorios_alteracoes_view(request):
-    acao = request.GET.get('acao', '')
+    acao = request.GET.get('acao')
     if acao not in Acao.values:
         acao = ''
     registros = paginar(request, registros_do_usuario(request.user, acao))

@@ -2,7 +2,7 @@ from decimal import Decimal
 from django.template import Context, Template
 from django.test import SimpleTestCase
 from django.utils import translation
-from infrastructure.utils.formatacao import com_opcoes, item, numero, quantidade
+from infrastructure.utils.formatacao import chave_alfabetica, com_opcoes, item, numero, quantidade
 from interfaces.templatetags.formatacao import (
     intensidade, maximo_de_opcoes, moeda, moeda_absoluta, numero_simples, passo_da_quantidade, unidades_de_medida,
     valores_da_opcao,
@@ -91,3 +91,11 @@ class QuantidadeTest(SimpleTestCase):
             "{% load formatacao %}{{ q|quantidade:'kg' }} | {{ item|descricao_do_item }} | {{ outro|descricao_do_item }}",
         ).render(Context({'q': Decimal('1.500'), 'item': item_de_venda, 'outro': com_opcoes_escolhidas}))
         self.assertEqual(texto, '1,5 kg | 0,25 kg Queijo | 1× Bolo (Coco)')
+
+
+class ChaveAlfabeticaTest(SimpleTestCase):
+
+    def test_ordena_como_no_dicionario_sem_separar_acentos_nem_maiusculas(self):
+        palavras = ['Transporte', 'água', 'Aluguel', 'Ágil', 'ÁRVORE', 'avião']
+        self.assertEqual(sorted(palavras, key=chave_alfabetica), ['Ágil', 'água', 'Aluguel', 'ÁRVORE', 'avião', 'Transporte'])
+        self.assertEqual(chave_alfabetica('Água-Açaí'), 'agua-acai')

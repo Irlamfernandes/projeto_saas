@@ -5,7 +5,7 @@ from django.test import TestCase
 from infrastructure.models.cliente import Cliente
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto
-from infrastructure.models.produto import casas_decimais, quantidade_aceita, sigla
+from infrastructure.models.produto import Unidade, casas_decimais, quantidade_aceita, sigla
 from infrastructure.models.venda import ItemVenda, PagamentoCliente, Parcela, Venda
 
 
@@ -46,7 +46,7 @@ class VendaModelsTest(TestCase):
         venda = Venda(loja=self.loja1, cliente=self.cliente_loja2, valor_total=Decimal('50.00'))
         with self.assertRaises(ValidationError) as ctx:
             venda.full_clean()
-        self.assertIn('cliente', ctx.exception.error_dict)
+        self.assertEqual(ctx.exception.message_dict['cliente'], ['O cliente selecionado não pertence à mesma loja desta venda.'])
 
     # ---------------------------------------------------------
     # Testes do Model ItemVenda
@@ -74,7 +74,7 @@ class VendaModelsTest(TestCase):
         )
         with self.assertRaises(ValidationError) as ctx:
             item.full_clean()
-        self.assertIn('produto', ctx.exception.error_dict)
+        self.assertEqual(ctx.exception.message_dict['produto'], ['O produto selecionado não pertence à mesma loja desta venda.'])
 
     # ---------------------------------------------------------
     # Testes do Model PagamentoCliente
@@ -97,13 +97,13 @@ class VendaModelsTest(TestCase):
         )
         with self.assertRaises(ValidationError) as ctx:
             pagamento.full_clean()
-        self.assertIn('cliente', ctx.exception.error_dict)
+        self.assertEqual(ctx.exception.message_dict['cliente'], ['O cliente selecionado não pertence a esta loja.'])
     def test_subtotal_arredonda_para_centavos(self):
         item = ItemVenda(quantidade=Decimal('0.350'), preco_unitario=Decimal('39.90'))
         self.assertEqual(item.subtotal(), Decimal('13.97'))
 
     def test_quantidade_aceita_pela_unidade(self):
-        casos = [(Decimal('2'), 'un', True), (Decimal('2.5'), 'un', False), (Decimal('0.125'), 'kg', True),
+        casos = [(Decimal('2'), 'un', True), (Decimal('2.000'), 'un', True), (Decimal('2.5'), 'un', False), (Decimal('0.125'), 'kg', True),
                  (Decimal('0.1255'), 'kg', False), (Decimal('1.25'), 'm', True), (Decimal('1.255'), 'm', False), (3, 'g', True)]
         for quantidade, unidade, esperado in casos:
             with self.subTest(quantidade=quantidade, unidade=unidade):
@@ -112,6 +112,8 @@ class VendaModelsTest(TestCase):
     def test_sigla_e_casas_do_produto(self):
         self.assertEqual((self.produto_loja1.sigla, self.produto_loja1.casas_decimais), ('un.', 0))
         self.assertEqual((sigla('l'), casas_decimais('l'), sigla('outra')), ('L', 3, 'outra'))
+        self.assertEqual([sigla(unidade) for unidade in Unidade],
+                         ['un.', 'kg', 'g', 'L', 'ml', 'm', 'cm', 'par', 'dz', 'cx', 'pct'])
 
     def test_parcela_str(self):
         venda = Venda.objects.create(loja=self.loja1, cliente=self.cliente_loja1, valor_total=Decimal('10.00'))

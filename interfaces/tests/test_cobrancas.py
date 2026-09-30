@@ -21,6 +21,7 @@ class NumeroDoWhatsappTest(SimpleTestCase):
         casos = {
             '(24) 99999-0000': '5524999990000',
             '24 3333-4444': '552433334444',
+            '552433334444': '552433334444',
             '+55 24 99999-0000': '5524999990000',
             '5524999990000': '5524999990000',
             '99999-0000': '',
@@ -86,6 +87,12 @@ class MensagemDeCobrancaTest(CobrancasTestCase):
         Parcela.objects.create(venda=venda, vencimento=HOJE + timedelta(days=30))
         [cobranca] = clientes_a_cobrar(self.usuario, HOJE)
         self.assertIn("(3× Bolo) parcela 1/2: vence hoje · R$ 18,00", mensagem_de_cobranca(cobranca))
+
+    def test_varios_itens_na_mesma_compra(self):
+        venda = self.venda(self.maria, 1, HOJE, timezone.now())
+        ItemVenda.objects.create(venda=venda, produto=self.bolo, quantidade=2, preco_unitario=Decimal('12.00'))
+        [cobranca] = clientes_a_cobrar(self.usuario, HOJE)
+        self.assertIn("(1× Bolo, 2× Bolo)", mensagem_de_cobranca(cobranca))
 
     def test_item_com_opcoes_mostra_a_escolha(self):
         venda = self.venda(self.maria, 1, HOJE, timezone.now())

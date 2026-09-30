@@ -91,14 +91,17 @@ def consultar_pypi(nome, baixar=_baixar_json):
     """(versão mais nova, data de publicação, link do que mudou)."""
     dados = baixar(f'https://pypi.org/pypi/{nome}/json')
     arquivos = dados.get('urls') or []
-    datas = [datetime.fromisoformat(arquivo['upload_time_iso_8601'].replace('Z', '+00:00')) for arquivo in arquivos]
+    datas = [datetime.fromisoformat(arquivo['upload_time_iso_8601']) for arquivo in arquivos]
     link = link_do_que_mudou(dados['info'].get('project_urls') or {}, f'https://pypi.org/project/{nome}/#history')
     return dados['info']['version'], min(datas, default=None), link
 
 
 def _repositorio_npm(repositorio):
-    url = repositorio.get('url', '') if isinstance(repositorio, dict) else (repositorio or '')
-    url = re.sub(r'^git\+|\.git$', '', url).replace('git://', 'https://').replace('ssh://git@', 'https://')
+    if isinstance(repositorio, dict):
+        repositorio = repositorio.get('url')
+    if not repositorio:
+        return ''
+    url = re.sub(r'^git\+|\.git$', '', repositorio).replace('git://', 'https://').replace('ssh://git@', 'https://')
     return f'{url}/releases' if 'github.com' in url else ''
 
 
@@ -130,7 +133,7 @@ def pendentes_js(rodar=_rodar):
         link = _repositorio_npm(dados.get('repository')) or f'https://www.npmjs.com/package/{nome}?activeTab=versions'
         encontradas.append(Atualizacao(
             'JavaScript', nome, info.get('current') or '?', info['latest'],
-            datetime.fromisoformat(publicada.replace('Z', '+00:00')) if publicada else None, link,
+            datetime.fromisoformat(publicada) if publicada else None, link,
         ))
     return encontradas
 
@@ -239,14 +242,18 @@ def aplicar(nomes, raiz=RAIZ, baixar=_baixar_json):
     return trocas
 
 
-def main(argv=None, saida=sys.stdout, agora=None, **dependencias):
+def criar_parser():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     comandos = parser.add_subparsers(dest='comando', required=True)
     rel = comandos.add_parser('relatorio', help='lista as versões novas (e testa com --testar)')
     rel.add_argument('--testar', action='store_true', help='roda os testes com as versões novas')
     apl = comandos.add_parser('aplicar', help='troca a versão fixada nos requirements')
     apl.add_argument('pacotes', nargs='+')
-    args = parser.parse_args(argv)
+    return parser
+
+
+def main(argv=None, saida=sys.stdout, agora=None, **dependencias):
+    args = criar_parser().parse_args(argv)
 
     baixar = dependencias.get('baixar', _baixar_json)
     rodar = dependencias.get('rodar', _rodar)

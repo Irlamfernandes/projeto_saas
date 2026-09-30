@@ -16,7 +16,9 @@ class CobrancaNaTela:
 
 def numero_do_whatsapp(telefone):
     """Só os dígitos, com o 55 do Brasil na frente. Vazio se não tiver jeito de telefone com DDD."""
-    digitos = re.sub(r'\D', '', telefone or '')
+    if not telefone:
+        return ''
+    digitos = re.sub(r'\D', '', telefone)
     if len(digitos) in (10, 11):
         return f"55{digitos}"
     if len(digitos) in (12, 13) and digitos.startswith('55'):

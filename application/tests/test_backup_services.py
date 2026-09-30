@@ -1,18 +1,24 @@
 import io
 import json
 import tempfile
+import threading
+from contextlib import redirect_stdout
 from datetime import timedelta
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils import timezone
+from application.auditoria.services import registrar_alteracao
 from application.backup import services
 from application.backup.services import (
     TRAVADO_POR, apagar_antigos, em_segundo_plano, fazer_backup, pedir_backup, registros_no_backup, restaurar,
 )
 from infrastructure.models import (
-    Backup, Cliente, ConfiguracaoDeBackup, ErroDoSistema, ItemVenda, LojaModel, OrigemDoBackup, Produto, Venda,
+    Acao, Backup, Cliente, ConfiguracaoDeBackup, ErroDoSistema, ItemVenda, LojaModel, OrigemDoBackup, Produto, Venda,
 )
 from infrastructure.utils.backup_cripto import ChaveDeBackupInvalida, descriptografar
 from tests.apoio import BackupsFalsos, CenarioDeLoja, ComPlanosIniciais
@@ -72,6 +78,10 @@ class PedirBackupTest(TestCase):
         self._configurar(em_andamento_desde=self.agora - TRAVADO_POR)
         self.assertTrue(self._pedir(MANUAL)[0])
 
+    def test_travado_libera_depois_de_2_horas(self):
+        self._configurar(em_andamento_desde=self.agora - timedelta(hours=2))
+        self.assertTrue(self._pedir(MANUAL)[0])
+
     def test_usa_a_hora_atual_e_a_thread_quando_nao_informadas(self):
         with patch.object(services, 'em_segundo_plano') as thread:
             self.assertTrue(pedir_backup(MANUAL)[0])
@@ -95,6 +105,16 @@ class EmSegundoPlanoTest(TestCase):
             em_segundo_plano(feito.append, 'backup')
         self.assertEqual(feito, ['backup'])
         fechar.assert_called_once()
+
+    def test_a_thread_se_chama_backup(self):
+        """O nome aparece nos logs e nas ferramentas de diagnóstico do servidor."""
+        nomes = []
+        with patch.object(services, 'close_old_connections'):
+            em_segundo_plano(lambda: nomes.append(threading.current_thread().name))
+            for thread in threading.enumerate():
+                if thread.name == 'backup':
+                    thread.join()
+        self.assertEqual(nomes, ['backup'])
 
 
 @override_settings(BACKUP_CHAVE=SENHA)
@@ -178,6 +198,60 @@ class FazerBackupTest(ComPlanosIniciais, TestCase):
             restaurar(arquivo, senha='errada')
         self.assertEqual(LojaModel.objects.count(), 1)
 
+    def test_a_contagem_de_registros_e_a_do_arquivo_e_a_duracao_e_curta(self):
+        backup = fazer_backup(MANUAL, self.armazenamento, agora=self.agora)
+        self.assertEqual(backup.registros, len(self._conteudo(backup)))
+        self.assertLess(backup.duracao, timedelta(minutes=1))
+
+    def test_arquivo_portavel_usuario_pelo_nome_e_sem_id(self):
+        """Chaves naturais: o arquivo não depende dos ids do banco de origem."""
+        registrar_alteracao(loja=self.loja, usuario=self.usuario, acao=Acao.CLIENTE_CADASTRADO, descricao="Maria")
+        conteudo = self._conteudo(fazer_backup(MANUAL, self.armazenamento, agora=self.agora))
+        [usuario] = [item for item in conteudo if item['model'] == 'infrastructure.usuariomodel']
+        [registro] = [item for item in conteudo if item['model'] == 'infrastructure.registrodealteracao']
+        self.assertNotIn('pk', usuario)
+        self.assertEqual(registro['fields']['usuario'], ["caixa"])
+
+    def test_falha_guarda_o_comeco_do_erro_e_fica_no_log(self):
+        armazenamento = BackupsFalsos()
+        with patch.object(armazenamento, 'enviar', side_effect=RuntimeError("x" * 1500)), \
+                self.assertLogs('application.backup.services', 'ERROR') as log:
+            backup = fazer_backup(MANUAL, armazenamento, agora=self.agora)
+        self.assertEqual((len(backup.erro), backup.arquivo), (1000, ''))
+        self.assertLess(backup.duracao, timedelta(minutes=1))
+        self.assertEqual(log.records[0].getMessage(), f"O backup backup-{self.agora:%Y%m%d-%H%M%S}.json.gz.enc falhou")
+
+    def test_depois_de_dar_certo_apaga_as_copias_antigas(self):
+        ConfiguracaoDeBackup.objects.filter(pk=1).update(manter=1)
+        Backup.objects.create(criado_em=self.agora - timedelta(days=3), origem=AGENDADO, sucesso=True, arquivo='velho.enc')
+        fazer_backup(MANUAL, self.armazenamento, agora=self.agora)
+        self.assertEqual(self.armazenamento.removidos, ['velho.enc'])
+
+    def test_restaurar_nao_escreve_nada_na_tela(self):
+        backup = fazer_backup(MANUAL, self.armazenamento, agora=self.agora)
+        arquivo = self.tmp / backup.arquivo
+        arquivo.write_bytes(self.armazenamento.arquivos[backup.arquivo])
+        saida = io.StringIO()
+        with redirect_stdout(saida):
+            restaurar(arquivo, SENHA)
+        self.assertEqual(saida.getvalue(), '')
+
+
+class EntraNoBackupTest(SimpleTestCase):
+
+    def test_o_que_fica_de_fora(self):
+        casos = {
+            Cliente: True,
+            ContentType: False,  # o app inteiro fica de fora
+            Permission: False,   # só este modelo fica de fora; o resto do auth entra
+            Group: True,
+        }
+        for modelo, entra in casos.items():
+            with self.subTest(modelo.__name__):
+                self.assertEqual(services._entra_no_backup(modelo), entra)
+        proxy = SimpleNamespace(_meta=SimpleNamespace(app_label='infrastructure', label_lower='infrastructure.outro', proxy=True))
+        self.assertFalse(services._entra_no_backup(proxy))  # proxy repetiria os dados do modelo de verdade
+
 
 @override_settings(BACKUP_CHAVE=SENHA)
 class ApagarAntigosTest(TestCase):
@@ -205,6 +279,18 @@ class ApagarAntigosTest(TestCase):
         ConfiguracaoDeBackup.objects.create(pk=1, manter=1)
         self._backup(1)
         velho = self._backup(2)
-        with self.assertLogs('application.backup.services', 'ERROR'):
+        with self.assertLogs('application.backup.services', 'ERROR') as log:
             apagar_antigos(BackupsFalsos(falhar_ao_remover=('b2.enc',)))
         self.assertTrue(Backup.objects.filter(pk=velho.pk).exists())
+        self.assertEqual(log.records[0].getMessage(), "Não deu para apagar o backup antigo b2.enc")
+
+    def test_uma_copia_que_nao_sai_nao_impede_as_outras(self):
+        ConfiguracaoDeBackup.objects.create(pk=1, manter=1)
+        self._backup(1)
+        self._backup(2)
+        mais_velho = self._backup(3)
+        armazenamento = BackupsFalsos(falhar_ao_remover=('b2.enc',))
+        with self.assertLogs('application.backup.services', 'ERROR'):
+            apagar_antigos(armazenamento)
+        self.assertEqual(armazenamento.removidos, ['b3.enc'])
+        self.assertFalse(Backup.objects.filter(pk=mais_velho.pk).exists())

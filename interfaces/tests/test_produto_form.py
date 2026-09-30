@@ -191,6 +191,14 @@ class FiltroProdutosFormTest(TestCase):
             'busca': 'bolo', 'categoria': 'Doces', 'baixo_estoque': True, 'ordem': 'nome',
         })
 
+    def test_cada_ordem_da_tela_de_produtos_e_aceita(self):
+        for ordem in ('nome', '-nome', 'preco_venda', '-preco_venda', 'quantidade_estoque', '-quantidade_estoque',
+                      'data_criacao', '-data_criacao'):
+            with self.subTest(ordem):
+                form = FiltroProdutosForm({'ordem': ordem})
+                self.assertTrue(form.is_valid())
+                self.assertEqual(form.criterios()['ordem'], ordem)
+
     def test_ordem_desconhecida_usa_o_padrao(self):
         form = FiltroProdutosForm({'ordem': 'senha; DROP TABLE'})
         self.assertTrue(form.is_valid())

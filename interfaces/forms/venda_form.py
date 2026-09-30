@@ -70,9 +70,9 @@ class _VendaForm(forms.Form):
         opcoes = self.data.getlist('item_opcoes') or [''] * len(produtos)
         if not produtos:
             raise ValidationError("Adicione pelo menos um produto à venda.")
-        if not len(produtos) == len(quantidades) == len(opcoes) or len(produtos) > MAXIMO_DE_ITENS:
+        if len(produtos) > MAXIMO_DE_ITENS:
             raise ValidationError(ERRO_ITEM)
-        try:
+        try:  # listas de tamanhos diferentes: o zip estrito levanta ValueError, que vira o mesmo erro
             itens = [
                 (int(produto), _quantidade(quantidade), _escolhas(escolhas))
                 for produto, quantidade, escolhas in zip(produtos, quantidades, opcoes, strict=True)

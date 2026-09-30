@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from django.contrib.auth import get_user_model
@@ -137,3 +137,7 @@ class RegistrarLembreteTest(TestCase):
         self.assertEqual(str(lembrete), f"Ana · {HOJE:%d/%m/%Y}")
         registro = RegistroDeAlteracao.objects.get()
         self.assertEqual((registro.acao, registro.descricao), (Acao.LEMBRETE_ENVIADO, "Ana · R$ 25,50"))
+
+    def test_data_do_lembrete_no_horario_de_brasilia(self):
+        lembrete = LembreteDePagamento(cliente=Cliente(nome="Ana"), enviado_em=datetime(2026, 9, 30, 0, 30, tzinfo=UTC))
+        self.assertEqual(str(lembrete), "Ana · 29/09/2026")

@@ -6,8 +6,8 @@ from application.relatorios.periodos import inicios_dos_periodos
 from application.tenancy import filtrar_por_loja
 from infrastructure.models import Cliente, Produto, Venda
 
-_DINHEIRO = DecimalField(max_digits=14, decimal_places=2)
-_ZERO = Value(Decimal('0.00'), output_field=_DINHEIRO)
+DINHEIRO = DecimalField(max_digits=14, decimal_places=2)  # pragma: no mutate (só o tipo da soma: não muda o valor)
+_ZERO = Value(Decimal('0.00'), output_field=DINHEIRO)
 
 
 class Contexto:
@@ -53,7 +53,7 @@ def filtrar_por_intervalo(queryset, inicio=None, fim=None, campo='data_venda'):
 def montar_relatorio(user, inicio=None, fim=None, agora=None):
     vendas = filtrar_por_loja(Venda.objects.all(), user)
     no_intervalo = filtrar_por_intervalo(vendas, inicio, fim).aggregate(
-        total=soma_das_vendas(), ticket=Coalesce(Avg('valor_total'), _ZERO, output_field=_DINHEIRO),
+        total=soma_das_vendas(), ticket=Coalesce(Avg('valor_total'), _ZERO, output_field=DINHEIRO),
     )
     periodos = inicios_dos_periodos(agora)
     por_periodo = faturamento_por_periodo(
@@ -87,4 +87,4 @@ def montar_relatorio(user, inicio=None, fim=None, agora=None):
 
 def soma_das_vendas(filtro=None):
     """Soma de valor_total (zero quando não há vendas), opcionalmente filtrada."""
-    return Coalesce(Sum('valor_total', filter=filtro), _ZERO, output_field=_DINHEIRO)
+    return Coalesce(Sum('valor_total', filter=filtro), _ZERO, output_field=DINHEIRO)

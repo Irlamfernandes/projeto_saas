@@ -9,7 +9,7 @@ def registrar_alteracao(*, loja, usuario, acao, descricao, detalhes=None, client
     """`clientes`: os que o registro cita pelo nome (vazios são ignorados), para a LGPD achar depois."""
     registro = RegistroDeAlteracao.objects.create(
         loja=loja,
-        usuario=usuario if getattr(usuario, 'is_authenticated', False) else None,
+        usuario=usuario if usuario is not None and usuario.is_authenticated else None,
         acao=acao,
         descricao=descricao[:255],
         detalhes=detalhes or {},

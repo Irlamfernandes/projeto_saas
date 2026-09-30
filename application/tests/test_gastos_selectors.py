@@ -80,7 +80,5 @@ class GastosDoMesTest(TestCase):
     def test_categorias_sugeridas_mais_as_da_loja_em_ordem(self):
         Despesa.objects.create(loja=self.loja, data=HOJE, categoria="Gás", valor=Decimal('10'))
         categorias = categorias_usadas(self.usuario)
-        self.assertIn("Gás", categorias)
-        self.assertIn("Aluguel", categorias)
         self.assertNotIn("Da outra", categorias)
-        self.assertEqual(categorias, sorted(categorias, key=str.casefold))
+        self.assertEqual(categorias[:4], ["Água", "Aluguel", "Embalagens", "Gás"])  # acento não joga para o fim

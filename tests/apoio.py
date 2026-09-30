@@ -1,7 +1,26 @@
+import dataclasses
+import importlib
 import io
+from pathlib import Path
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from infrastructure.utils.supabase_storage import SupabaseAPIError
+
+def dataclasses_do_pacote(pacote):
+    """Dataclasses definidas em `pacote` (fora testes e migrações). Acha os módulos pelos arquivos .py, então uma
+    pasta sem __init__.py também entra (o pkgutil.walk_packages pularia a pasta inteira)."""
+    raiz = Path(pacote.__path__[0])
+    classes = set()
+    for arquivo in sorted(raiz.rglob('*.py')):
+        partes = arquivo.relative_to(raiz.parent).with_suffix('').parts
+        if 'tests' in partes or 'migrations' in partes:
+            continue
+        nome = '.'.join(partes[:-1] if partes[-1] == '__init__' else partes)
+        modulo = importlib.import_module(nome)
+        classes |= {objeto for objeto in vars(modulo).values() if isinstance(objeto, type)
+                    and dataclasses.is_dataclass(objeto) and objeto.__module__ == nome}
+    return classes
+
 
 URL_PUBLICA = "https://exemplo.supabase.co/storage/v1/object/public/imagens"
 

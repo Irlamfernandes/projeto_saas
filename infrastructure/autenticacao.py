@@ -12,8 +12,6 @@ class BackendComLoja(ModelBackend):
     """
 
     def authenticate(self, request, username=None, password=None, **kwargs):
-        if username is None:
-            username = kwargs.get(get_user_model().USERNAME_FIELD)
         if not username:
             return None
         if minutos_bloqueado(username):

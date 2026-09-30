@@ -85,7 +85,7 @@ class CustomUserAdmin(ModelAdmin):
         if not change and not request.user.is_superuser and (obj.is_superuser or obj.is_staff):
             raise PermissionDenied("Você não tem permissão para criar usuários com privilégios administrativos.")
 
-        if not change or not obj.pk or not obj.has_usable_password():
+        if not change or not obj.has_usable_password():  # usuário novo, ou antigo sem senha
             alphabet = string.ascii_letters + string.digits
             senha_temporaria = ''.join(secrets.choice(alphabet) for _ in range(8))
             obj.set_password(senha_temporaria)

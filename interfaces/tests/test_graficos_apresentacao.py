@@ -21,11 +21,13 @@ class ApresentacaoDeGraficosTest(SimpleTestCase):
         })
 
     def test_mensal(self):
-        dados = graficos.mensal([Ponto(date(2026, 3, 1), Decimal('7'))], nome='Vendas')
-        self.assertEqual((dados['rotulos'], dados['detalhes'], dados['series'][0]['nome']), (['mar/26'], ['Março de 2026'], 'Vendas'))
+        dados = graficos.mensal([Ponto(date(2026, 3, 1), Decimal('7'))])
+        self.assertEqual((dados['rotulos'], dados['detalhes'], dados['series'][0]['nome']), (['mar/26'], ['Março de 2026'], 'Faturamento'))
+        self.assertEqual(graficos.mensal([], nome='Vendas')['series'][0]['nome'], 'Vendas')
 
     def test_vendido_x_recebido_usa_as_duas_cores_validadas(self):
         dados = graficos.vendido_x_recebido([FluxoDoMes(date(2026, 2, 1), Decimal('60'), Decimal('25'))])
+        self.assertEqual((dados['rotulos'], dados['detalhes']), (['fev/26'], ['Fevereiro de 2026']))
         self.assertEqual([(s['nome'], s['valores'], s['cor']) for s in dados['series']], [
             ('Vendido na caderneta', [60.0], 'marca'), ('Recebido', [25.0], 'destaque'),
         ])

@@ -63,7 +63,7 @@ class AnalisesDeVendasTest(TestCase):
         self.c.venda(CenarioDeLoja.quando(2026, 3, 12), [(self.bolo, 1, '25.00')])
         self.c.venda(CenarioDeLoja.quando(2026, 2, 1), [(self.bolo, 100)])  # fora do período
 
-        ranking = mais_vendidos(self.usuario, inicio=date(2026, 3, 1), fim=date(2026, 3, 20))
+        ranking = mais_vendidos(self.usuario, inicio=date(2026, 3, 1), fim=date(2026, 3, 20), limite=10)
 
         self.assertEqual([(p.nome, p.quantidade, p.faturamento) for p in ranking], [
             ("Pão francês", 50, Decimal('50.00')),

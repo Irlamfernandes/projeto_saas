@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
@@ -51,6 +52,14 @@ class TelaTest(GastosViewTestCase):
         response = self.client.get(reverse('gastos'))
         self.assertContains(response, 'Aluguel')
         self.assertContains(response, reverse('excluir_gasto', args=['despesa', despesa.pk]))
+
+    def test_mostra_o_mes_escolhido(self):
+        mes_passado = self.hoje.replace(day=1) - timedelta(days=1)
+        despesa = Despesa.objects.create(loja=self.loja, data=mes_passado, categoria="Conserto", valor=Decimal('900'))
+        response = self.client.get(reverse('gastos'), {'mes': f"{mes_passado:%Y-%m}"})
+        self.assertEqual(response.context['mes'].chave, f"{mes_passado:%Y-%m}")
+        self.assertEqual(list(response.context['despesas']), [despesa])
+        self.assertEqual(list(self.client.get(reverse('gastos')).context['despesas']), [])
 
     def test_inicio_tem_o_atalho_e_o_resultado_do_mes(self):
         response = self.client.get(reverse('dashboard'))

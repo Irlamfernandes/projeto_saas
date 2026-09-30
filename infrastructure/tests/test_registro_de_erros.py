@@ -120,14 +120,14 @@ class GuardarErroNoBancoTest(TestCase):
                 patch.object(handler, 'handleError') as handle_error:
             handler.emit(_registro())
         handle_error.assert_called_once()
-        self.assertFalse(GuardarErroNoBanco._gravando.ativo)
+        self.assertFalse(hasattr(GuardarErroNoBanco._gravando, 'ativo'))  # a trava sai no fim
 
     def test_erro_durante_a_gravacao_nao_entra_em_laco(self):
         GuardarErroNoBanco._gravando.ativo = True
         try:
             GuardarErroNoBanco().emit(_registro())
         finally:
-            GuardarErroNoBanco._gravando.ativo = False
+            del GuardarErroNoBanco._gravando.ativo
         self.assertFalse(ErroDoSistema.objects.exists())
 
     def test_avisos_de_seguranca_ficam_so_no_console(self):

@@ -42,7 +42,7 @@ def casas_decimais(unidade):
 def quantidade_aceita(quantidade, unidade):
     """A quantidade cabe nas casas decimais da unidade? (2,5 kg sim; 2,5 unidades não.)"""
     quantidade = Decimal(quantidade)
-    return quantidade == quantidade.quantize(Decimal(1).scaleb(-casas_decimais(unidade)))
+    return quantidade % Decimal(10) ** -casas_decimais(unidade) == 0
 
 
 def campo_de_quantidade(**kwargs):

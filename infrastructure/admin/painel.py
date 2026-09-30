@@ -27,7 +27,7 @@ class Cartao:
     titulo: str
     valor: str
     detalhe: str
-    link: str = ''
+    link: str
 
 
 def painel_do_admin(request, context):

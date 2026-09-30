@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 from application.assinatura.selectors import em_teste_gratis
 from application.contas.services import trocar_tema
 from application.exceptions import RegraDeNegocioError
@@ -16,7 +16,8 @@ from interfaces.views.planos_view import conferir_pix_abertos
 TEMPLATE_CONFIGURACOES = 'interfaces/configuracoes.html'
 
 
-@loja_required(trava_plano_vencido=False)
+@require_GET
+@loja_required
 def configuracoes_view(request):
     pix_aguardando = conferir_pix_abertos(request)
     loja = request.user.loja

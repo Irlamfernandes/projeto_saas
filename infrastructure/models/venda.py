@@ -103,8 +103,7 @@ class ItemVenda(models.Model):
         return com_opcoes(self.produto.nome, self.opcoes)
 
     def __str__(self):
-        produto_nome = self.produto.nome if self.produto else 'Produto Removido'
-        return f"{self.quantidade}x {produto_nome} (Venda #{self.venda_id})"
+        return f"{self.quantidade}x {self.produto.nome} (Venda #{self.venda_id})"  # produto é obrigatório (PROTECT)
 
 
 class PagamentoCliente(models.Model):
@@ -141,8 +140,7 @@ class PagamentoCliente(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        cliente_nome = self.cliente.nome if self.cliente else 'Cliente Não Identificado'
-        return f"Pagamento - {cliente_nome} (R$ {self.valor})"
+        return f"Pagamento - {self.cliente.nome} (R$ {self.valor})"  # cliente é obrigatório
 
 class Parcela(models.Model):
     """Data combinada para pagar a parte da venda que ficou na caderneta. Venda a prazo sem data = sem parcela.

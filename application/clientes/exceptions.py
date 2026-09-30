@@ -16,7 +16,7 @@ class ClienteComSaldo(RegraDeNegocioError):
     """A LGPD permite guardar os dados enquanto houver valor a acertar (cobrar ou devolver)."""
 
     def __init__(self, saldo):
-        situacao = f"deve {reais(saldo)}" if saldo > 0 else f"tem {reais(-saldo)} de crédito"
+        situacao = f"tem {reais(-saldo)} de crédito" if saldo.is_signed() else f"deve {reais(saldo)}"  # negativo = crédito
         super().__init__(
             f"Este cliente ainda {situacao} na caderneta. Acerte o saldo antes de apagar os dados: "
             "a lei permite guardá-los enquanto houver valor a receber ou a devolver."

@@ -68,9 +68,10 @@ def pendencias_da_venda(venda):
     if restante <= 0:
         return []
     vencimentos = [parcela.vencimento for parcela in venda.parcelas.all()] or [None]
+    valores = dividir(restante, len(vencimentos))  # uma parte por data
     return [
-        Pendencia(venda=venda, vencimento=vencimento, valor=valor, pendente=valor, numero=numero, de=len(vencimentos))
-        for numero, (vencimento, valor) in enumerate(zip(vencimentos, dividir(restante, len(vencimentos)), strict=True), start=1)
+        Pendencia(venda=venda, vencimento=vencimentos[indice], valor=valor, pendente=valor, numero=indice + 1, de=len(vencimentos))
+        for indice, valor in enumerate(valores)
     ]
 
 
@@ -96,6 +97,6 @@ def pendencias_do_cliente(cliente):
     prefetch_related_objects([cliente], *dados_para_pendencias())  # não repete o que já veio carregado
     vendas = cliente.vendas.all()
     pagos_na_caderneta = sum((p.valor for p in cliente.pagamentos.all() if p.venda_id is None), ZERO)
-    sobras_do_ato = sum((-a_prazo(venda) for venda in vendas if a_prazo(venda) < 0), ZERO)
+    sobras_do_ato = -sum((min(a_prazo(venda), ZERO) for venda in vendas), ZERO)  # pago a mais no ato vira crédito
     pendencias = [pendencia for venda in vendas for pendencia in pendencias_da_venda(venda)]
     return abater(pendencias, pagos_na_caderneta + sobras_do_ato)

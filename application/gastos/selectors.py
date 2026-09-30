@@ -2,14 +2,15 @@ import calendar
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from django.db.models import Count, DecimalField, ExpressionWrapper, F, Q, Sum
+from django.db.models import Count, ExpressionWrapper, F, Q, Sum
 from django.db.models.functions import Coalesce
 from application.relatorios.periodos import meses_ate
+from application.relatorios.selectors import DINHEIRO
 from application.tenancy import filtrar_por_loja
+from infrastructure.utils.formatacao import chave_alfabetica
 from infrastructure.models import Compra, Despesa, ItemVenda, Perda, Venda
 
 ZERO = Decimal('0.00')
-DINHEIRO = DecimalField(max_digits=14, decimal_places=2)
 CATEGORIAS_SUGERIDAS = (
     'Aluguel', 'Luz', 'Água', 'Internet e telefone', 'Transporte', 'Embalagens', 'Taxas e maquininha',
     'Salários', 'Impostos', 'Manutenção', 'Propaganda',
@@ -82,7 +83,7 @@ def perdas_do_mes(user, mes):
 
 def categorias_usadas(user):
     usadas = filtrar_por_loja(Despesa.objects.all(), user).values_list('categoria', flat=True).distinct()
-    return sorted(set(CATEGORIAS_SUGERIDAS) | set(usadas), key=str.casefold)
+    return sorted(set(CATEGORIAS_SUGERIDAS) | set(usadas), key=chave_alfabetica)
 
 
 def resultado_do_mes(user, mes):

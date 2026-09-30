@@ -14,7 +14,7 @@ from application.tenancy import filtrar_por_loja
 from infrastructure.models import Produto
 
 SEM_CATEGORIA = 'Sem categoria'
-QUANTIDADE = DecimalField(max_digits=15, decimal_places=3)
+QUANTIDADE = DecimalField(max_digits=15, decimal_places=3)  # pragma: no mutate (só o tipo da soma: não muda o valor)
 LIMITE_CLASSE_A = Decimal('80')
 LIMITE_CLASSE_B = Decimal('95')
 CUSTO_DO_ITEM = ExpressionWrapper(F('quantidade') * F('custo_unitario'), output_field=DINHEIRO)
@@ -146,10 +146,10 @@ class ProdutoParado:
     valor_em_estoque: Decimal
     ultima_venda: datetime | None
     dias_parado: int | None  # None: nunca vendeu
-    unidade: str = 'un'
+    unidade: str
 
 
-def produtos_parados(user, dias=60, agora=None):
+def produtos_parados(user, dias, agora=None):
     """Produtos com estoque que não vendem há `dias` dias ou mais (ou nunca venderam)."""
     agora = timezone.localtime(agora)
     limite = inicio_do_dia(agora.date() - timedelta(days=dias))
@@ -180,7 +180,7 @@ class Reposicao:
     media_diaria: Decimal
     dias_restantes: int
     sugestao_de_compra: int
-    unidade: str = 'un'
+    unidade: str
 
 
 def previsao_de_reposicao(user, janela=30, horizonte=14, agora=None):

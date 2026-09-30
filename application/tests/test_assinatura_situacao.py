@@ -2,7 +2,7 @@ from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 from django.test import SimpleTestCase, TestCase
-from application.assinatura.situacao import DIAS_DE_AVISO, SituacaoDoPlano, plano_vencido, situacao_do_plano
+from application.assinatura.situacao import SituacaoDoPlano, plano_vencido, situacao_do_plano
 from infrastructure.models import LojaModel
 
 HOJE = date(2026, 10, 20)
@@ -15,7 +15,7 @@ def situacao(dias):
 class SituacaoDoPlanoTest(SimpleTestCase):
 
     def test_nivel_do_aviso_sobe_conforme_o_vencimento_chega(self):
-        casos = {30: '', DIAS_DE_AVISO + 1: '', 7: 'info', 4: 'info', 3: 'alerta', 2: 'alerta', 1: 'critico', 0: 'critico', -1: 'critico'}
+        casos = {30: '', 8: '', 7: 'info', 4: 'info', 3: 'alerta', 2: 'alerta', 1: 'critico', 0: 'critico', -1: 'critico'}
         for dias, nivel in casos.items():
             with self.subTest(dias=dias):
                 self.assertEqual(situacao(dias).nivel, nivel)

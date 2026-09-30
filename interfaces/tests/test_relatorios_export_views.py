@@ -1,13 +1,15 @@
 import io
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 import openpyxl
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from infrastructure.models import Cliente, LojaModel, Venda
+from interfaces.desenvolvedor import CORSARIOS_CODE
+from interfaces.views.relatorios_export_views import FORMATOS
 
 User = get_user_model()
 
@@ -58,15 +60,22 @@ class RelatoriosExportViewsTest(TestCase):
         response = self.client.get(reverse('exportar_pdf_modular', args=[' Geral ']))
 
         self.assertEqual(response['Content-Type'], 'application/pdf')
-        self.assertIn('filename="relatorio_geral.pdf"', response['Content-Disposition'])
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="relatorio_geral.pdf"')
         self.assertTrue(b"".join(response.streaming_content).startswith(b"%PDF"))
+
+    def test_pdf_leva_a_marca_da_loja_e_a_assinatura(self):
+        self.client.force_login(self.user_loja1)
+        gerar = MagicMock()
+        with patch.dict(FORMATOS, {'pdf': (gerar, 'application/pdf', 'pdf')}):
+            self.client.get(reverse('exportar_pdf_modular', args=['geral']))
+        self.assertEqual(gerar.call_args.kwargs, {'loja': self.loja1, 'assinatura': CORSARIOS_CODE.assinatura})
 
     def test_excel_para_download(self):
         self.client.force_login(self.user_loja1)
         response = self.client.get(reverse('exportar_excel_modular', args=['resumo']))
 
         self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        self.assertIn('filename="relatorio_resumo.xlsx"', response['Content-Disposition'])
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="relatorio_resumo.xlsx"')
 
     def test_exporta_apenas_dados_da_loja_do_usuario(self):
         faturamento = self._excel('resumo').active['B2'].value
