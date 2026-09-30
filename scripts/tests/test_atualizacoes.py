@@ -216,7 +216,8 @@ class TestRelatorio:
 
     def test_nenhuma_em_cada_grupo(self):
         texto = at.relatorio([Atualizacao('Python', 'x', '1', '2')], AGORA)
-        assert "(testes passam): nenhuma" in texto and "(testes falham): nenhuma" in texto
+        assert "(testes passam): nenhuma" in texto
+        assert "(testes falham): nenhuma" in texto
 
 
 class TestAplicar:

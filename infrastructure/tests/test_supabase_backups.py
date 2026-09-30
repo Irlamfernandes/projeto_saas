@@ -55,9 +55,10 @@ def test_bucket_ja_existe(tmp_path):
 
 
 def test_recusa_bucket_publico(tmp_path):
+    backups = _backups()
     with patch('requests.request', Supabase(_resposta(200, {'public': True}))), \
             pytest.raises(SupabaseAPIError, match="está público"):
-        _backups().enviar(tmp_path / 'nao-importa', 'b.enc')
+        backups.enviar(tmp_path / 'nao-importa', 'b.enc')
 
 
 def test_baixa_aos_poucos():
@@ -75,17 +76,19 @@ def test_remove():
 
 
 def test_erros_do_supabase():
+    backups = _backups()
     with patch('requests.request', Supabase(_resposta(500, texto='quebrou'))), \
             pytest.raises(SupabaseAPIError, match=r"\(500\): quebrou"):
-        _backups().remover('b.enc')
+        backups.remover('b.enc')
     with patch('requests.request', side_effect=requests.ConnectionError("sem rede")), \
             pytest.raises(SupabaseAPIError, match="sem rede"):
-        _backups().remover('b.enc')
+        backups.remover('b.enc')
 
 
 def test_sem_credenciais():
+    sem_credenciais = BackupsNoSupabase('', '')
     with pytest.raises(SupabaseConfigError):
-        BackupsNoSupabase('', '').remover('b.enc')
+        sem_credenciais.remover('b.enc')
 
 
 @override_settings(SUPABASE_URL=f'{URL}/rest/v1/', SUPABASE_KEY='segredo')

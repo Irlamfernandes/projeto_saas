@@ -20,7 +20,8 @@ FIXADA = re.compile(r'^(?P<nome>[A-Za-z0-9][A-Za-z0-9._-]*)==(?P<versao>[^\s#;]+
 PALAVRAS_DE_CHANGELOG = ('changelog', 'changes', 'release', 'history', 'news', 'what')
 PALAVRAS_DE_REPOSITORIO = ('source', 'repository', 'code', 'github', 'homepage')
 TIPOS = {'principal': 'Principal ⚠️', 'novidades': 'Novidades', 'correção': 'Correção', 'outra': 'Outra'}
-RESULTADOS = {'passam': '✅ passam', 'falham': '❌ falham', 'só juntas': '⚠️ só falham juntas', '': '— não testado'}
+SO_JUNTAS = 'só juntas'  # cada uma passa sozinha, mas os testes falham com todas juntas
+RESULTADOS = {'passam': '✅ passam', 'falham': '❌ falham', SO_JUNTAS: '⚠️ só falham juntas', '': '— não testado'}
 
 
 @dataclass
@@ -101,7 +102,7 @@ def _repositorio_npm(repositorio):
         repositorio = repositorio.get('url')
     if not repositorio:
         return ''
-    url = re.sub(r'^git\+|\.git$', '', repositorio).replace('git://', 'https://').replace('ssh://git@', 'https://')
+    url = re.sub(r'(?:^git\+)|(?:\.git$)', '', repositorio).replace('git://', 'https://').replace('ssh://git@', 'https://')
     return f'{url}/releases' if 'github.com' in url else ''
 
 
@@ -181,7 +182,7 @@ def verificar(atualizacoes, testar):
         atualizacao.testes = 'passam' if testar([atualizacao]) else 'falham'
     if all(a.testes == 'passam' for a in atualizacoes):
         for atualizacao in atualizacoes:
-            atualizacao.testes = 'só juntas'
+            atualizacao.testes = SO_JUNTAS
 
 
 # ---------- relatório ----------
@@ -197,7 +198,7 @@ def relatorio(atualizacoes, agora):
     if not atualizacoes:
         return f"## Tudo em dia ✅\n\nNenhuma biblioteca com versão nova em {agora:%d/%m/%Y}.\n"
     so_atualizar = [a for a in atualizacoes if a.testes == 'passam']
-    mexer = [a for a in atualizacoes if a.testes in ('falham', 'só juntas')]
+    mexer = [a for a in atualizacoes if a.testes in ('falham', SO_JUNTAS)]
     linhas = [
         f"## {len(atualizacoes)} biblioteca(s) com versão nova — {agora:%d/%m/%Y}",
         '',

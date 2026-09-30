@@ -4,17 +4,24 @@ Render e a tela "Erros do sistema" do admin. A mensagem de um erro pode trazer o
 """
 import re
 
-EMAIL = re.compile(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+')
-# 8 ou mais dígitos, com ou sem espaço, ponto, hífen, barra e parênteses no meio: (24) 99999-8888, 123.456.789-00.
-NUMERO_LONGO = re.compile(r'\+?\(?(?:\d[\s().\-/]*){7,}\d')
+# Quantificadores possessivos (++) e o início preso ao começo da palavra: o texto é lido uma vez só, sem voltar atrás
+# (um erro com um texto enorme não trava o registro).
+EMAIL = re.compile(r'(?<![\w.+-])[\w.+-]++@[\w-]++(?:\.[\w-]++)+')
+# Um trecho de dígitos com espaço, ponto, hífen, barra e parênteses no meio: (24) 99999-8888, 123.456.789-00.
+TRECHO_NUMERICO = re.compile(r'\+?\(?\d[\d\s().\-/]*+')
+DIGITOS_DE_UM_NUMERO_LONGO = 8
 # Datas (2026-09-29, 2026-09-29 10:00) também são 8 dígitos seguidos, mas não são dado pessoal e ajudam a ler o erro.
 DATA = re.compile(r'\d{4}-\d{2}-\d{2}(?:[ T]\d{1,2})?')
 
 
 def _numero(encontrado):
     trecho = encontrado.group()
-    return trecho if DATA.fullmatch(trecho) else '[número]'
+    fim = len(trecho.rstrip(' ().-/\t\n\r\f\v'))  # o número vai até o último dígito; o que sobra fica no texto
+    numero, resto = trecho[:fim], trecho[fim:]
+    if sum(c.isdigit() for c in numero) < DIGITOS_DE_UM_NUMERO_LONGO or DATA.fullmatch(numero):
+        return trecho
+    return '[número]' + resto
 
 
 def mascarar(texto):
-    return NUMERO_LONGO.sub(_numero, EMAIL.sub('[e-mail]', texto or ''))
+    return TRECHO_NUMERICO.sub(_numero, EMAIL.sub('[e-mail]', texto or ''))

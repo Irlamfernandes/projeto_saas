@@ -8,6 +8,7 @@ from django.utils import timezone
 # O agendador chama de hora em hora, mas às vezes atrasa alguns minutos. Sem folga, um backup "a cada 1 hora"
 # feito às 10:07 perderia a chamada das 11:03 e só sairia ao meio-dia.
 FOLGA = timedelta(minutes=30)
+NOME_DA_CONFIGURACAO = 'Configuração de backup'
 
 
 class UnidadeDoIntervalo(models.TextChoices):
@@ -42,11 +43,11 @@ class ConfiguracaoDeBackup(models.Model):
 
     class Meta:
         db_table = 'configuracao_de_backup'
-        verbose_name = 'Configuração de backup'
-        verbose_name_plural = 'Configuração de backup'
+        verbose_name = NOME_DA_CONFIGURACAO
+        verbose_name_plural = NOME_DA_CONFIGURACAO
 
     def __str__(self):
-        return 'Configuração de backup'
+        return NOME_DA_CONFIGURACAO
 
     @classmethod
     def atual(cls):

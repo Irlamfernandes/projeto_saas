@@ -113,7 +113,7 @@ def apagar_antigos(armazenamento):
     Só é chamado logo depois de um backup que deu certo: sempre existe ao menos uma cópia guardada.
     """
     manter = ConfiguracaoDeBackup.atual().manter
-    for antigo in list(Backup.objects.filter(sucesso=True)[manter:]):
+    for antigo in Backup.objects.filter(sucesso=True)[manter:]:
         try:
             armazenamento.remover(antigo.arquivo)
         except StorageError:
