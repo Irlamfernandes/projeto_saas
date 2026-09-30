@@ -213,19 +213,38 @@ function pluginRotulosNoFim(tokens, formato) {
     };
 }
 
-function desenharGraficos(raiz = document, ChartClasse = globalThis.Chart) {
-    if (!ChartClasse) return [];
+/* Cada gráfico só é desenhado quando chega perto da tela: no celular, o topo da página aparece antes, sem esperar os
+   gráficos de baixo. Navegador sem IntersectionObserver desenha tudo na hora. */
+function quandoPertoDaTela(elemento, desenhar, Observador) {
+    if (!Observador) {
+        desenhar();
+        return null;
+    }
+    const observador = new Observador((entradas, proprio) => {
+        if (!entradas.some((entrada) => entrada.isIntersecting)) return;
+        proprio.disconnect();
+        desenhar();
+    }, { rootMargin: '50% 0px' });
+    observador.observe(elemento);
+    return observador;
+}
+
+function desenharGraficos(raiz = document, ChartClasse = globalThis.Chart, Observador = globalThis.IntersectionObserver) {
+    const graficos = [];
+    if (!ChartClasse) return graficos;
     const tokens = lerTokens();
     ChartClasse.defaults.font.family = 'Figtree, system-ui, sans-serif';
     ChartClasse.defaults.font.size = tokens.fonte;
     if (globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
         ChartClasse.defaults.animation = false;
     }
-    return Array.from(raiz.querySelectorAll('canvas[data-grafico]')).map((canvas) => {
-        const fonte = document.getElementById(canvas.dataset.dados);
-        const dados = JSON.parse(fonte.textContent);
-        return new ChartClasse(canvas, montarConfiguracao(canvas.dataset.grafico, dados, tokens, canvas.dataset.formato));
-    });
+    const observadores = Array.from(raiz.querySelectorAll('canvas[data-grafico]')).map((canvas) => quandoPertoDaTela(canvas, () => {
+        const dados = JSON.parse(document.getElementById(canvas.dataset.dados).textContent);
+        graficos.push(new ChartClasse(canvas, montarConfiguracao(canvas.dataset.grafico, dados, tokens, canvas.dataset.formato)));
+    }, Observador));
+    // Na troca de tema, os que ainda não apareceram deixam de esperar: o redesenho cria observadores novos.
+    graficos.parar = () => observadores.forEach((observador) => observador?.disconnect());
+    return graficos;
 }
 
 /* No tema "Automático", o aparelho pode trocar de claro para escuro com a tela aberta: redesenha com as cores novas. */
@@ -234,6 +253,7 @@ function acompanharTemaDoAparelho(graficos, redesenhar = desenharGraficos) {
     if (!escuro?.addEventListener) return;
     let atuais = graficos;
     escuro.addEventListener('change', () => {
+        atuais.parar?.();
         atuais.forEach((grafico) => grafico.destroy());
         atuais = redesenhar();
     });
@@ -246,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => acompanharTemaDoAparelho(des
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         formatarMoeda, formatarMoedaCurta, formatarUnidades, remEmPx, lerTokens, montarConfiguracao, desenharGraficos,
+        quandoPertoDaTela,
         acompanharTemaDoAparelho,
         pluginMira, pluginRotulosNoFim,
     };
