@@ -2,12 +2,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
-from django.db.models import Count, Max, Min, Q, Sum
+from django.db.models import Count, Max, Min, OuterRef, Q, Subquery, Sum
 from django.utils import timezone
 from application.relatorios.periodos import inicio_do_dia
 from application.relatorios.vendas import ZERO
 from application.tenancy import filtrar_por_loja
-from infrastructure.models import Cliente
+from infrastructure.models import Cliente, PagamentoCliente, Venda
 
 FAIXAS_DE_ATRASO = (
     ('Até 30 dias', 0, 30),
@@ -47,7 +47,12 @@ def idade_das_dividas(user, agora=None):
     clientes = (
         filtrar_por_loja(Cliente.objects.com_saldo(), user)
         .filter(saldo_calculado__gt=0)
-        .annotate(ultimo_pagamento=Max('pagamentos__data_pagamento'), primeira_compra=Min('vendas__data_venda'))
+        # Subconsultas, não junções: juntar vendas e pagamentos multiplicaria as linhas (compras × pagamentos de cada
+        # cliente) e o saldo seria recalculado em cada uma.
+        .annotate(
+            ultimo_pagamento=_do_cliente(PagamentoCliente, Max('data_pagamento')),
+            primeira_compra=_do_cliente(Venda, Min('data_venda')),
+        )
     )
     devedores = sorted(
         (Devedor(c, c.saldo_calculado, _dias_sem_pagar(c, agora)) for c in clientes),
@@ -55,6 +60,11 @@ def idade_das_dividas(user, agora=None):
     )
     faixas = [_faixa(rotulo, minimo, maximo, devedores) for rotulo, minimo, maximo in FAIXAS_DE_ATRASO]
     return IdadeDasDividas(faixas, devedores, sum((d.saldo for d in devedores), ZERO))
+
+
+def _do_cliente(modelo, agregado):
+    """Um valor (a data mais recente, a mais antiga) dos registros do cliente, calculado dentro da consulta."""
+    return Subquery(modelo.objects.filter(cliente=OuterRef('pk')).order_by().values('cliente').annotate(v=agregado).values('v'))
 
 
 def _dias_sem_pagar(cliente, agora):
