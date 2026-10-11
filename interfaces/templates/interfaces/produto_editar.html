@@ -49,7 +49,7 @@
 
         {% include 'interfaces/_estoque_do_produto.html' with prefixo='edit' ajuda='Use para acertar o estoque depois de uma contagem ou de uma compra.' %}
 
-        {% include 'interfaces/_opcoes_do_produto.html' %}
+        {% include 'interfaces/_variacoes_do_produto.html' %}
 
         <div class="campo">
             <label for="edit-descricao" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
@@ -92,4 +92,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/fotos.js' %}" defer></script>
+<script src="{% static 'js/variacoes.js' %}" defer></script>
 {% endblock %}

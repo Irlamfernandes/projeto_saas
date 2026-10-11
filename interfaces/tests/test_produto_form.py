@@ -10,7 +10,7 @@ from tests.apoio import imagem_de_teste
 
 
 def como_post(dados):
-    """Como o navegador envia: listas para os campos repetidos (opcao_nome, opcao_valores)."""
+    """Como o navegador envia: listas para os campos repetidos (variacao_nome, variacao_quantidade...)."""
     post = QueryDict(mutable=True)
     for campo, valor in dados.items():
         post.setlist(campo, valor if isinstance(valor, list) else [valor])
@@ -91,7 +91,7 @@ class ProdutoFormTest(TestCase):
     def test_sem_imagens_retorna_lista_vazia(self):
         form = self._form()
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.parametros(), {'produto': form.instance, 'imagens': []})
+        self.assertEqual(form.parametros(), {'produto': form.instance, 'variacoes': [], 'imagens': []})
 
     def test_recusa_arquivo_que_nao_e_imagem(self):
         falso = SimpleUploadedFile('virus.png', b'<script>alert(1)</script>', content_type='image/png')
@@ -106,50 +106,84 @@ class ProdutoFormTest(TestCase):
             self.assertErro(self._form(arquivos={'imagens': [imagem_de_teste('g.png')]}), "A imagem 'g.png' excede o limite de 25 MB.")
 
 
-class OpcoesDoProdutoTest(ProdutoFormTest):
-    """Nome da opção + valores um por linha; 'G + 5,00' cobra R$ 5 a mais."""
+def linhas(*variacoes):
+    """[(id, nome, acréscimo, quantidade), ...] -> campos repetidos do POST."""
+    colunas = list(zip(*variacoes, strict=True)) if variacoes else [[], [], [], []]
+    return dict(zip(('variacao_id', 'variacao_nome', 'variacao_acrescimo', 'variacao_quantidade'), map(list, colunas),
+                    strict=True))
 
-    def opcoes(self, nomes, valores):
-        form = self._form(opcao_nome=nomes, opcao_valores=valores)
+
+class VariacoesDoProdutoTest(ProdutoFormTest):
+    """Uma linha por variação: nome, acréscimo (opcional) e quantidade (só com controle de estoque)."""
+
+    def variacoes(self, *linhas_do_post, **dados):
+        form = self._form(**linhas(*linhas_do_post), **dados)
         self.assertTrue(form.is_valid(), form.errors)
-        return form.instance.opcoes
+        return form
 
-    def test_le_nomes_valores_e_acrescimos(self):
-        opcoes = self.opcoes([' Tamanho ', 'Cor'], ['P\r\n M \n\nG + 5,00\nGG +R$ 7.5', 'Azul'])
-
-        self.assertEqual(opcoes, [
-            {'nome': 'Tamanho', 'valores': [
-                {'nome': 'P', 'acrescimo': '0.00'}, {'nome': 'M', 'acrescimo': '0.00'},
-                {'nome': 'G', 'acrescimo': '5.00'}, {'nome': 'GG', 'acrescimo': '7.50'},
-            ]},
-            {'nome': 'Cor', 'valores': [{'nome': 'Azul', 'acrescimo': '0.00'}]},
-        ])
-
-    def test_blocos_vazios_sao_ignorados_e_sem_opcoes_fica_lista_vazia(self):
-        self.assertEqual(self.opcoes(['', ' '], ['', '  ']), [])
-        self.assertEqual(self._form().is_valid() and self._form().instance.opcoes, [])
-
-    def test_mais_sem_nome_antes_e_parte_do_valor(self):
-        self.assertEqual(self.opcoes(['Brinde'], ['+1'])[0]['valores'], [{'nome': '+1', 'acrescimo': '0.00'}])
-        self.assertEqual(
-            [valor['nome'] for valor in self.opcoes(['Tipo'], ['Tam + grande\nC++\nKit+2'])[0]['valores']],
-            ['Tam + grande', 'C++', 'Kit'],
+    def test_blusa_com_tres_variacoes_e_o_estoque_vira_a_soma(self):
+        form = self.variacoes(
+            ('', ' Azul P ', '', '10'), ('', 'Azul M', '', '5'), ('4', 'Branca P', 'R$ 2,50', '5'),
+            quantidade_estoque='999',
         )
 
-    def test_mensagens_de_erro_das_opcoes(self):
+        self.assertEqual(form.parametros()['variacoes'], [
+            {'id': None, 'nome': 'Azul P', 'acrescimo': Decimal('0.00'), 'quantidade': Decimal('10.000')},
+            {'id': None, 'nome': 'Azul M', 'acrescimo': Decimal('0.00'), 'quantidade': Decimal('5.000')},
+            {'id': 4, 'nome': 'Branca P', 'acrescimo': Decimal('2.50'), 'quantidade': Decimal('5.000')},
+        ])
+        self.assertEqual(form.cleaned_data['quantidade_estoque'], Decimal('20'))
+
+    def test_linhas_em_branco_sao_ignoradas_e_sem_variacoes_o_estoque_e_o_digitado(self):
+        form = self.variacoes(('', ' ', ' ', ''), quantidade_estoque='3')
+        self.assertEqual(form.parametros()['variacoes'], [])
+        self.assertEqual(form.cleaned_data['quantidade_estoque'], Decimal('3'))
+
+    def test_aceita_ponto_virgula_e_vazio(self):
+        form = self.variacoes(('', 'A', '1.5', '2,5'), ('', 'B', '', ''), unidade='kg')
+        [a, b] = form.parametros()['variacoes']
+        self.assertEqual((a['acrescimo'], a['quantidade']), (Decimal('1.50'), Decimal('2.500')))
+        self.assertEqual((b['acrescimo'], b['quantidade']), (Decimal('0.00'), Decimal('0')))
+
+    def test_sem_controle_de_estoque_a_quantidade_nem_e_lida(self):
+        form = self.variacoes(('', 'Chocolate', '', 'abc'), sem_controle_de_estoque='1')
+        self.assertEqual(form.parametros()['variacoes'][0]['quantidade'], Decimal('0'))
+        self.assertEqual(form.cleaned_data['quantidade_estoque'], Decimal('0'))
+
+    def test_mensagens_de_erro_das_variacoes(self):
         casos = {
-            'sem nome': ([''], ['P'], "Dê um nome para cada opção (ex.: Tamanho, Sabor, Cor)."),
-            'sem valores': (['Tamanho'], [''], 'Escreva os valores da opção "Tamanho", um por linha.'),
-            'opções demais': (['A', 'B', 'C', 'D', 'E', 'F'], ['1'] * 6, "Cada produto pode ter até 5 opções."),
-            'opção repetida': (['Cor', 'cor'], ['Azul', 'Preto'], 'Há duas opções chamadas "cor".'),
-            'valores demais': (['Número'], ['\n'.join(map(str, range(31)))], 'A opção "Número" pode ter até 30 valores.'),
-            'valor repetido': (['Tamanho'], ['P\nM\np + 2'], 'O valor "p" aparece duas vezes em "Tamanho".'),
-            'nome longo': (['N' * 41], ['P'], f'"{"N" * 20}…" é longo demais: use até 40 letras em cada opção e valor.'),
-            'valor longo': (['Tamanho'], ['V' * 41], f'"{"V" * 20}…" é longo demais: use até 40 letras em cada opção e valor.'),
+            'sem nome': [('', '', '2', '')], 'id inválido': [('x', 'A', '', '')],
+            'acréscimo inválido': [('', 'A', 'dois', '')], 'acréscimo negativo': [('', 'A', '-1', '')],
+            'acréscimo enorme': [('', 'A', '100000000', '')], 'acréscimo infinito': [('', 'A', 'Infinity', '')],
+            'quantidade inválida': [('', 'A', '', '1,2,3')], 'quantidade negativa': [('', 'A', '', '-1')],
+            'quantidade enorme': [('', 'A', '', '1000000000')], 'fração por unidade': [('', 'A', '', '1,5')],
+            'repetida': [('', 'Azul', '', ''), ('', 'azul', '', '')], 'longa': [('', 'N' * 41, '', '')],
+            'demais': [('', f'V{numero}', '', '') for numero in range(101)],
         }
-        for caso, (nomes, valores, mensagem) in casos.items():
+        mensagens = {
+            'sem nome': "Dê um nome para cada variação (ex.: Azul P, Chocolate).", 'id inválido': "Variação inválida.",
+            'acréscimo inválido': 'Acréscimo inválido em "A".', 'acréscimo negativo': 'Acréscimo inválido em "A".',
+            'acréscimo enorme': 'Acréscimo inválido em "A".', 'acréscimo infinito': 'Acréscimo inválido em "A".',
+            'quantidade inválida': 'Quantidade inválida em "A".', 'quantidade negativa': 'Quantidade inválida em "A".',
+            'quantidade enorme': 'Quantidade inválida em "A".',
+            'fração por unidade': 'Esta unidade só aceita números inteiros: confira a quantidade de "A".',
+            'repetida': 'Há duas variações chamadas "azul".',
+            'longa': f'"{"N" * 20}…" é longo demais: use até 40 letras no nome da variação.',
+            'demais': "Cada produto pode ter até 100 variações.",
+        }
+        for caso, linhas_do_post in casos.items():
             with self.subTest(caso):
-                self.assertErro(self._form(opcao_nome=nomes, opcao_valores=valores), mensagem)
+                self.assertErro(self._form(**linhas(*linhas_do_post)), mensagens[caso])
+
+    def test_no_limite_passa(self):
+        form = self.variacoes(*[('', f'V{numero}', '99999999,99', '1') for numero in range(100)])
+        self.assertEqual(len(form.parametros()['variacoes']), 100)
+        self.assertEqual(self.variacoes(('', 'N' * 40, '', '999999999,999'), unidade='kg').cleaned_data['quantidade_estoque'],
+                         Decimal('999999999.999'))
+
+    def test_soma_maior_que_o_estoque_comporta(self):
+        self.assertErro(self._form(**linhas(('', 'A', '', '999999999'), ('', 'B', '', '999999999'))),
+                        "Quantidade em estoque grande demais.")
 
 
 class EditarProdutoFormTest(TestCase):
@@ -167,7 +201,7 @@ class EditarProdutoFormTest(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.parametros(), {
-            'produto': self.produto, 'imagens_novas': [], 'ids_imagens_remover': [3, 7],
+            'produto': self.produto, 'variacoes': [], 'imagens_novas': [], 'ids_imagens_remover': [3, 7],
         })
 
     def test_vazio_nao_remove_nada(self):

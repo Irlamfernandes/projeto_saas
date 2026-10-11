@@ -8,8 +8,7 @@ from application.a_receber.selectors import clientes_a_cobrar, cobranca_do_clien
 from application.a_receber.services import registrar_lembrete
 from application.tests.test_vendas_services import DIA_15, ServicoDeVendaTestCase, vencimentos
 from application.vendas.exceptions import (
-    EstoqueInsuficiente, OpcaoNaoEscolhida, OpcoesMudaram, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta,
-    VendaSemItens, VendaSemLoja,
+    EstoqueInsuficiente, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
 from application.vendas.pendencias import Pendencia, Situacao, pendencias_do_cliente
 from application.vendas.selectors import produtos_em_estoque_do_usuario
@@ -133,8 +132,8 @@ class MensagensDeErroDaVendaTest(SimpleTestCase):
             VendaSemItens(): "Adicione pelo menos um produto à venda.",
             VendaSemLoja(): "Venda de balcão precisa de uma loja: entre com um usuário de loja ou escolha um cliente.",
             SenhaIncorreta(): "Senha incorreta. A venda não foi cancelada.",
-            OpcaoNaoEscolhida(bolo, "Sabor"): "Escolha a opção \"Sabor\" de 'Bolo'.",
-            OpcoesMudaram(bolo): "As opções de 'Bolo' mudaram. Tire o produto da venda e adicione de novo.",
+            EstoqueInsuficiente(queijo, SimpleNamespace(nome="Meia cura", quantidade_estoque=Decimal('0.2'))):
+                "Estoque insuficiente para 'Queijo (Meia cura)'. Disponível: 0,2 kg",
         }
         for erro, mensagem in casos.items():
             with self.subTest(type(erro).__name__):

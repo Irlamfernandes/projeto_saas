@@ -24,7 +24,7 @@ class Base(TestCase):
         self.joao = cadastrar_cliente(Cliente(loja=self.loja, nome="João"), self.dono)
 
     def _vender(self, cliente, pago=Decimal('20')):
-        venda = registrar_venda(itens=[(self.bolo.pk, 1, {})], cliente=cliente, loja=self.loja, forma_pagamento='pix',
+        venda = registrar_venda(itens=[(self.bolo.pk, 1, None)], cliente=cliente, loja=self.loja, forma_pagamento='pix',
                                 usuario=self.dono, valor_pago=pago)
         return venda
 
@@ -38,7 +38,7 @@ class HistoricoLigadoAoClienteTest(Base):
         self.maria.telefone = "(24) 98888-7777"
         atualizar_cliente(self.maria, self.dono)
         venda = self._vender(self.maria)
-        editar_venda(venda, itens=[(self.bolo.pk, 1, {})], cliente=self.joao, forma_pagamento='pix', usuario=self.dono)
+        editar_venda(venda, itens=[(self.bolo.pk, 1, None)], cliente=self.joao, forma_pagamento='pix', usuario=self.dono)
         registrar_pagamento(self.joao, valor=Decimal('5'), forma_pagamento='pix', usuario=self.dono)
         registrar_lembrete(self.joao, valor=Decimal('5'), usuario=self.dono)
         cancelar_venda(Venda.objects.get(), usuario=self.dono, senha='senha-certa', motivo="teste")

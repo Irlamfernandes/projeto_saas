@@ -101,20 +101,15 @@ class ProdutoFormFronteirasTest(TestCase):
             with self.subTest(caso):
                 self.assertErro(self._form(**dados), mensagem)
 
-    def test_opcoes_no_limite_passam(self):
-        self.valido(opcao_nome=[f'Opção {i}' for i in range(5)], opcao_valores=['A'] * 5)
-        self.assertErro(self._form(opcao_nome=[f'Opção {i}' for i in range(6)], opcao_valores=['A'] * 6),
-                        "Cada produto pode ter até 5 opções.")
-        self.valido(opcao_nome=['Sabor'], opcao_valores=['\n'.join(f'S{i}' for i in range(30))])
-        self.valido(opcao_nome=['o' * 40], opcao_valores=['v' * 40])
+    def test_linha_vazia_no_meio_nao_esconde_as_seguintes(self):
+        form = self.valido(variacao_id=['', ''], variacao_nome=['', 'Azul'], variacao_acrescimo=['', ''],
+                           variacao_quantidade=['', '1'])
+        self.assertEqual([variacao['nome'] for variacao in form.variacoes], ['Azul'])
 
-    def test_bloco_vazio_no_meio_nao_esconde_os_seguintes(self):
-        opcoes = self.valido(opcao_nome=['', 'Cor'], opcao_valores=['', 'Azul']).instance.opcoes
-        self.assertEqual([opcao['nome'] for opcao in opcoes], ['Cor'])
-
-    def test_nome_de_opcao_a_mais_no_post_e_ignorado(self):
-        opcoes = self.valido(opcao_nome=['Cor', 'Adulterado'], opcao_valores=['Azul']).instance.opcoes
-        self.assertEqual([opcao['nome'] for opcao in opcoes], ['Cor'])
+    def test_coluna_a_mais_no_post_e_ignorada(self):
+        form = self.valido(variacao_id=[''], variacao_nome=['Azul', 'Adulterado'], variacao_acrescimo=[''],
+                           variacao_quantidade=['1'])
+        self.assertEqual([variacao['nome'] for variacao in form.variacoes], ['Azul'])
 
 
 class NovaSenhaFormTest(TestCase):

@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.cliente import Cliente
-from infrastructure.models.produto import Produto, campo_de_quantidade
+from infrastructure.models.produto import Produto, Variacao, campo_de_quantidade
 from infrastructure.utils.formatacao import com_opcoes
 
 def subtotal(quantidade, preco):
@@ -75,7 +75,10 @@ class ItemVenda(models.Model):
     )
     # Preço de custo do produto no dia da venda: o lucro do mês não muda quando o custo muda depois.
     custo_unitario = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
-    # O que foi escolhido nas opções do produto: [{'nome': 'Tamanho', 'valor': 'G'}, ...]. O acréscimo já está no preço.
+    # Variação vendida: o estoque volta para ela se a venda for editada ou cancelada. Vazia se ela foi excluída depois.
+    variacao = models.ForeignKey(Variacao, on_delete=models.SET_NULL, null=True, blank=True, related_name='itens_de_venda')
+    # O que aparece ao lado do nome, como era na venda: [{'nome': 'Variação', 'valor': 'Azul P'}] (vendas antigas
+    # podem ter uma por opção: Tamanho G, Cor Azul). O acréscimo já está no preço.
     opcoes = models.JSONField(default=list, blank=True)
 
     class Meta:

@@ -245,8 +245,8 @@ class MensagensDosCadastrosTest(SimpleTestCase):
             CompraSemItens(): "Adicione pelo menos um produto à compra.",
             ProdutoDeOutraLoja(): "Um dos produtos escolhidos não foi encontrado nesta loja.",
             QuantidadeInvalidaParaUnidade(bolo): "'Bolo' é contado por unidade: confira a quantidade.",
-            EstoqueNaoCobreAPerda(bolo, "2 un."): "'Bolo' tem só 2 un. em estoque.",
-            EstoqueJaUsado(bolo): (
+            EstoqueNaoCobreAPerda("Bolo", "2 un."): "'Bolo' tem só 2 un. em estoque.",
+            EstoqueJaUsado("Bolo"): (
                 "Não dá para excluir: parte do 'Bolo' desta compra já foi vendida ou baixada. "
                 "Acerte o estoque no cadastro do produto, se precisar."
             ),

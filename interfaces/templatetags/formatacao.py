@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from django import template
-from infrastructure.models.produto import MAXIMO_DE_OPCOES, Unidade, casas_decimais, sigla
+from infrastructure.models.produto import MAXIMO_DE_VARIACOES, Unidade, casas_decimais, sigla
 from infrastructure.utils import formatacao
 from infrastructure.utils.cpf import formatar_cpf
 from infrastructure.utils.formatacao import moeda
@@ -34,9 +34,8 @@ def quantidade(valor, unidade):
 
 @register.filter
 def descricao_do_item(item):
-    """Item de venda, compra ou perda: '2× Bolo', '0,35 kg Queijo', '1× Camiseta (G, Azul)'."""
-    nome = formatacao.com_opcoes(item.produto.nome, getattr(item, 'opcoes', None))
-    return formatacao.item(item.quantidade, item.produto.unidade, nome)
+    """Item de venda, compra ou perda: '2× Bolo', '0,35 kg Queijo', '1× Camiseta (Azul P)'."""
+    return formatacao.item(item.quantidade, item.produto.unidade, item.nome)
 
 
 @register.filter
@@ -51,16 +50,6 @@ def passo_da_quantidade(casas):
     return f"{Decimal(1).scaleb(-int(casas or 0)):f}"
 
 
-@register.filter
-def valores_da_opcao(opcao):
-    """Valores de uma opção do produto como são digitados no cadastro: um por linha, 'G + 5,00' com acréscimo
-    (sem separador de milhar, para ler de volta igual)."""
-    return "\n".join(
-        f"{valor['nome']} + {valor['acrescimo'].replace('.', ',')}" if Decimal(valor['acrescimo']) else valor['nome']
-        for valor in opcao['valores']
-    )
-
-
 @register.simple_tag
 def unidades_de_medida():
     return [
@@ -70,5 +59,5 @@ def unidades_de_medida():
 
 
 @register.simple_tag
-def maximo_de_opcoes():
-    return MAXIMO_DE_OPCOES
+def maximo_de_variacoes():
+    return MAXIMO_DE_VARIACOES

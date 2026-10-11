@@ -1,0 +1,8 @@
+{% load formatacao %}<fieldset class="grid grid-cols-2 sm:grid-cols-[1fr_6.5rem_6.5rem_auto] items-end gap-2 rounded-controle bg-fundo p-3" data-variacao-produto>
+    <legend class="sr-only">Variação do produto</legend>
+    <input type="hidden" name="variacao_id" value="{{ variacao.pk|default:'' }}">
+    <label class="campo col-span-2 sm:col-span-1"><span class="rotulo">Nome</span><input type="text" name="variacao_nome" value="{{ variacao.nome|default:'' }}" maxlength="40" placeholder="Ex.: Azul P" class="entrada"></label>
+    <label class="campo" data-quantidade-da-variacao><span class="rotulo">Quantidade</span><input type="number" name="variacao_quantidade" value="{% if variacao %}{{ variacao.quantidade_estoque|numero_simples }}{% endif %}" min="0" step="{{ produto.casas_decimais|passo_da_quantidade }}" placeholder="0" inputmode="decimal" class="entrada tabular-nums"></label>
+    <label class="campo"><span class="rotulo">Acréscimo <span class="rotulo-opcional">R$</span></span><input type="text" name="variacao_acrescimo" value="{% if variacao.acrescimo %}{{ variacao.acrescimo|numero_simples }}{% endif %}" placeholder="0,00" inputmode="decimal" class="entrada tabular-nums"></label>
+    <button type="button" class="btn-fantasma btn-pequeno px-2 py-2.5 text-critico-texto col-span-2 justify-self-end sm:col-span-1" data-remover-variacao aria-label="Tirar esta variação" title="Tirar esta variação"><svg class="ico ico-sm"><use href="#i-lixeira"/></svg></button>
+</fieldset>

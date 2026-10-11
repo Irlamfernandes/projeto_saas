@@ -65,7 +65,7 @@ def gastos_view(request):
         'despesas': despesas_do_mes(user, mes),
         'compras': compras_do_mes(user, mes),
         'perdas': perdas_do_mes(user, mes),
-        'produtos': produtos_do_usuario(user).order_by('nome'),
+        'produtos': produtos_do_usuario(user).prefetch_related('variacoes').order_by('nome'),
         'categorias': categorias_usadas(user),
         'motivos': MOTIVOS_SUGERIDOS,
     }

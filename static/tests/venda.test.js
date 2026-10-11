@@ -730,109 +730,139 @@ describe('unidades e estoque sem controle', () => {
     });
 });
 
-describe('opções do produto', () => {
-    const { precoComOpcoes, precoDoItem, mesmasEscolhas, rotuloDoValor } = require('../js/venda.js');
-    const CAMISETA = {
-        id: 9, nome: 'Camiseta', codigo: 'C1', preco: '40.00', estoque: 2, unidade: 'un.', casas: 0,
-        opcoes: [
-            { nome: 'Tamanho', valores: [{ nome: 'P', acrescimo: '0.00' }, { nome: 'G', acrescimo: '5.00' }] },
-            { nome: 'Cor', valores: [{ nome: 'Azul', acrescimo: '0.00' }, { nome: 'Ouro', acrescimo: '2.50' }] },
+describe('variações do produto', () => {
+    const { precoComVariacao, precoDoItem, rotuloDaVariacao } = require('../js/venda.js');
+    const BLUSA = {
+        id: 9, nome: 'Blusa X', codigo: '22', preco: '40.00', estoque: 16, unidade: 'un.', casas: 0,
+        variacoes: [
+            { id: 1, nome: 'Azul P', acrescimo: '0.00', estoque: 10 },
+            { id: 2, nome: 'Azul M', acrescimo: '0.00', estoque: 5 },
+            { id: 3, nome: 'Branca P', acrescimo: '2.50', estoque: 1 },
         ],
     };
     const linhas = () => [...document.querySelectorAll('[data-itens-lista] li')];
-    const seletores = (linha) => [...linha.querySelectorAll('select')];
-    const opcoesEnviadas = () => [...document.querySelectorAll('[name="item_opcoes"]')].map((campo) => JSON.parse(campo.value));
+    const seletor = (linha) => linha.querySelector('select');
+    const variacoesEnviadas = () => [...document.querySelectorAll('[name="item_variacao"]')].map((campo) => campo.value);
 
-    function escolher(linha, indice, valor) {
-        const campo = seletores(linha)[indice];
+    function escolher(linha, valor) {
+        const campo = seletor(linha);
         campo.value = valor;
         campo.dispatchEvent(new Event('change'));
     }
 
     beforeEach(() => { Element.prototype.scrollIntoView = jest.fn(); });
 
-    test('preço com os acréscimos escolhidos, em centavos inteiros', () => {
-        expect(precoComOpcoes(CAMISETA, { Tamanho: 'G', Cor: 'Ouro' })).toBe(47.5);
-        expect(precoComOpcoes(CAMISETA, { Tamanho: 'P' })).toBe(40);
-        expect(precoComOpcoes({ preco: '0.10' }, {})).toBe(0.1);
-        expect(rotuloDoValor({ nome: 'G', acrescimo: '5.00' })).toMatch(/^G \(\+R\$\s5,00\)$/);
-        expect(rotuloDoValor({ nome: 'P', acrescimo: '0.00' })).toBe('P');
+    test('preço com o acréscimo da variação, em centavos inteiros', () => {
+        expect(precoComVariacao(BLUSA, BLUSA.variacoes[2])).toBe(42.5);
+        expect(precoComVariacao(BLUSA, null)).toBe(40);
+        expect(precoComVariacao({ preco: '0.10' }, { acrescimo: '0.20' })).toBe(0.3);
+        expect(rotuloDaVariacao({ nome: 'G', acrescimo: '5.00' }, 3)).toMatch(/^G \(\+R\$\s5,00\)$/);
+        expect(rotuloDaVariacao({ nome: 'P', acrescimo: '0.00' }, 1)).toBe('P');
+        expect(rotuloDaVariacao({ nome: 'P', acrescimo: '0.00' }, 0)).toBe('P · sem estoque');
     });
 
-    test('mesmas escolhas em qualquer ordem; o item da época mantém o preço dele', () => {
-        expect(mesmasEscolhas({ a: '1', b: '2' }, { b: '2', a: '1' })).toBe(true);
-        expect(mesmasEscolhas({ a: '1' }, { a: '1', b: '2' })).toBe(false);
-        expect(mesmasEscolhas({ a: '1' }, { a: '2' })).toBe(false);
-        const original = { preco: 30, escolhas: { Tamanho: 'G' } };
-        expect(precoDoItem({ produto: CAMISETA, escolhas: { Tamanho: 'G' }, original })).toBe(30);
-        expect(precoDoItem({ produto: CAMISETA, escolhas: { Tamanho: 'P' }, original })).toBe(40);
-        expect(precoDoItem({ produto: CAMISETA, escolhas: { Tamanho: 'G' } })).toBe(45);
+    test('o item da época mantém o preço dele só com a mesma variação', () => {
+        const [azul, , branca] = BLUSA.variacoes;
+        const original = { preco: 30, variacao: 3 };
+        expect(precoDoItem({ produto: BLUSA, variacao: branca, original })).toBe(30);
+        expect(precoDoItem({ produto: BLUSA, variacao: azul, original })).toBe(40);
+        expect(precoDoItem({ produto: BLUSA, variacao: null, original })).toBe(40);
+        expect(precoDoItem({ produto: BLUSA, variacao: null, original: { preco: 30, variacao: null } })).toBe(30);
+        expect(precoDoItem({ produto: BLUSA, variacao: branca })).toBe(42.5);
     });
 
-    test('cada vez que adiciona vira uma linha nova com um seletor obrigatório por opção', () => {
-        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
-        carrinho.adicionar(CAMISETA);
-        carrinho.adicionar(CAMISETA);
+    test('cada vez que adiciona vira uma linha nova com o seletor de variação obrigatório', () => {
+        const { carrinho } = montarPagina({ catalogo: [BLUSA] });
+        carrinho.adicionar(BLUSA);
+        carrinho.adicionar(BLUSA);
 
         expect(linhas()).toHaveLength(2);
-        const [tamanho, cor] = seletores(linhas()[0]);
-        expect([tamanho.required, cor.required]).toEqual([true, true]);
-        expect(tamanho.getAttribute('aria-label')).toBe('Tamanho de Camiseta');
-        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', 'P', 'G']);
-        expect(tamanho.options[2].textContent).toMatch(/^G \(\+R\$\s5,00\)$/);
-        expect(opcoesEnviadas()).toEqual([{}, {}]);
+        const campo = seletor(linhas()[0]);
+        expect(campo.required).toBe(true);
+        expect(campo.getAttribute('aria-label')).toBe('Variação de Blusa X');
+        expect([...campo.options].map((opcao) => opcao.value)).toEqual(['', '1', '2', '3']);
+        expect(campo.options[0].textContent).toBe('Escolha a variação…');
+        expect(campo.options[3].textContent).toMatch(/^Branca P \(\+R\$\s2,50\)$/);
+        expect(variacoesEnviadas()).toEqual(['', '']);
+        expect(total()).toMatch(/80,00/);
     });
 
-    test('escolher atualiza o preço, o total e o que vai para o servidor, sem perder o foco', () => {
-        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
-        carrinho.adicionar(CAMISETA);
-        carrinho.adicionar(CAMISETA);
+    test('escolher atualiza o preço, o estoque mostrado, o total e o que vai para o servidor, sem perder o foco', () => {
+        const { carrinho } = montarPagina({ catalogo: [BLUSA] });
+        carrinho.adicionar(BLUSA);
+        carrinho.adicionar(BLUSA);
 
-        escolher(linhas()[1], 0, 'G');
-        escolher(linhas()[1], 1, 'Ouro');
+        escolher(linhas()[1], '3');
 
-        expect(opcoesEnviadas()).toEqual([{}, { Tamanho: 'G', Cor: 'Ouro' }]);
-        expect(total()).toMatch(/87,50/);
-        expect(document.activeElement).toBe(seletores(linhas()[1])[1]);
-        expect(seletores(linhas()[1]).map((campo) => campo.value)).toEqual(['G', 'Ouro']);
-
-        escolher(linhas()[1], 0, '');
-        expect(opcoesEnviadas()[1]).toEqual({ Cor: 'Ouro' });
+        expect(variacoesEnviadas()).toEqual(['', '3']);
         expect(total()).toMatch(/82,50/);
+        expect(document.activeElement).toBe(seletor(linhas()[1]));
+        expect(linhas()[1].textContent).toContain('1 em estoque');
+
+        escolher(linhas()[1], '');
+        expect(variacoesEnviadas()[1]).toBe('');
+        expect(total()).toMatch(/80,00/);
     });
 
-    test('o estoque é dividido entre as linhas do mesmo produto', () => {
-        const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
-        carrinho.adicionar(CAMISETA);
-        carrinho.adicionar(CAMISETA);
-        carrinho.adicionar(CAMISETA); // estoque 2: a terceira não cabe
+    test('o estoque conferido é o da variação: a que acabou não dá para escolher em outra linha', () => {
+        const { carrinho } = montarPagina({ catalogo: [BLUSA] });
+        carrinho.adicionar(BLUSA);
+        carrinho.adicionar(BLUSA);
+        escolher(linhas()[0], '3'); // Branca P: só 1
 
-        expect(linhas()).toHaveLength(2);
-        const campo = linhas()[0].querySelector('[name="item_quantidade"]');
-        expect(campo.max).toBe('1');
+        const outra = seletor(linhas()[1]);
+        expect(outra.options[3].disabled).toBe(true);
+        expect(outra.options[3].textContent).toContain('sem estoque');
+        expect(seletor(linhas()[0]).options[3].disabled).toBe(false); // a própria escolha continua marcável
         carrinho.mudarQuantidade(carrinho.itens[0], 5);
+        expect(carrinho.itens[0].quantidade).toBe(1);
+        expect(linhas()[0].querySelector('[name="item_quantidade"]').max).toBe('1');
+    });
+
+    test('trocar para uma variação com menos estoque reduz a quantidade', () => {
+        const { carrinho } = montarPagina({ catalogo: [BLUSA] });
+        carrinho.adicionar(BLUSA);
+        escolher(linhas()[0], '1');
+        carrinho.mudarQuantidade(carrinho.itens[0], 4);
+        escolher(linhas()[0], '3');
         expect(carrinho.itens[0].quantidade).toBe(1);
     });
 
-    test('na edição, a escolha da época vem marcada, mantém o preço e aparece mesmo se o valor sumiu', () => {
+    test('antes de escolher a variação, o limite é o total do produto', () => {
+        const { carrinho } = montarPagina({ catalogo: [BLUSA] });
+        carrinho.adicionar(BLUSA);
+        carrinho.mudarQuantidade(carrinho.itens[0], 30);
+        expect(carrinho.itens[0].quantidade).toBe(16);
+        expect(linhas()[0].querySelector('[name="item_quantidade"]').max).toBe('16');
+    });
+
+    test('na edição, a variação da época vem marcada e mantém o preço; a que sumiu fica para escolher', () => {
         montarPagina({
-            catalogo: [{ ...CAMISETA, estoque: 10 }],
+            catalogo: [BLUSA],
             itens: [
-                { id: 9, quantidade: 1, preco: '42.00', opcoes: { Tamanho: 'GG', Cor: 'Azul' } },
-                { id: 9, quantidade: 1, preco: '40.00' },
+                { id: 9, quantidade: 1, preco: '41.00', variacao: 3 },
+                { id: 9, quantidade: 1, preco: '40.00', variacao: 99 },
             ],
         });
 
-        const [tamanho, cor] = seletores(linhas()[0]);
-        expect([tamanho.value, cor.value, tamanho.required]).toEqual(['GG', 'Azul', false]);
-        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', 'P', 'G', 'GG']);
-        expect(seletores(linhas()[1]).map((campo) => campo.value)).toEqual(['', '']);
-        expect(total()).toMatch(/82,00/);
+        expect(seletor(linhas()[0]).value).toBe('3');
+        expect(seletor(linhas()[1]).value).toBe('');
+        expect(total()).toMatch(/81,00/);
 
-        escolher(linhas()[0], 0, 'G');
-        expect(total()).toMatch(/85,00/); // 45 (preço de hoje) + 40
-        escolher(linhas()[0], 0, 'GG');
-        expect(total()).toMatch(/82,00/);
+        escolher(linhas()[0], '1');
+        expect(total()).toMatch(/80,00/); // 40 (preço de hoje) + 40
+        escolher(linhas()[0], '3');
+        expect(total()).toMatch(/81,00/);
+    });
+
+    test('sem controle de estoque, nenhuma variação acaba', () => {
+        const semControle = { ...BLUSA, estoque: null, variacoes: BLUSA.variacoes.map((v) => ({ ...v, estoque: null })) };
+        const { carrinho } = montarPagina({ catalogo: [semControle] });
+        carrinho.adicionar(semControle);
+        escolher(linhas()[0], '3');
+        carrinho.mudarQuantidade(carrinho.itens[0], 50);
+        expect(carrinho.itens[0].quantidade).toBe(50);
+        expect(linhas()[0].textContent).toContain('sem controle de estoque');
     });
 });
 
@@ -841,7 +871,7 @@ describe('detalhes do carrinho (cobrados pelo teste de mutação)', () => {
     const QUEIJO = { id: 1, nome: 'Queijo', codigo: '', preco: '39.90', estoque: 5.5, unidade: 'kg', casas: 3 };
     const CAMISETA = {
         id: 2, nome: 'Camiseta', codigo: 'C1', preco: '40.00', estoque: 2, unidade: 'un.', casas: 0,
-        opcoes: [{ nome: 'Tamanho', valores: [{ nome: 'P', acrescimo: '0.00' }, { nome: 'G', acrescimo: '5.00' }] }],
+        variacoes: [{ id: 5, nome: 'P', acrescimo: '0.00', estoque: 1 }, { id: 6, nome: 'G', acrescimo: '5.00', estoque: 1 }],
     };
     const linhas = () => [...document.querySelectorAll('[data-itens-lista] li')];
     let rolar;
@@ -867,13 +897,13 @@ describe('detalhes do carrinho (cobrados pelo teste de mutação)', () => {
         expect(nomes).toEqual(['Zebra', 'Abacate']);
     });
 
-    test('na edição, valor da época que ainda existe não aparece repetido', () => {
-        montarPagina({ catalogo: [CAMISETA], itens: [{ id: 2, quantidade: 1, preco: '45.00', opcoes: { Tamanho: 'G' } }] });
+    test('na edição, a variação da época aparece uma vez só', () => {
+        montarPagina({ catalogo: [CAMISETA], itens: [{ id: 2, quantidade: 1, preco: '45.00', variacao: 6 }] });
         const tamanho = linhas()[0].querySelector('select');
-        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', 'P', 'G']);
+        expect([...tamanho.options].map((opcao) => opcao.value)).toEqual(['', '5', '6']);
     });
 
-    test('item novo com opções começa no "Tamanho…" e cada vez vira uma linha', () => {
+    test('item novo com variações começa no "Escolha a variação…" e cada vez vira uma linha', () => {
         const { carrinho } = montarPagina({ catalogo: [CAMISETA] });
         carrinho.adicionar(CAMISETA);
         carrinho.adicionar(CAMISETA);

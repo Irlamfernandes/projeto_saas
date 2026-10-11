@@ -114,7 +114,7 @@
                 <label for="id_produto_perda" class="rotulo">Produto <span class="obrigatorio" aria-hidden="true">*</span></label>
                 <select id="id_produto_perda" name="produto" required class="entrada">
                     <option value="">Escolha o produto</option>
-                    {% for produto in produtos %}<option value="{{ produto.id }}">{{ produto.nome }}{% if produto.controla_estoque %} · {{ produto.quantidade_estoque|quantidade:produto.unidade }}{% endif %}</option>{% endfor %}
+                    {% include 'interfaces/_opcoes_de_produto.html' with com_estoque=True %}
                 </select>
             </div>
             <div class="grid grid-cols-1 min-[22em]:grid-cols-2 gap-3">

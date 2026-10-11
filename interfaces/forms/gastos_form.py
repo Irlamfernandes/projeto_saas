@@ -2,7 +2,6 @@ from decimal import Decimal, InvalidOperation
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from infrastructure.models import Produto
 
 MAXIMO_DE_ITENS = 30
 QUANTIDADE_MAXIMA = Decimal('1000000')
@@ -24,9 +23,17 @@ def _decimal(texto):
     return numero
 
 
+def produto_e_variacao(texto):
+    """Valor do seletor de produto: '12' (produto 12) ou '12:5' (variação 5 do produto 12)."""
+    produto, separador, variacao = texto.strip().partition(':')
+    return int(produto), int(variacao) if separador else None
+
+
 def _converter(linhas):
     try:
-        return [(int(produto), _decimal(quantidade), _decimal(custo)) for produto, quantidade, custo in linhas]
+        return [
+            (*produto_e_variacao(produto), _decimal(quantidade), _decimal(custo)) for produto, quantidade, custo in linhas
+        ]
     except (ValueError, InvalidOperation):
         raise ValidationError(ERRO_ITEM) from None
 
@@ -50,9 +57,12 @@ class CompraForm(forms.Form):
 
     def _ler_itens(self):
         itens = _converter(self._linhas_preenchidas())
-        if any(quantidade <= 0 or custo < 0 for _, quantidade, custo in itens):
+        if any(quantidade <= 0 or custo < 0 for _, _, quantidade, custo in itens):
             raise ValidationError("A quantidade precisa ser maior que zero e o custo não pode ser negativo.")
-        return [(produto, quantidade, custo.quantize(Decimal('0.01'))) for produto, quantidade, custo in itens]
+        return [
+            (produto, quantidade, custo.quantize(Decimal('0.01')), variacao)
+            for produto, variacao, quantidade, custo in itens
+        ]
 
     def _linhas_preenchidas(self):
         """Linhas (produto, quantidade, custo) com algo escrito; linhas totalmente em branco são ignoradas."""
@@ -97,10 +107,8 @@ class DespesaForm(forms.Form):
 
 class PerdaForm(forms.Form):
     data = _data()
-    produto = forms.ModelChoiceField(queryset=Produto.objects.none(), error_messages={
-        'required': "Escolha o produto que se perdeu.",
-        'invalid_choice': "Produto não encontrado nesta loja.",
-    })
+    # '12' ou '12:5' (com a variação): ver produto_e_variacao.
+    produto = forms.CharField(error_messages={'required': "Escolha o produto que se perdeu."})
     quantidade = forms.DecimalField(min_value=Decimal('0.001'), max_digits=12, decimal_places=3, localize=True,
                                     error_messages={
                                         'required': "Informe a quantidade perdida.",
@@ -117,11 +125,21 @@ class PerdaForm(forms.Form):
 
     def __init__(self, *args, produtos, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['produto'].queryset = produtos
+        self.produtos = produtos
+
+    def clean_produto(self):
+        try:
+            produto_id, variacao_id = produto_e_variacao(self.cleaned_data['produto'])
+        except ValueError:
+            produto_id, variacao_id = None, None
+        if not self.produtos.filter(pk=produto_id).exists():
+            raise ValidationError("Produto não encontrado nesta loja.")
+        return produto_id, variacao_id
 
     def parametros(self):
         dados = self.cleaned_data
+        produto_id, variacao_id = dados['produto']
         return {
-            'produto_id': dados['produto'].pk, 'quantidade': dados['quantidade'], 'data': dados['data'],
-            'motivo': dados['motivo'],
+            'produto_id': produto_id, 'variacao_id': variacao_id, 'quantidade': dados['quantidade'],
+            'data': dados['data'], 'motivo': dados['motivo'],
         }

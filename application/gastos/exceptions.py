@@ -21,13 +21,13 @@ class QuantidadeInvalidaParaUnidade(GastoError):
 
 
 class EstoqueNaoCobreAPerda(GastoError):
-    def __init__(self, produto, disponivel):
-        super().__init__(f"'{produto.nome}' tem só {disponivel} em estoque.")
+    def __init__(self, nome, disponivel):
+        super().__init__(f"'{nome}' tem só {disponivel} em estoque.")
 
 
 class EstoqueJaUsado(GastoError):
-    def __init__(self, produto):
+    def __init__(self, nome):
         super().__init__(
-            f"Não dá para excluir: parte do '{produto.nome}' desta compra já foi vendida ou baixada. "
+            f"Não dá para excluir: parte do '{nome}' desta compra já foi vendida ou baixada. "
             "Acerte o estoque no cadastro do produto, se precisar."
         )

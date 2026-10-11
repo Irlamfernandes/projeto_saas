@@ -1,21 +1,19 @@
-import re
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from application.produtos.selectors import ORDEM_PADRAO, ORDENACOES_PERMITIDAS
 from infrastructure.models import Produto, Unidade
-from infrastructure.models.produto import MAXIMO_DE_OPCOES, MILESIMO, quantidade_aceita
+from infrastructure.models.produto import MAXIMO_DE_VARIACOES, MILESIMO, TAMANHO_DO_NOME_DA_VARIACAO, quantidade_aceita
 
 # HEIC/HEIF: o formato das fotos do iPhone e de vários Androids (lido pelo pi-heif, ligado em infrastructure/apps.py).
 EXTENSOES_DE_IMAGEM = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']
 # Limite do arquivo enviado. O que fica guardado é bem menor: a foto é reduzida e regravada em WebP.
 TAMANHO_MAXIMO_MB = 25
 TAMANHO_MAXIMO_IMAGEM = TAMANHO_MAXIMO_MB * 1024 * 1024
-MAXIMO_DE_VALORES = 30
-TAMANHO_DO_NOME_NA_OPCAO = 40
-# O que vem depois do último "+" em "G + 5,00" ou "G +R$ 5": o valor G custa R$ 5 a mais.
-_ACRESCIMO = re.compile(r'(?:R\$\s*)?(\d{1,7}(?:[.,]\d{1,2})?)')
+CENTAVO = Decimal('0.01')
+LIMITE_DO_ACRESCIMO = Decimal('100000000')  # o campo guarda até 99.999.999,99
+LIMITE_DA_QUANTIDADE = Decimal('1000000000')  # 12 dígitos, 3 depois da vírgula
 
 
 def validar_tamanho_da_imagem(arquivo):
@@ -48,53 +46,72 @@ class ImagensField(forms.ImageField):
         return [super(ImagensField, self).clean(arquivo, initial) for arquivo in arquivos if arquivo]
 
 
-def ler_opcoes(nomes, textos):
-    """Campos repetidos opcao_nome e opcao_valores (um valor por linha) -> opções do produto. Blocos vazios são ignorados."""
-    opcoes = []
-    for nome, texto in zip(nomes, textos, strict=False):  # listas vindas do POST: sobra adulterada é ignorada
+def ler_variacoes(dados, unidade, controla_estoque):
+    """Linhas repetidas variacao_id, variacao_nome, variacao_acrescimo e variacao_quantidade -> lista de variações.
+
+    Linha toda em branco é ignorada. O acréscimo e a quantidade são opcionais (vazio = 0); sem controle de estoque,
+    a quantidade nem é lida. `id` vazio = variação nova.
+    """
+    linhas = zip(
+        dados.getlist('variacao_id'), dados.getlist('variacao_nome'),
+        dados.getlist('variacao_acrescimo'), dados.getlist('variacao_quantidade'), strict=False,
+    )  # listas vindas do POST: sobra adulterada é ignorada
+    variacoes = []
+    for id_texto, nome, acrescimo, quantidade in linhas:
         nome = nome.strip()
-        valores = [_ler_valor(linha.strip()) for linha in texto.splitlines() if linha.strip()]
-        if not nome and not valores:
+        if not (nome or acrescimo.strip() or quantidade.strip()):
             continue
         if not nome:
-            raise ValidationError("Dê um nome para cada opção (ex.: Tamanho, Sabor, Cor).")
-        if not valores:
-            raise ValidationError(f"Escreva os valores da opção \"{nome}\", um por linha.")
-        opcoes.append({'nome': nome, 'valores': valores})
-    _conferir_opcoes(opcoes)
-    return opcoes
+            raise ValidationError("Dê um nome para cada variação (ex.: Azul P, Chocolate).")
+        variacoes.append({
+            'id': _id_da_variacao(id_texto),
+            'nome': nome,
+            'acrescimo': _numero(acrescimo, f"Acréscimo inválido em \"{nome}\".", LIMITE_DO_ACRESCIMO).quantize(CENTAVO),
+            'quantidade': _quantidade(quantidade, nome, unidade) if controla_estoque else Decimal('0'),
+        })
+    _conferir_variacoes(variacoes)
+    return variacoes
 
 
-def _ler_valor(linha):
-    nome, mais, depois = linha.rpartition('+')
-    achou = _ACRESCIMO.fullmatch(depois.strip())
-    if not (mais and nome.strip() and achou):
-        return {'nome': linha, 'acrescimo': '0.00'}
-    acrescimo = Decimal(achou[1].replace(',', '.')).quantize(Decimal('0.01'))
-    return {'nome': nome.strip(), 'acrescimo': str(acrescimo)}
+def _id_da_variacao(texto):
+    if not texto.strip():
+        return None
+    if not texto.strip().isdigit():
+        raise ValidationError("Variação inválida.")
+    return int(texto)
 
 
-def _conferir_opcoes(opcoes):
-    if len(opcoes) > MAXIMO_DE_OPCOES:
-        raise ValidationError(f"Cada produto pode ter até {MAXIMO_DE_OPCOES} opções.")
-    _sem_repetir([opcao['nome'] for opcao in opcoes], "Há duas opções chamadas \"{}\".")
-    for opcao in opcoes:
-        nomes = [valor['nome'] for valor in opcao['valores']]
-        if len(nomes) > MAXIMO_DE_VALORES:
-            raise ValidationError(f"A opção \"{opcao['nome']}\" pode ter até {MAXIMO_DE_VALORES} valores.")
-        _sem_repetir(nomes, f"O valor \"{{}}\" aparece duas vezes em \"{opcao['nome']}\".")
-        longo = next((texto for texto in [opcao['nome'], *nomes] if len(texto) > TAMANHO_DO_NOME_NA_OPCAO), None)
-        if longo:
-            raise ValidationError(
-                f"\"{longo[:20]}…\" é longo demais: use até {TAMANHO_DO_NOME_NA_OPCAO} letras em cada opção e valor.",
-            )
+def _numero(texto, mensagem, limite):
+    """'5,00', '5.00', 'R$ 5' ou vazio (0). Negativo ou grande demais é recusado."""
+    texto = texto.replace('R$', '').strip().replace(',', '.')
+    try:
+        numero = Decimal(texto or '0')
+    except InvalidOperation:
+        raise ValidationError(mensagem) from None
+    if not numero.is_finite() or numero < 0 or numero >= limite:
+        raise ValidationError(mensagem)
+    return numero
 
 
-def _sem_repetir(nomes, mensagem):
+def _quantidade(texto, nome, unidade):
+    quantidade = _numero(texto, f"Quantidade inválida em \"{nome}\".", LIMITE_DA_QUANTIDADE).quantize(MILESIMO)
+    if not quantidade_aceita(quantidade, unidade):
+        raise ValidationError(f"Esta unidade só aceita números inteiros: confira a quantidade de \"{nome}\".")
+    return quantidade
+
+
+def _conferir_variacoes(variacoes):
+    if len(variacoes) > MAXIMO_DE_VARIACOES:
+        raise ValidationError(f"Cada produto pode ter até {MAXIMO_DE_VARIACOES} variações.")
     vistos = set()
-    for nome in nomes:
+    for variacao in variacoes:
+        nome = variacao['nome']
+        if len(nome) > TAMANHO_DO_NOME_DA_VARIACAO:
+            raise ValidationError(
+                f"\"{nome[:20]}…\" é longo demais: use até {TAMANHO_DO_NOME_DA_VARIACAO} letras no nome da variação.",
+            )
         if nome.casefold() in vistos:
-            raise ValidationError(mensagem.format(nome))
+            raise ValidationError(f"Há duas variações chamadas \"{nome}\".")
         vistos.add(nome.casefold())
 
 
@@ -159,11 +176,14 @@ class ProdutoForm(forms.ModelForm):
                 dados[campo] = zero
         self.instance.controla_estoque = not dados.get('sem_controle_de_estoque')
         try:
-            self.instance.opcoes = ler_opcoes(self.data.getlist('opcao_nome'), self.data.getlist('opcao_valores'))
+            self.variacoes = ler_variacoes(self.data, dados.get('unidade'), self.instance.controla_estoque)
         except ValidationError as erro:
+            self.variacoes = []
             self.add_error(None, erro)
         if not self.instance.controla_estoque:
             dados['quantidade_estoque'] = Decimal('0')
+        elif self.variacoes:  # com variações, o estoque do produto é a soma delas
+            dados['quantidade_estoque'] = sum((variacao['quantidade'] for variacao in self.variacoes), Decimal('0'))
         if 'quantidade_estoque' in dados:
             # Mesma forma que vem do banco (3 casas): o histórico só registra o que mudou de verdade.
             dados['quantidade_estoque'] = dados['quantidade_estoque'].quantize(MILESIMO)
@@ -172,7 +192,7 @@ class ProdutoForm(forms.ModelForm):
         return dados
 
     def parametros(self):
-        return {'produto': self.instance, 'imagens': self.cleaned_data['imagens']}
+        return {'produto': self.instance, 'variacoes': self.variacoes, 'imagens': self.cleaned_data['imagens']}
 
 
 class EditarProdutoForm(ProdutoForm):
@@ -187,6 +207,7 @@ class EditarProdutoForm(ProdutoForm):
     def parametros(self):
         return {
             'produto': self.instance,
+            'variacoes': self.variacoes,
             'imagens_novas': self.cleaned_data['imagens'],
             'ids_imagens_remover': self.cleaned_data['remover_imagens'],
         }

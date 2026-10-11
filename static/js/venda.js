@@ -1,7 +1,7 @@
 /*
  * Carrinho da venda: busca de produtos (nome ou código, sem se importar com acentos) e lista de itens.
- * Marcação em interfaces/_carrinho.html. Envia listas paralelas item_produto[], item_quantidade[] e item_opcoes[]
- * (as opções escolhidas em JSON: {"Tamanho": "G"}). Produto com opções entra numa linha nova a cada vez.
+ * Marcação em interfaces/_carrinho.html. Envia listas paralelas item_produto[], item_quantidade[] e item_variacao[]
+ * (id da variação escolhida; vazio se o produto não tem). Produto com variações entra numa linha nova a cada vez.
  */
 
 const LIMITE_DE_RESULTADOS = 8;
@@ -41,39 +41,25 @@ function descreverPreco(produto, preco) {
     return `${formatarReais(preco)} ${medida}`;
 }
 
-function temOpcoes(produto) {
-    return (produto.opcoes || []).length > 0;
+function temVariacoes(produto) {
+    return (produto.variacoes || []).length > 0;
 }
 
-/* Preço do produto mais o acréscimo dos valores escolhidos (G + R$ 5,00), em centavos inteiros. */
-function precoComOpcoes(produto, escolhas) {
-    const centavos = (produto.opcoes || []).reduce((soma, opcao) => {
-        const valor = opcao.valores.find((candidato) => candidato.nome === escolhas[opcao.nome]);
-        return soma + (valor ? Math.round(Number(valor.acrescimo) * 100) : 0);
-    }, Math.round(Number(produto.preco) * 100));
+/* Preço do produto mais o acréscimo da variação (Azul G + R$ 5,00), em centavos inteiros. */
+function precoComVariacao(produto, variacao) {
+    const centavos = Math.round(Number(produto.preco) * 100) + Math.round(Number(variacao?.acrescimo || 0) * 100);
     return centavos / 100;
 }
 
-function mesmasEscolhas(umas, outras) {
-    const nomes = Object.keys(umas);
-    return nomes.length === Object.keys(outras).length && nomes.every((nome) => umas[nome] === outras[nome]);
-}
-
-/* Item que já estava na venda (edição) e segue com as mesmas escolhas mantém o preço da época, como no servidor. */
+/* Item que já estava na venda (edição) e segue com a mesma variação mantém o preço da época, como no servidor. */
 function precoDoItem(item) {
-    if (item.original && mesmasEscolhas(item.escolhas, item.original.escolhas)) return item.original.preco;
-    return precoComOpcoes(item.produto, item.escolhas);
+    if (item.original && (item.variacao?.id ?? null) === item.original.variacao) return item.original.preco;
+    return precoComVariacao(item.produto, item.variacao);
 }
 
-function rotuloDoValor(valor) {
-    return Number(valor.acrescimo) ? `${valor.nome} (+${formatarReais(Number(valor.acrescimo))})` : valor.nome;
-}
-
-/* Valores do seletor: os do produto e, na edição, o escolhido na época se ele não existir mais. */
-function valoresDaOpcao(opcao, item) {
-    const daEpoca = item.original?.escolhas[opcao.nome];
-    const existe = opcao.valores.some((valor) => valor.nome === daEpoca);
-    return daEpoca && !existe ? [...opcao.valores, { nome: daEpoca, acrescimo: 0 }] : opcao.valores;
+function rotuloDaVariacao(variacao, livre) {
+    const acrescimo = Number(variacao.acrescimo) ? ` (+${formatarReais(Number(variacao.acrescimo))})` : '';
+    return livre <= 0 ? `${variacao.nome}${acrescimo} · sem estoque` : `${variacao.nome}${acrescimo}`;
 }
 
 /* Quantidade × preço em centavos, com contas inteiras (0,35 kg × R$ 39,90 = R$ 13,97, como no servidor). */
@@ -148,26 +134,27 @@ function iniciarCarrinho(raiz) {
     lerJson(raiz.dataset.itens).forEach((inicial) => {
         const produto = porId.get(inicial.id);
         if (!produto) return;
-        const escolhas = inicial.opcoes || {};
-        const original = { preco: Number(inicial.preco), escolhas: { ...escolhas } };
-        itens.push({ produto, quantidade: inicial.quantidade, escolhas: { ...escolhas }, original, preco: original.preco });
+        const variacao = (produto.variacoes || []).find((candidata) => candidata.id === inicial.variacao) || null;
+        const original = { preco: Number(inicial.preco), variacao: inicial.variacao ?? null };
+        itens.push({ produto, variacao, quantidade: inicial.quantidade, original, preco: original.preco });
     });
 
-    /* O que ainda dá para vender do produto, descontando as outras linhas dele no carrinho. */
-    function livre(produto, fora = null) {
-        const usado = itens.filter((item) => item.produto.id === produto.id && item !== fora)
+    /* O que ainda dá para vender (do produto ou da variação), descontando as outras linhas iguais do carrinho. */
+    function livre(produto, variacao = null, fora = null) {
+        const usado = itens.filter((item) => item.produto.id === produto.id && item.variacao === variacao && item !== fora)
             .reduce((soma, item) => soma + item.quantidade, 0);
-        return Number((limiteDoEstoque(produto) - usado).toFixed(3));
+        return Number((limiteDoEstoque(variacao || produto) - usado).toFixed(3));
     }
 
     function adicionar(produto) {
-        // Com opções, cada vez é uma linha nova: pode ser outro tamanho, outro sabor...
-        const existente = !temOpcoes(produto) && itens.find((item) => item.produto.id === produto.id);
+        // Com variações, cada vez é uma linha nova: pode ser outra cor, outro tamanho...
+        const existente = !temVariacoes(produto) && itens.find((item) => item.produto.id === produto.id);
         const disponivel = livre(produto);
         if (existente) {
             existente.quantidade += Math.min(1, disponivel);
         } else if (disponivel > 0) {
-            itens.push({ produto, quantidade: Math.min(1, disponivel), escolhas: {}, preco: precoComOpcoes(produto, {}) });
+            const quantidade = temVariacoes(produto) ? 1 : Math.min(1, disponivel);
+            itens.push({ produto, variacao: null, quantidade, preco: precoComVariacao(produto, null) });
         }
         busca.value = '';
         fecharResultados();
@@ -178,36 +165,35 @@ function iniciarCarrinho(raiz) {
     function mudarQuantidade(item, quantidade) {
         const casas = item.produto.casas || 0;
         const pedida = Number(String(quantidade).replace(',', '.')) || 1;
-        const limitada = Math.min(pedida, livre(item.produto, item));
+        const limitada = Math.min(pedida, livre(item.produto, item.variacao, item));
         item.quantidade = Math.max(passoDaQuantidade(item.produto), Number(limitada.toFixed(casas)));
         desenharItens();
     }
 
-    function escolher(item, opcao, valor, indice) {
-        if (valor) {
-            item.escolhas[opcao.nome] = valor;
-        } else {
-            delete item.escolhas[opcao.nome];
-        }
+    function escolher(item, id) {
+        item.variacao = item.produto.variacoes.find((variacao) => String(variacao.id) === id) || null;
         item.preco = precoDoItem(item);
+        const disponivel = item.variacao ? livre(item.produto, item.variacao, item) : Infinity;
+        item.quantidade = Math.max(passoDaQuantidade(item.produto), Math.min(item.quantidade, disponivel));
         desenharItens();
-        lista.children[itens.indexOf(item)].querySelectorAll('[data-opcao-item]')[indice].focus();
+        lista.children[itens.indexOf(item)].querySelector('[data-variacao-item]').focus();
     }
 
-    /* Um seletor por opção. Obrigatório nos itens novos; na edição, deixar como estava mantém a escolha da época. */
-    function seletoresDeOpcoes(item) {
-        const grupo = criarElemento('div', 'flex flex-wrap gap-1.5 mt-1.5');
-        item.produto.opcoes.forEach((opcao, indice) => {
-            const campo = criarElemento('select', 'entrada entrada-pequena');
-            campo.dataset.opcaoItem = '';
-            campo.required = !item.original;
-            campo.setAttribute('aria-label', `${opcao.nome} de ${item.produto.nome}`);
-            campo.append(new Option(`${opcao.nome}…`, ''), ...valoresDaOpcao(opcao, item).map((valor) => new Option(rotuloDoValor(valor), valor.nome)));
-            campo.value = item.escolhas[opcao.nome] ?? '';
-            campo.addEventListener('change', () => escolher(item, opcao, campo.value, indice));
-            grupo.append(campo);
-        });
-        return grupo;
+    /* Seletor da variação (obrigatório). A que acabou aparece, mas não dá para escolher. */
+    function seletorDeVariacao(item) {
+        const campo = criarElemento('select', 'entrada entrada-pequena mt-1.5');
+        campo.dataset.variacaoItem = '';
+        campo.required = true;
+        campo.setAttribute('aria-label', `Variação de ${item.produto.nome}`);
+        campo.append(new Option('Escolha a variação…', ''), ...item.produto.variacoes.map((variacao) => {
+            const disponivel = livre(item.produto, variacao, item);
+            const opcao = new Option(rotuloDaVariacao(variacao, disponivel), String(variacao.id));
+            opcao.disabled = disponivel <= 0 && variacao !== item.variacao;
+            return opcao;
+        }));
+        campo.value = item.variacao ? String(item.variacao.id) : '';
+        campo.addEventListener('change', () => escolher(item, campo.value));
+        return campo;
     }
 
     function remover(item) {
@@ -227,19 +213,20 @@ function iniciarCarrinho(raiz) {
     function linhaDoItem(item) {
         const linha = criarElemento('li', 'item-carrinho');
         const info = criarElemento('div', 'min-w-0 flex-1 basis-40'); // estreito: o nome ocupa a linha e os controles descem
+        const estoque = item.variacao ? { ...item.produto, estoque: item.variacao.estoque } : item.produto;
         info.append(
             criarElemento('span', 'block font-semibold leading-snug', item.produto.nome),
             criarElemento('span', 'block text-xs text-tinta-fraca tabular-nums',
-                `${descreverPreco(item.produto, item.preco)} · ${descreverEstoque(item.produto)}`),
+                `${descreverPreco(item.produto, item.preco)} · ${descreverEstoque(estoque)}`),
         );
-        if (temOpcoes(item.produto)) info.append(seletoresDeOpcoes(item));
+        if (temVariacoes(item.produto)) info.append(seletorDeVariacao(item));
 
         const quantidade = criarElemento('div', 'quantidade');
         const menos = botaoIcone('i-menos', `Diminuir ${item.produto.nome}`, 'quantidade-botao');
         const campo = criarElemento('input', 'quantidade-campo');
         const mais = botaoIcone('i-mais', `Aumentar ${item.produto.nome}`, 'quantidade-botao');
         const passo = passoDaQuantidade(item.produto);
-        const limite = livre(item.produto, item);
+        const limite = livre(item.produto, item.variacao, item); // sem variação escolhida: o total do produto
         Object.assign(campo, {
             type: 'number', min: passo, step: passo, value: item.quantidade, name: 'item_quantidade',
             inputMode: passo < 1 ? 'decimal' : 'numeric',
@@ -257,8 +244,8 @@ function iniciarCarrinho(raiz) {
 
         const produto = criarElemento('input');
         Object.assign(produto, { type: 'hidden', name: 'item_produto', value: item.produto.id });
-        const escolhas = criarElemento('input');
-        Object.assign(escolhas, { type: 'hidden', name: 'item_opcoes', value: JSON.stringify(item.escolhas) });
+        const variacao = criarElemento('input');
+        Object.assign(variacao, { type: 'hidden', name: 'item_variacao', value: item.variacao ? item.variacao.id : '' });
 
         const valor = criarElemento('span', 'w-24 text-right font-semibold tabular-nums', formatarReais(subtotal(item)));
         const tirar = botaoIcone('i-lixeira', `Tirar ${item.produto.nome} da venda`, 'btn-fantasma btn-pequeno px-2 text-critico-texto');
@@ -267,7 +254,7 @@ function iniciarCarrinho(raiz) {
         // Em telas bem estreitas (menos de ~340px) a lixeira desce para a linha de baixo, em vez de alargar a página.
         const acoes = criarElemento('div', 'flex flex-wrap items-center justify-end gap-2');
         acoes.append(quantidade, valor, tirar);
-        linha.append(info, acoes, produto, escolhas);
+        linha.append(info, acoes, produto, variacao);
         return linha;
     }
 
@@ -533,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Stryker disable next-line all: no Jest `module` sempre existe; a linha só serve para os testes importarem o arquivo.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
-        normalizar, buscarProdutos, totalDoCarrinho, precoComOpcoes, precoDoItem, mesmasEscolhas, rotuloDoValor, formatarReais, subtotal, descreverEstoque, descreverPreco, iniciarCarrinho, iniciarResumoDePagamento,
+        normalizar, buscarProdutos, totalDoCarrinho, precoComVariacao, precoDoItem, rotuloDaVariacao, formatarReais, subtotal, descreverEstoque, descreverPreco, iniciarCarrinho, iniciarResumoDePagamento,
         formaDePagamentoObrigatoria, iniciarFormaObrigatoria, somarDias, iniciarVencimento, dividirEmParcelas,
         datasDasParcelas, resumoDasParcelas,
     };

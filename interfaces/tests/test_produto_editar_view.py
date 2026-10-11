@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models import Acao, RegistroDeAlteracao
 from infrastructure.models.loja_model import LojaModel
-from infrastructure.models.produto import Produto, ProdutoImagem
+from infrastructure.models.produto import Produto, ProdutoImagem, Variacao
 from tests.apoio import URL_PUBLICA, StorageFalso, imagem_de_teste
 
 User = get_user_model()
@@ -58,29 +58,61 @@ class ProdutoEditarViewTest(TestCase):
         self.assertContains(response, "Cada produto pode ter até 5 fotos: dá para adicionar mais 5")
         self.assertContains(response, 'data-maximo-fotos="5"')
 
-    def test_opcoes_vem_preenchidas_e_sao_salvas_com_historico(self):
-        valores = [{'nome': 'Coco', 'acrescimo': '0.00'}, {'nome': 'Nozes', 'acrescimo': '3.00'}]
-        self.produto.opcoes = [{'nome': 'Sabor', 'valores': valores}]
-        self.produto.save()
+    def variacoes(self, *linhas):
+        return dict(zip(('variacao_id', 'variacao_nome', 'variacao_acrescimo', 'variacao_quantidade'),
+                        map(list, zip(*linhas, strict=True)), strict=True))
+
+    def test_variacoes_vem_preenchidas_e_sao_salvas_com_historico(self):
+        azul = Variacao.objects.create(produto=self.produto, nome="Azul P", quantidade_estoque=6)
+        branca = Variacao.objects.create(produto=self.produto, nome="Branca P", quantidade_estoque=4, acrescimo=Decimal('2.5'))
         self.client.force_login(self.user_loja1)
         pagina = self.client.get(self.url)
-        self.assertContains(pagina, 'value="Sabor"')
-        self.assertContains(pagina, 'Coco\nNozes + 3,00</textarea>')
-        self.assertContains(pagina, 'data-maximo="5" open')
+        self.assertContains(pagina, f'name="variacao_id" value="{azul.pk}"')
+        self.assertContains(pagina, 'value="Branca P"')
+        self.assertContains(pagina, 'name="variacao_acrescimo" value="2.5"')
+        self.assertContains(pagina, 'data-maximo="100" open')
 
-        self._editar(opcao_nome=['Sabor', 'Tamanho'], opcao_valores=['Coco\nNozes + 3,00', 'Fatia\nInteiro + 40'])
+        self._editar(**self.variacoes((str(azul.pk), 'Azul PP', '', '8'), ('', 'Verde M', '1,00', '3')))
 
         self.produto.refresh_from_db()
-        self.assertEqual([opcao['nome'] for opcao in self.produto.opcoes], ['Sabor', 'Tamanho'])
-        historico = RegistroDeAlteracao.objects.get(acao=Acao.PRODUTO_EDITADO)
-        self.assertIn('opcoes', historico.detalhes['alteracoes'])
+        self.assertEqual(
+            [(v.nome, v.acrescimo, v.quantidade_estoque) for v in self.produto.variacoes.all()],
+            [("Azul PP", Decimal('0.00'), Decimal('8')), ("Verde M", Decimal('1.00'), Decimal('3'))],
+        )
+        self.assertEqual(self.produto.variacoes.get(nome="Azul PP").pk, azul.pk)  # a mesma, renomeada
+        self.assertFalse(Variacao.objects.filter(pk=branca.pk).exists())
+        self.assertEqual(self.produto.quantidade_estoque, Decimal('11'))  # a soma, não os 15 digitados
+        alteracoes = RegistroDeAlteracao.objects.get(acao=Acao.PRODUTO_EDITADO).detalhes['alteracoes']
+        self.assertEqual(alteracoes['variacoes'][1], [
+            {'nome': 'Azul PP', 'acrescimo': '0.00', 'quantidade_estoque': '8.00'},
+            {'nome': 'Verde M', 'acrescimo': '1.00', 'quantidade_estoque': '3.00'},
+        ])
 
-    def test_opcao_invalida_mostra_o_erro_e_nao_salva(self):
-        response = self._editar(opcao_nome=[''], opcao_valores=['P'])
+    def test_trocar_os_nomes_entre_si_na_mesma_edicao(self):
+        azul = Variacao.objects.create(produto=self.produto, nome="Azul")
+        branca = Variacao.objects.create(produto=self.produto, nome="Branca")
 
-        self.assertIn("Dê um nome para cada opção (ex.: Tamanho, Sabor, Cor).", self._mensagens(response))
-        self.produto.refresh_from_db()
-        self.assertEqual(self.produto.opcoes, [])
+        self._editar(**self.variacoes((str(azul.pk), 'Branca', '', '1'), (str(branca.pk), 'Azul', '', '2')))
+
+        azul.refresh_from_db()
+        branca.refresh_from_db()
+        self.assertEqual((azul.nome, branca.nome), ("Branca", "Azul"))
+
+    def test_variacao_invalida_mostra_o_erro_e_nao_salva(self):
+        response = self._editar(**self.variacoes(('', '', '', '2')))
+
+        self.assertIn("Dê um nome para cada variação (ex.: Azul P, Chocolate).", self._mensagens(response))
+        self.assertFalse(self.produto.variacoes.exists())
+
+    def test_variacao_de_outro_produto_e_recusada(self):
+        de_fora = Variacao.objects.create(produto=self.produto_loja2, nome="Dela")
+
+        response = self._editar(**self.variacoes((str(de_fora.pk), 'Minha', '', '1')))
+
+        self.assertIn("Uma das variações não existe mais. Abra o produto de novo e refaça a alteração.",
+                      self._mensagens(response))
+        de_fora.refresh_from_db()
+        self.assertEqual(de_fora.nome, "Dela")
 
     def test_produto_com_5_fotos_pede_para_remover_antes(self):
         for _ in range(5):

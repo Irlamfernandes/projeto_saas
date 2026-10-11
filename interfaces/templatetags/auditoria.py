@@ -12,6 +12,7 @@ ROTULOS = {
     'preco_venda': 'Preço de venda', 'quantidade_estoque': 'Estoque', 'descricao': 'Descrição',
     'telefone': 'Telefone', 'cpf': 'CPF', 'email': 'E-mail', 'endereco': 'Endereço',
     'unidade': 'Vendido por', 'controla_estoque': 'Controla estoque', 'opcoes': 'Opções',
+    'variacoes': 'Variações',
 }
 VAZIO = '(vazio)'
 ICONES_POR_ACAO = {'venda_cancelada': 'i-x', 'marca_alterada': 'i-foto', 'plano_renovado': 'i-calendario'}
@@ -85,6 +86,16 @@ def _valor_da_opcao(valor):
     return valor['nome']
 
 
+def _variacoes(variacoes):
+    """'Azul P: 10; Branca M: 5 (+R$ 5,00)'."""
+    return '; '.join(map(_variacao, variacoes)) or VAZIO
+
+
+def _variacao(variacao):
+    texto = f"{variacao['nome']}: {numero(variacao['quantidade_estoque'])}"
+    return f"{texto} (+{reais(variacao['acrescimo'])})" if Decimal(variacao['acrescimo']) else texto
+
+
 def _reais(valor):
     return reais(valor) if _e_numero(valor) else str(valor)
 
@@ -141,4 +152,5 @@ def _fotos(fotos):
 # Como mostrar o valor de cada campo no histórico (o resto aparece como veio).
 _FORMATOS = {
     'preco_custo': _reais, 'preco_venda': _reais, 'quantidade_estoque': _estoque, 'unidade': _unidade, 'opcoes': _opcoes,
+    'variacoes': _variacoes,
 }

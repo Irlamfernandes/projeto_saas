@@ -59,7 +59,7 @@
 
             {% include 'interfaces/_estoque_do_produto.html' with prefixo='id' ajuda='Avisamos no início quando estiver acabando.' %}
 
-            {% include 'interfaces/_opcoes_do_produto.html' %}
+            {% include 'interfaces/_variacoes_do_produto.html' %}
 
             <div class="campo">
                 <label for="id_descricao_produto" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
@@ -148,6 +148,9 @@
                                         {% elif produto.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ produto.quantidade_estoque|quantidade:produto.unidade }}</span>
                                         {% else %}<span class="pilula-neutra">{{ produto.quantidade_estoque|quantidade:produto.unidade }}</span>{% endif %}
                                     </span>
+                                    {% with variacoes=produto.variacoes.all %}{% if variacoes %}
+                                    <span class="mt-1 block text-xs text-tinta-suave">{% for variacao in variacoes %}{{ variacao.nome }}{% if produto.controla_estoque %}: <b class="font-semibold tabular-nums{% if not variacao.quantidade_estoque %} text-critico-texto{% endif %}">{{ variacao.quantidade_estoque|quantidade:produto.unidade }}</b>{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</span>
+                                    {% endif %}{% endwith %}
                                 </span>
                             </div>
                         </td>
@@ -177,4 +180,5 @@
 
 {% block extra_js %}
 <script src="{% static 'js/fotos.js' %}" defer></script>
+<script src="{% static 'js/variacoes.js' %}" defer></script>
 {% endblock %}

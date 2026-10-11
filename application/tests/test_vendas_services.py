@@ -3,13 +3,13 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from application.vendas.exceptions import (
-    EstoqueInsuficiente, OpcaoNaoEscolhida, OpcoesMudaram, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta,
-    VendaSemItens, VendaSemLoja,
+    EstoqueInsuficiente, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
+from application.produtos.exceptions import VariacaoMudou, VariacaoNaoEscolhida
 from application.vendas.services import cancelar_venda, editar_venda, registrar_venda
 from infrastructure.models import (
     Acao, Cliente, FormaDePagamento, ItemVenda, LojaModel, PagamentoCliente, Parcela, Produto, RegistroDeAlteracao, Unidade,
-    Venda,
+    Variacao, Venda,
 )
 
 
@@ -207,91 +207,104 @@ class UnidadesEControleDeEstoqueTest(ServicoDeVendaTestCase):
         self.assertEstoque(self.bolo, 0)
 
 
-TAMANHO_E_COR = [
-    {'nome': 'Tamanho', 'valores': [
-        {'nome': 'P', 'acrescimo': '0.00'}, {'nome': 'G', 'acrescimo': '5.00'},
-    ]},
-    {'nome': 'Cor', 'valores': [{'nome': 'Azul', 'acrescimo': '0.00'}, {'nome': 'Ouro', 'acrescimo': '2.50'}]},
-]
-G_AZUL = {'Cor': 'Azul', 'Tamanho': 'G'}
-
-
-class OpcoesNaVendaTest(ServicoDeVendaTestCase):
-    """A escolha fica no item, o acréscimo entra no preço e o estoque é o do produto."""
+class VariacoesNaVendaTest(ServicoDeVendaTestCase):
+    """Blusa X (código 22) com 20 unidades: 10 Azul P, 5 Azul M e 5 Branca P. Cada venda baixa da variação vendida."""
 
     def setUp(self):
         super().setUp()
-        self.camiseta = Produto.objects.create(
-            loja=self.loja, nome="Camiseta", preco_venda=Decimal('40.00'), preco_custo=Decimal('15.00'),
-            quantidade_estoque=5, opcoes=TAMANHO_E_COR,
+        self.blusa = Produto.objects.create(
+            loja=self.loja, nome="Blusa X", codigo_interno="22", preco_venda=Decimal('40.00'),
+            preco_custo=Decimal('15.00'), quantidade_estoque=20,
+        )
+        self.azul_p = Variacao.objects.create(produto=self.blusa, nome="Azul P", quantidade_estoque=10)
+        self.azul_m = Variacao.objects.create(produto=self.blusa, nome="Azul M", quantidade_estoque=5)
+        self.branca_p = Variacao.objects.create(
+            produto=self.blusa, nome="Branca P", quantidade_estoque=5, acrescimo=Decimal('2.50'),
         )
 
-    def test_acrescimo_entra_no_preco_e_a_escolha_fica_no_item_na_ordem_do_produto(self):
-        venda = self.vender([(self.camiseta.pk, 2, G_AZUL)])
+    def assertEstoques(self, produto, variacoes):
+        self.assertEstoque(self.blusa, produto)
+        for variacao, esperado in zip((self.azul_p, self.azul_m, self.branca_p), variacoes, strict=True):
+            variacao.refresh_from_db()
+            self.assertEqual(variacao.quantidade_estoque, esperado, variacao.nome)
+
+    def test_baixa_da_variacao_vendida_e_do_total_do_produto(self):
+        venda = self.vender([(self.blusa.pk, 2, self.azul_p.pk)])
 
         item = venda.itens.get()
-        self.assertEqual((item.preco_unitario, item.custo_unitario), (Decimal('45.00'), Decimal('15.00')))
-        self.assertEqual(item.opcoes, [{'nome': 'Tamanho', 'valor': 'G'}, {'nome': 'Cor', 'valor': 'Azul'}])
-        self.assertEqual(item.nome, "Camiseta (G, Azul)")
-        self.assertEqual(venda.valor_total, Decimal('90.00'))
-        self.assertEstoque(self.camiseta, 3)
+        self.assertEqual((item.variacao, item.preco_unitario, item.custo_unitario), (self.azul_p, Decimal('40.00'), Decimal('15.00')))
+        self.assertEqual(item.opcoes, [{'nome': 'Variação', 'valor': 'Azul P'}])
+        self.assertEqual(item.nome, "Blusa X (Azul P)")
+        self.assertEstoques(18, [8, 5, 5])
         historico = RegistroDeAlteracao.objects.get(acao=Acao.VENDA_REGISTRADA)
-        self.assertEqual(historico.detalhes['venda']['itens'][0]['produto'], "Camiseta (G, Azul)")
+        self.assertEqual(historico.detalhes['venda']['itens'][0]['produto'], "Blusa X (Azul P)")
 
-    def test_escolhas_iguais_se_juntam_e_diferentes_viram_outro_item(self):
+    def test_acrescimo_da_variacao_entra_no_preco(self):
+        venda = self.vender([(self.blusa.pk, 2, self.branca_p.pk)])
+        self.assertEqual(venda.itens.get().preco_unitario, Decimal('42.50'))
+        self.assertEqual(venda.valor_total, Decimal('85.00'))
+
+    def test_mesma_variacao_se_junta_e_outra_vira_outro_item(self):
         venda = self.vender([
-            (self.camiseta.pk, 1, G_AZUL), (self.camiseta.pk, 1, {'Tamanho': 'P', 'Cor': 'Ouro'}),
-            (self.camiseta.pk, 2, dict(reversed(G_AZUL.items()))),
+            (self.blusa.pk, 1, self.azul_p.pk), (self.blusa.pk, 1, self.azul_m.pk), (self.blusa.pk, 2, self.azul_p.pk),
         ])
 
         self.assertEqual(
-            sorted((item.nome, item.quantidade, item.preco_unitario) for item in venda.itens.all()),
-            [("Camiseta (G, Azul)", 3, Decimal('45.00')), ("Camiseta (P, Ouro)", 1, Decimal('42.50'))],
+            sorted((item.nome, item.quantidade) for item in venda.itens.all()),
+            [("Blusa X (Azul M)", 1), ("Blusa X (Azul P)", 3)],
         )
-        self.assertEqual(venda.valor_total, Decimal('177.50'))
-        self.assertEstoque(self.camiseta, 1)
+        self.assertEstoques(16, [7, 4, 5])
 
-    def test_o_estoque_confere_a_soma_de_todas_as_escolhas(self):
-        with self.assertRaises(EstoqueInsuficiente):
-            self.vender([(self.camiseta.pk, 3, G_AZUL), (self.camiseta.pk, 3, {'Tamanho': 'P', 'Cor': 'Azul'})])
-        self.assertEstoque(self.camiseta, 5)
+    def test_o_estoque_conferido_e_o_da_variacao(self):
+        with self.assertRaises(EstoqueInsuficiente) as erro:
+            self.vender([(self.blusa.pk, 6, self.azul_m.pk)])  # o produto tem 20, mas a Azul M só 5
+        self.assertEqual(str(erro.exception), "Estoque insuficiente para 'Blusa X (Azul M)'. Disponível: 5 un.")
+        self.assertEstoques(20, [10, 5, 5])
 
-    def test_cada_opcao_precisa_de_um_valor_que_existe(self):
-        for escolhas in ({'Tamanho': 'G'}, {'Tamanho': 'GG', 'Cor': 'Azul'}):
-            with self.subTest(escolhas), self.assertRaises(OpcaoNaoEscolhida) as erro:
-                self.vender([(self.camiseta.pk, 1, escolhas)])
-        self.assertIn('"Cor" de \'Camiseta\'', str(OpcaoNaoEscolhida(self.camiseta, 'Cor')))
-        self.assertIn("Tamanho", str(erro.exception))
+    def test_produto_com_variacoes_exige_uma_delas(self):
+        with self.assertRaises(VariacaoNaoEscolhida) as erro:
+            self.vender([(self.blusa.pk, 1)])
+        self.assertEqual(str(erro.exception), "Escolha a variação de 'Blusa X' (ex.: cor, tamanho).")
 
-    def test_opcao_que_o_produto_nao_tem_e_recusada(self):
-        with self.assertRaises(OpcoesMudaram) as erro:
-            self.vender([(self.camiseta.pk, 1, {**G_AZUL, 'Sabor': 'Morango'})])
-        self.assertEqual(
-            str(erro.exception), "As opções de 'Camiseta' mudaram. Tire o produto da venda e adicione de novo.",
-        )
-        with self.assertRaises(OpcoesMudaram):
-            self.vender([(self.arroz.pk, 1, {'Tamanho': 'G'})])
+    def test_variacao_de_outro_produto_ou_excluida_e_recusada(self):
+        outra = Variacao.objects.create(produto=self.arroz, nome="Integral")
+        for produto, variacao in ((self.blusa, outra.pk), (self.blusa, 9999), (self.feijao, self.azul_p.pk)):
+            with self.subTest(produto=produto.nome, variacao=variacao), self.assertRaises(VariacaoMudou) as erro:
+                self.vender([(produto.pk, 1, variacao)])
+        self.assertEqual(str(erro.exception), "As variações de 'Feijão' mudaram. Escolha o produto de novo.")
+        self.assertEstoques(20, [10, 5, 5])
 
-    def test_editar_mantem_preco_e_escolha_da_epoca_mesmo_se_o_produto_mudou(self):
-        venda = self.vender([(self.camiseta.pk, 1, G_AZUL)])
-        Produto.objects.filter(pk=self.camiseta.pk).update(preco_venda=Decimal('50.00'), opcoes=[
-            {'nome': 'Tamanho', 'valores': [{'nome': 'P', 'acrescimo': '0.00'}]},
-        ])
+    def test_cancelar_devolve_para_a_variacao(self):
+        venda = self.vender([(self.blusa.pk, 2, self.azul_m.pk)])
+        cancelar_venda(venda, usuario=self.usuario, senha='senha-certa', motivo='desistiu')
+        self.assertEstoques(20, [10, 5, 5])
 
-        editar_venda(venda, itens=[(self.camiseta.pk, 1, G_AZUL)], cliente=self.ana, usuario=self.usuario)
+    def test_editar_trocando_de_variacao_devolve_a_antiga_e_baixa_a_nova_com_o_preco_de_hoje(self):
+        venda = self.vender([(self.blusa.pk, 2, self.azul_p.pk)])
+        Produto.objects.filter(pk=self.blusa.pk).update(preco_venda=Decimal('50.00'))
+
+        editar_venda(venda, itens=[(self.blusa.pk, 2, self.branca_p.pk)], cliente=self.ana, usuario=self.usuario)
 
         item = venda.itens.get()
-        self.assertEqual((item.nome, item.preco_unitario), ("Camiseta (G, Azul)", Decimal('45.00')))
+        self.assertEqual((item.nome, item.preco_unitario), ("Blusa X (Branca P)", Decimal('52.50')))
+        self.assertEstoques(18, [10, 5, 3])
 
-    def test_editar_trocando_a_escolha_usa_o_preco_de_hoje(self):
-        venda = self.vender([(self.camiseta.pk, 1, G_AZUL)])
-        Produto.objects.filter(pk=self.camiseta.pk).update(preco_venda=Decimal('50.00'))
+    def test_editar_a_mesma_variacao_mantem_o_preco_da_epoca(self):
+        venda = self.vender([(self.blusa.pk, 1, self.branca_p.pk)])
+        Produto.objects.filter(pk=self.blusa.pk).update(preco_venda=Decimal('50.00'))
+        Variacao.objects.filter(pk=self.branca_p.pk).update(nome="Branca PP", acrescimo=0)
 
-        editar_venda(venda, itens=[(self.camiseta.pk, 1, {'Tamanho': 'P', 'Cor': 'Ouro'})], cliente=self.ana,
-                     usuario=self.usuario)
+        editar_venda(venda, itens=[(self.blusa.pk, 3, self.branca_p.pk)], cliente=self.ana, usuario=self.usuario)
 
         item = venda.itens.get()
-        self.assertEqual((item.nome, item.preco_unitario), ("Camiseta (P, Ouro)", Decimal('52.50')))
+        self.assertEqual((item.nome, item.preco_unitario), ("Blusa X (Branca P)", Decimal('42.50')))
+        self.assertEstoques(17, [10, 5, 2])
+
+    def test_sem_controle_de_estoque_nao_mexe_em_nenhuma_quantidade(self):
+        Produto.objects.filter(pk=self.blusa.pk).update(controla_estoque=False)
+        venda = self.vender([(self.blusa.pk, 50, self.azul_p.pk)])
+        self.assertEqual(venda.itens.get().quantidade, 50)
+        self.assertEstoques(20, [10, 5, 5])
 
 
 class EditarVendaTest(ServicoDeVendaTestCase):

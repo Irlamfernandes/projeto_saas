@@ -18,11 +18,10 @@ def venda_editar_view(request, venda_id):
     clientes = clientes_da_loja(venda.loja)
 
     if request.method != 'POST':
-        reservados = {item.produto_id: item.quantidade for item in venda.itens.all()}
         pago_no_ato = sum(p.valor for p in venda.pagamentos_no_ato.all())
         context = {
             'venda': venda,
-            'catalogo': catalogo_para_venda(produtos_da_loja(venda.loja).order_by('nome'), reservados),
+            'catalogo': catalogo_para_venda(produtos_da_loja(venda.loja).order_by('nome'), venda),
             'itens_iniciais': itens_da_venda(venda),
             'clientes': clientes,
             'formas_de_pagamento': FormaDePagamento.choices,

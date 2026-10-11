@@ -63,7 +63,7 @@ class VendaEditarViewTest(VendaEditarViewTestCase):
         self.client.force_login(self.user_loja1)
         response = self.client.get(self.url)
 
-        self.assertEqual(response.context['itens_iniciais'], [{'id': self.arroz.pk, 'quantidade': 2, 'preco': '20.00', 'opcoes': {}}])
+        self.assertEqual(response.context['itens_iniciais'], [{'id': self.arroz.pk, 'quantidade': 2, 'preco': '20.00', 'variacao': None}])
         arroz = next(p for p in response.context['catalogo'] if p['id'] == self.arroz.pk)
         self.assertEqual(arroz['estoque'], 10, "as 2 unidades desta venda voltam a ficar disponíveis para ela")
         self.assertEqual(response.context['pago_no_ato'], Decimal('40'))
