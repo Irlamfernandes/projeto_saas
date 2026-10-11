@@ -3,6 +3,7 @@ from pathlib import Path
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
+from django.templatetags.static import static
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -172,6 +173,9 @@ UNFOLD = {
     'SITE_URL': '/dashboard/',
     'SITE_SYMBOL': 'storefront',
     'SITE_FAVICONS': 'infrastructure.admin.tema.favicons',
+    # Olhinho nos campos de senha, o mesmo do site (login do admin incluído).
+    'STYLES': [lambda request: static('css/mostrar_senha.css')],
+    'SCRIPTS': [lambda request: static('js/mostrar_senha.js')],
     'SHOW_VIEW_ON_SITE': False,
     'SHOW_HISTORY': True,
     'DASHBOARD_CALLBACK': 'infrastructure.admin.painel.painel_do_admin',

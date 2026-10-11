@@ -1,0 +1,15 @@
+/* Olhinho dos campos de senha (static/js/mostrar_senha.js), no site e no admin: só cores herdadas, sem tokens. */
+.campo-senha { position: relative; display: block; }
+.campo-senha > input { width: 100%; padding-right: 2.75rem; }
+.olho-da-senha {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 2.75rem;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; border: 0; color: inherit; opacity: 0.7; cursor: pointer;
+}
+.olho-da-senha:hover { opacity: 1; }
+.olho-da-senha:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: -0.375rem; border-radius: 0.5rem; }
+.olho-da-senha-icone {
+    width: 1.25rem; height: 1.25rem;
+    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+.olho-da-senha[aria-pressed="false"] .olho-da-senha-icone path:last-child { display: none; }
