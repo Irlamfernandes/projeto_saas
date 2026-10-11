@@ -12,7 +12,7 @@ class UsuarioSemLoja(LojaError):
 
 class MarcaInvalida(LojaError):
     def __init__(self):
-        super().__init__("Não foi possível ler a imagem da marca. Envie uma imagem JPG, PNG ou WEBP.")
+        super().__init__("Não foi possível ler a imagem da marca. Envie uma imagem JPG, PNG, WEBP ou HEIC.")
 
 
 class FalhaNoEnvioDaMarca(LojaError):

@@ -212,7 +212,7 @@ class MensagensDoSistemaTest(SimpleTestCase):
             PixRecusado(""): "O Mercado Pago não aceitou gerar o Pix. Confira o e-mail e tente de novo.",
             PagamentoIndisponivel(): "Não foi possível falar com o Mercado Pago agora. Tente de novo em instantes.",
             UsuarioSemLoja(): "Este usuário não está ligado a nenhuma loja.",
-            MarcaInvalida(): "Não foi possível ler a imagem da marca. Envie uma imagem JPG, PNG ou WEBP.",
+            MarcaInvalida(): "Não foi possível ler a imagem da marca. Envie uma imagem JPG, PNG, WEBP ou HEIC.",
             FalhaNoEnvioDaMarca(): "Não foi possível enviar a marca agora. Nada foi alterado; tente novamente.",
         }
         for erro, mensagem in casos.items():

@@ -19,7 +19,7 @@ from interfaces.forms.relatorio_form import LimiteEstoqueForm, PeriodoForm
 from interfaces.forms.senha_form import NovaSenhaForm
 from interfaces.tests.test_produto_form import como_post
 from interfaces.views.comum import primeiro_erro
-from tests.apoio import CenarioDeLoja, imagem_de_teste
+from tests.apoio import CenarioDeLoja, foto_heic_de_teste, imagem_de_teste
 
 SENHA_FORTE = 'Caju-Verde-2026'
 
@@ -34,8 +34,8 @@ class MarcaFormTest(SimpleTestCase):
     def test_mensagens(self):
         self.assertEqual(self.erros({}), ["Escolha a imagem da marca."])
         self.assertEqual(self.erros({'marca': SimpleUploadedFile('logo.png', b'texto')}),
-                         ["Envie uma imagem válida (JPG, PNG ou WEBP)."])
-        self.assertEqual(self.erros({'marca': imagem_de_teste('logo.gif', 'GIF')}), ["Envie uma imagem JPG, PNG ou WEBP."])
+                         ["Envie uma imagem válida (JPG, PNG, WEBP ou HEIC)."])
+        self.assertEqual(self.erros({'marca': imagem_de_teste('logo.gif', 'GIF')}), ["Envie uma imagem JPG, PNG, WEBP ou HEIC."])
 
 
 class ProdutoFormFronteirasTest(TestCase):
@@ -56,17 +56,21 @@ class ProdutoFormFronteirasTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(primeiro_erro(form), mensagem)
 
+    def test_aceita_heic_e_heif(self):
+        imagens = MultiValueDict({'imagens': [foto_heic_de_teste('a.heic'), foto_heic_de_teste('b.HEIF')]})
+        self.assertEqual(len(self.valido(arquivos=imagens).parametros()['imagens']), 2)
+
     def test_aceita_jpeg_e_webp(self):
         imagens = MultiValueDict({'imagens': [imagem_de_teste('a.jpeg', 'JPEG'), imagem_de_teste('b.webp', 'WEBP')]})
         self.assertEqual(len(self.valido(arquivos=imagens).parametros()['imagens']), 2)
 
-    def test_limite_da_imagem_e_de_15_mb_e_o_proprio_limite_passa(self):
-        self.assertEqual(TAMANHO_MAXIMO_IMAGEM, 15_728_640)
+    def test_limite_da_imagem_e_de_25_mb_e_o_proprio_limite_passa(self):
+        self.assertEqual(TAMANHO_MAXIMO_IMAGEM, 26_214_400)
         imagem = imagem_de_teste('g.png')
         with patch('interfaces.forms.produto_form.TAMANHO_MAXIMO_IMAGEM', imagem.size):
             self.valido(arquivos={'imagens': [imagem]})
         with patch('interfaces.forms.produto_form.TAMANHO_MAXIMO_IMAGEM', imagem.size - 1):
-            self.assertErro(self._form(arquivos={'imagens': [imagem]}), "A imagem 'g.png' excede o limite de 15 MB.")
+            self.assertErro(self._form(arquivos={'imagens': [imagem]}), "A imagem 'g.png' excede o limite de 25 MB.")
 
     def test_campos_que_viram_zero_nao_sao_obrigatorios_nem_marcados_no_html(self):
         form = self._form()

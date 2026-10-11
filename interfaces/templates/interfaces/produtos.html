@@ -1,5 +1,5 @@
 {% extends 'interfaces/base.html' %}
-{% load formatacao %}
+{% load static formatacao %}
 
 {% block title %}Produtos · Gestão da Loja{% endblock %}
 {% block header_title %}Produtos{% endblock %}
@@ -68,10 +68,10 @@
 
             <div class="campo">
                 <label for="id_imagens_produto" class="rotulo">Fotos <span class="rotulo-opcional">opcional</span></label>
-                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/*,.heic,.heif" data-reduzir-fotos
                        data-maximo-fotos="{{ maximo_de_fotos }}"
                        class="entrada-arquivo">
-                <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG ou WEBP (máx. 15 MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
+                <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG, WEBP ou HEIC (máx. {{ tamanho_maximo_mb }} MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
             </div>
 
             <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Salvar produto</button>
@@ -173,4 +173,8 @@
         <button id="btn-proximo" type="button" class="btn-secundario px-3" data-mudar-foto="1" aria-label="Próxima foto"><svg class="ico"><use href="#i-seta"/></svg></button>
     </div>
 </dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fotos.js' %}" defer></script>
 {% endblock %}

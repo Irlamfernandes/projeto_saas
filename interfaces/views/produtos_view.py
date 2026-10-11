@@ -5,6 +5,7 @@ from application.produtos.services import cadastrar_produto
 from infrastructure.models import Produto
 from interfaces.decorators import loja_required
 from interfaces.forms import FiltroProdutosForm, ProdutoForm
+from interfaces.forms.produto_form import TAMANHO_MAXIMO_MB
 from interfaces.views.comum import executar_formulario, paginar, primeiro_erro
 
 TEMPLATE_PRODUTOS = 'interfaces/produtos.html'
@@ -38,5 +39,6 @@ def produtos_view(request):
         'filtro_ordem': criterios['ordem'],
         'filtro_baixo_estoque': criterios['baixo_estoque'],
         'maximo_de_fotos': MAXIMO_DE_FOTOS,
+        'tamanho_maximo_mb': TAMANHO_MAXIMO_MB,
     }
     return render(request, TEMPLATE_PRODUTOS, context)

@@ -252,7 +252,7 @@ class MensagensDosCadastrosTest(SimpleTestCase):
             ),
             ProdutoSemLoja(): "Superusuários devem associar o produto a uma loja específica.",
             FalhaNoEnvioDeImagem(): "Não foi possível enviar as imagens agora. Nada foi salvo; tente novamente.",
-            ImagemInvalida("foto.gif"): "Não foi possível ler a imagem 'foto.gif'. Envie uma foto JPG, PNG ou WEBP.",
+            ImagemInvalida("foto.gif"): "Não foi possível ler a imagem 'foto.gif'. Envie uma foto JPG, PNG, WEBP ou HEIC.",
             LimiteDeFotosExcedido(5, 2): "Cada produto pode ter no máximo 5 fotos. Dá para adicionar mais 2.",
             LimiteDeFotosExcedido(5, 0): "Cada produto pode ter no máximo 5 fotos. Remova alguma antes de adicionar outra.",
             ClienteSemLoja(): "Superusuários devem associar o cliente a uma loja específica.",

@@ -95,15 +95,15 @@ class ProdutoFormTest(TestCase):
 
     def test_recusa_arquivo_que_nao_e_imagem(self):
         falso = SimpleUploadedFile('virus.png', b'<script>alert(1)</script>', content_type='image/png')
-        self.assertErro(self._form(arquivos={'imagens': [falso]}), "Envie apenas imagens válidas (JPG, PNG ou WEBP).")
+        self.assertErro(self._form(arquivos={'imagens': [falso]}), "Envie apenas imagens válidas (JPG, PNG, WEBP ou HEIC).")
 
     def test_recusa_formato_fora_da_lista(self):
         gif = imagem_de_teste('anim.gif', 'GIF')
-        self.assertErro(self._form(arquivos={'imagens': [gif]}), "Envie apenas imagens JPG, PNG ou WEBP.")
+        self.assertErro(self._form(arquivos={'imagens': [gif]}), "Envie apenas imagens JPG, PNG, WEBP ou HEIC.")
 
     def test_recusa_imagem_grande_demais(self):
         with patch('interfaces.forms.produto_form.TAMANHO_MAXIMO_IMAGEM', 10):
-            self.assertErro(self._form(arquivos={'imagens': [imagem_de_teste('g.png')]}), "A imagem 'g.png' excede o limite de 15 MB.")
+            self.assertErro(self._form(arquivos={'imagens': [imagem_de_teste('g.png')]}), "A imagem 'g.png' excede o limite de 25 MB.")
 
 
 class OpcoesDoProdutoTest(ProdutoFormTest):

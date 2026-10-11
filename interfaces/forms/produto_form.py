@@ -7,9 +7,10 @@ from application.produtos.selectors import ORDEM_PADRAO, ORDENACOES_PERMITIDAS
 from infrastructure.models import Produto, Unidade
 from infrastructure.models.produto import MAXIMO_DE_OPCOES, MILESIMO, quantidade_aceita
 
-EXTENSOES_DE_IMAGEM = ['jpg', 'jpeg', 'png', 'webp']
+# HEIC/HEIF: o formato das fotos do iPhone e de vários Androids (lido pelo pi-heif, ligado em infrastructure/apps.py).
+EXTENSOES_DE_IMAGEM = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']
 # Limite do arquivo enviado. O que fica guardado é bem menor: a foto é reduzida e regravada em WebP.
-TAMANHO_MAXIMO_MB = 15
+TAMANHO_MAXIMO_MB = 25
 TAMANHO_MAXIMO_IMAGEM = TAMANHO_MAXIMO_MB * 1024 * 1024
 MAXIMO_DE_VALORES = 30
 TAMANHO_DO_NOME_NA_OPCAO = 40
@@ -31,13 +32,13 @@ class ImagensField(forms.ImageField):
 
     widget = _EnvioMultiplo
     default_error_messages = {
-        'invalid_image': "Envie apenas imagens válidas (JPG, PNG ou WEBP).",
+        'invalid_image': "Envie apenas imagens válidas (JPG, PNG, WEBP ou HEIC).",
     }
 
     def __init__(self, **kwargs):
         kwargs.setdefault('required', False)
         kwargs.setdefault('validators', [
-            FileExtensionValidator(EXTENSOES_DE_IMAGEM, message="Envie apenas imagens JPG, PNG ou WEBP."),
+            FileExtensionValidator(EXTENSOES_DE_IMAGEM, message="Envie apenas imagens JPG, PNG, WEBP ou HEIC."),
             validar_tamanho_da_imagem,
         ])
         super().__init__(**kwargs)

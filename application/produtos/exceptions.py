@@ -17,7 +17,7 @@ class FalhaNoEnvioDeImagem(ProdutoError):
 
 class ImagemInvalida(ProdutoError):
     def __init__(self, nome):
-        super().__init__(f"Não foi possível ler a imagem '{nome}'. Envie uma foto JPG, PNG ou WEBP.")
+        super().__init__(f"Não foi possível ler a imagem '{nome}'. Envie uma foto JPG, PNG, WEBP ou HEIC.")
 
 
 class LimiteDeFotosExcedido(ProdutoError):
