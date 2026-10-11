@@ -167,8 +167,8 @@ MERCADO_PAGO_ACCESS_TOKEN = os.environ.get('MERCADO_PAGO_ACCESS_TOKEN', '')
 # Tema do admin (django-unfold): cores Petróleo, menu organizado e painel com gráficos.
 # Menu, favicon e painel ficam em infrastructure/admin/tema.py e painel.py.
 UNFOLD = {
-    'SITE_TITLE': 'Gestão da Loja',
-    'SITE_HEADER': 'Gestão da Loja',
+    'SITE_TITLE': 'GestCor',
+    'SITE_HEADER': 'GestCor',
     'SITE_SUBHEADER': 'Administração · CorsariosCode',
     'SITE_URL': '/dashboard/',
     'SITE_SYMBOL': 'storefront',

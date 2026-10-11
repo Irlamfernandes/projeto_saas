@@ -1,6 +1,6 @@
 {
-    "name": "Gestão de Loja",
-    "short_name": "LojaApp",
+    "name": "GestCor",
+    "short_name": "GestCor",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f4f7f6",

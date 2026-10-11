@@ -1,7 +1,7 @@
 {% extends 'interfaces/base.html' %}
 {% load static formatacao %}
 
-{% block title %}Pix do plano · Gestão da Loja{% endblock %}
+{% block title %}Pix do plano · GestCor{% endblock %}
 {% block voltar %}<a href="{% url 'configuracoes' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Configurações</a>{% endblock %}
 {% block header_title %}Plano {{ cobranca.plano_nome }}{% endblock %}
 {% block subtitulo %}R$ {{ cobranca.valor|moeda }} por Pix{% endblock %}

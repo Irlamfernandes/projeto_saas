@@ -1,7 +1,7 @@
 {% extends 'interfaces/base.html' %}
 {% load static formatacao %}
 
-{% block title %}Editar {{ produto.nome }} · Gestão da Loja{% endblock %}
+{% block title %}Editar {{ produto.nome }} · GestCor{% endblock %}
 {% block voltar %}<a href="{% url 'produtos' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Produtos</a>{% endblock %}
 {% block header_title %}{{ produto.nome }}{% endblock %}
 {% block subtitulo %}Cadastrado em {{ produto.data_criacao|date:"d/m/Y" }}{% if produto.codigo_interno %} · código {{ produto.codigo_interno }}{% endif %}{% endblock %}
