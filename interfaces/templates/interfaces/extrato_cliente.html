@@ -4,7 +4,7 @@
 {% block title %}Caderneta de {{ cliente.nome }} · Gestão da Loja{% endblock %}
 {% block voltar %}<a href="{% url 'clientes' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Clientes</a>{% endblock %}
 {% block header_title %}Caderneta de {{ cliente.nome }}{% endblock %}
-{% block subtitulo %}{% if cliente.telefone %}{{ cliente.telefone }} · {% endif %}Cliente desde {{ cliente.data_criacao|date:"d/m/Y" }}{% endblock %}
+{% block subtitulo %}{% if cliente.telefone %}{{ cliente.telefone }} · {% endif %}{% if cliente.cpf %}CPF {{ cliente.cpf|cpf }} · {% endif %}Cliente desde {{ cliente.data_criacao|date:"d/m/Y" }}{% endblock %}
 {% block acoes %}
     <a href="{% url 'extrato_pdf' cliente.id %}" class="btn-secundario"><svg class="ico"><use href="#i-pdf"/></svg>Baixar extrato em PDF</a>
     {% if cliente.telefone %}
@@ -55,7 +55,7 @@
             {% if cliente.dados_apagados %}
                 <p class="subtitulo mt-1">Os dados pessoais deste cliente foram apagados a pedido dele. As compras e os pagamentos continuam aqui, sem o nome.</p>
             {% else %}
-                <p class="subtitulo mt-1">Se o cliente pedir (direito garantido pela LGPD), apague o nome, o telefone, o e-mail e o endereço. As compras e os pagamentos continuam nos relatórios, sem o nome.</p>
+                <p class="subtitulo mt-1">Se o cliente pedir (direito garantido pela LGPD), apague o nome, o telefone, o CPF, o e-mail e o endereço. As compras e os pagamentos continuam nos relatórios, sem o nome.</p>
                 {% if cliente.saldo_geral %}
                 <p class="mt-3 flex items-start gap-1.5 text-sm font-semibold text-tinta-suave"><svg class="ico ico-sm mt-0.5"><use href="#i-info"/></svg>Para apagar, acerte antes o saldo da caderneta: enquanto houver valor a receber ou a devolver, a lei permite guardar os dados.</p>
                 {% else %}
@@ -99,7 +99,7 @@
         {% csrf_token %}
         <div>
             <h2 id="t-modal-apagar-dados" class="text-lg font-bold">Apagar os dados pessoais de {{ cliente.nome }}?</h2>
-            <p class="text-sm text-tinta-suave mt-1">Nome, telefone, e-mail e endereço somem do cadastro e do histórico. O cliente passa a aparecer como "Cliente removido #{{ cliente.id }}". Isso não pode ser desfeito.</p>
+            <p class="text-sm text-tinta-suave mt-1">Nome, telefone, CPF, e-mail e endereço somem do cadastro e do histórico. O cliente passa a aparecer como "Cliente removido #{{ cliente.id }}". Isso não pode ser desfeito.</p>
         </div>
         <div class="campo">
             <label for="id_senha_apagar_dados" class="rotulo">Sua senha <span class="obrigatorio" aria-hidden="true">*</span></label>

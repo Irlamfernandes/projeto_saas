@@ -2,11 +2,13 @@ from decimal import Decimal, InvalidOperation
 from django import template
 from infrastructure.models.produto import MAXIMO_DE_OPCOES, Unidade, casas_decimais, sigla
 from infrastructure.utils import formatacao
+from infrastructure.utils.cpf import formatar_cpf
 from infrastructure.utils.formatacao import moeda
 
 register = template.Library()
 
 register.filter('moeda', moeda)
+register.filter('cpf', formatar_cpf)
 
 
 @register.filter

@@ -24,6 +24,11 @@
                 <p class="ajuda">Com ele, dá para mandar o resumo da caderneta pelo WhatsApp.</p>
             </div>
             <div class="campo">
+                <label for="id_cpf" class="rotulo">CPF <span class="rotulo-opcional">opcional</span></label>
+                <input type="text" id="id_cpf" name="cpf" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" class="entrada">
+                <p class="ajuda">Pode deixar em branco e colocar depois, em "Editar".</p>
+            </div>
+            <div class="campo">
                 <label for="id_email" class="rotulo">E-mail <span class="rotulo-opcional">opcional</span></label>
                 <input type="email" id="id_email" name="email" placeholder="cliente@email.com" class="entrada">
             </div>
@@ -44,7 +49,7 @@
             <div class="entrada-grupo bg-superficie flex-1">
                 <span class="afixo"><svg class="ico ico-sm"><use href="#i-busca"/></svg></span>
                 <label for="id_busca" class="sr-only">Buscar cliente</label>
-                <input type="search" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Nome ou telefone">
+                <input type="search" id="id_busca" name="q" value="{{ filtro_busca }}" placeholder="Nome, telefone ou CPF">
             </div>
             <span class="flex gap-2">
                 <button type="submit" class="btn-primario">Buscar</button>
@@ -61,14 +66,14 @@
                     <tr>
                         <td>
                             <div>
-                                <span class="block min-w-0"><span class="block font-semibold">{{ cliente.nome }}</span>{% if cliente.telefone %}<span class="block text-xs text-tinta-suave whitespace-nowrap">{{ cliente.telefone }}</span>{% endif %}{% if cliente.email %}<span class="block text-xs text-tinta-fraca truncate max-w-[16rem]">{{ cliente.email }}</span>{% endif %}{% if cliente.endereco %}<span class="block text-xs text-tinta-fraca truncate max-w-[16rem]">{{ cliente.endereco }}</span>{% endif %}</span>
+                                <span class="block min-w-0"><span class="block font-semibold">{{ cliente.nome }}</span>{% if cliente.telefone %}<span class="block text-xs text-tinta-suave whitespace-nowrap">{{ cliente.telefone }}</span>{% endif %}{% if cliente.cpf %}<span class="block text-xs text-tinta-suave whitespace-nowrap">CPF {{ cliente.cpf|cpf }}</span>{% endif %}{% if cliente.email %}<span class="block text-xs text-tinta-fraca truncate max-w-[16rem]">{{ cliente.email }}</span>{% endif %}{% if cliente.endereco %}<span class="block text-xs text-tinta-fraca truncate max-w-[16rem]">{{ cliente.endereco }}</span>{% endif %}</span>
                             </div>
                         </td>
                         <td class="w-px">
                             <span class="flex flex-col items-stretch gap-1.5">
                             <a href="{% url 'extrato_cliente' cliente.id %}" class="btn-secundario btn-pequeno" title="Caderneta de {{ cliente.nome }}"><svg class="ico ico-sm"><use href="#i-caderneta"/></svg>Caderneta</a>
                             <button type="button" class="btn-fantasma btn-pequeno" title="Editar {{ cliente.nome }}"
-                                    data-editar-cliente="{% url 'editar_cliente' cliente.id %}" data-nome="{{ cliente.nome }}" data-telefone="{{ cliente.telefone|default:'' }}" data-email="{{ cliente.email|default:'' }}" data-endereco="{{ cliente.endereco|default:'' }}">
+                                    data-editar-cliente="{% url 'editar_cliente' cliente.id %}" data-nome="{{ cliente.nome }}" data-telefone="{{ cliente.telefone|default:'' }}" data-cpf="{{ cliente.cpf|cpf }}" data-email="{{ cliente.email|default:'' }}" data-endereco="{{ cliente.endereco|default:'' }}">
                                 <svg class="ico ico-sm"><use href="#i-editar"/></svg>Editar
                             </button>
                             </span>
@@ -93,6 +98,7 @@
         </div>
         <div class="campo"><label for="edit-cli-nome" class="rotulo">Nome <span class="obrigatorio" aria-hidden="true">*</span></label><input type="text" id="edit-cli-nome" name="nome" required maxlength="255" class="entrada"></div>
         <div class="campo"><label for="edit-cli-telefone" class="rotulo">Telefone / WhatsApp <span class="rotulo-opcional">opcional</span></label><input type="tel" id="edit-cli-telefone" name="telefone" maxlength="20" class="entrada"></div>
+        <div class="campo"><label for="edit-cli-cpf" class="rotulo">CPF <span class="rotulo-opcional">opcional</span></label><input type="text" id="edit-cli-cpf" name="cpf" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" class="entrada"></div>
         <div class="campo"><label for="edit-cli-email" class="rotulo">E-mail <span class="rotulo-opcional">opcional</span></label><input type="email" id="edit-cli-email" name="email" class="entrada"></div>
         <div class="campo"><label for="edit-cli-endereco" class="rotulo">Endereço ou observação <span class="rotulo-opcional">opcional</span></label><textarea id="edit-cli-endereco" name="endereco" rows="2" class="entrada"></textarea></div>
         <div class="flex justify-end gap-2">

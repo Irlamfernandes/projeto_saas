@@ -10,7 +10,7 @@ register = template.Library()
 ROTULOS = {
     'nome': 'Nome', 'codigo_interno': 'Código', 'categoria': 'Categoria', 'preco_custo': 'Preço de custo',
     'preco_venda': 'Preço de venda', 'quantidade_estoque': 'Estoque', 'descricao': 'Descrição',
-    'telefone': 'Telefone', 'email': 'E-mail', 'endereco': 'Endereço',
+    'telefone': 'Telefone', 'cpf': 'CPF', 'email': 'E-mail', 'endereco': 'Endereço',
     'unidade': 'Vendido por', 'controla_estoque': 'Controla estoque', 'opcoes': 'Opções',
 }
 VAZIO = '(vazio)'

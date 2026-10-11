@@ -194,7 +194,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         jest.useRealTimers();
 
         const botao = document.createElement('button');
-        Object.assign(botao.dataset, { editarCliente: '/clientes/editar/7/', nome: 'Ana', telefone: 'Tel', email: 'Email', endereco: 'End' });
+        Object.assign(botao.dataset, { editarCliente: '/clientes/editar/7/', nome: 'Ana', telefone: 'Tel', cpf: 'Cpf', email: 'Email', endereco: 'End' });
         expect(() => abrirModalEdicaoCliente(botao)).not.toThrow(); // página sem a janela
 
         document.body.innerHTML = `
@@ -202,6 +202,7 @@ describe('Testes de Cobertura Total - main.js', () => {
             <form id="form-edicao-cliente"></form>
             <input id="edit-cli-nome" />
             <input id="edit-cli-telefone" />
+            <input id="edit-cli-cpf" />
             <input id="edit-cli-email" />
             <input id="edit-cli-endereco" />
         `;
@@ -213,6 +214,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(document.getElementById('form-edicao-cliente').getAttribute('action')).toBe('/clientes/editar/7/');
         expect(document.getElementById('edit-cli-nome').value).toBe('Ana');
         expect(document.getElementById('edit-cli-telefone').value).toBe('Tel');
+        expect(document.getElementById('edit-cli-cpf').value).toBe('Cpf');
         expect(document.getElementById('edit-cli-email').value).toBe('Email');
         expect(document.getElementById('edit-cli-endereco').value).toBe('End');
 
@@ -250,9 +252,9 @@ describe('Testes de Cobertura Total - main.js', () => {
 
         test('editar cliente abre a janela com os dados do botão', () => {
             ligar(`
-                <button data-editar-cliente="/clientes/editar/3/" data-nome="Bia" data-telefone="" data-email="" data-endereco=""></button>
+                <button data-editar-cliente="/clientes/editar/3/" data-nome="Bia" data-telefone="" data-cpf="" data-email="" data-endereco=""></button>
                 <dialog id="modal-edicao-cliente"></dialog><form id="form-edicao-cliente"></form>
-                <input id="edit-cli-nome"><input id="edit-cli-telefone"><input id="edit-cli-email"><input id="edit-cli-endereco">`);
+                <input id="edit-cli-nome"><input id="edit-cli-telefone"><input id="edit-cli-cpf"><input id="edit-cli-email"><input id="edit-cli-endereco">`);
             document.getElementById('modal-edicao-cliente').showModal = jest.fn();
             document.querySelector('[data-editar-cliente]').click();
             expect(document.getElementById('edit-cli-nome').value).toBe('Bia');

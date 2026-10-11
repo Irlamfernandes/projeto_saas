@@ -5,7 +5,7 @@ from infrastructure.models import Acao, Cliente, PagamentoCliente, RegistroDeAlt
 from infrastructure.utils.formatacao import reais
 
 OBSERVACAO_PADRAO_PAGAMENTO = 'Pagamento na caderneta'
-CAMPOS_DO_CLIENTE = ('nome', 'telefone', 'email', 'endereco')
+CAMPOS_DO_CLIENTE = ('nome', 'telefone', 'cpf', 'email', 'endereco')
 
 
 @transaction.atomic
@@ -57,7 +57,7 @@ REMOVIDO = '(removido)'
 
 @transaction.atomic
 def apagar_dados_pessoais(cliente, *, usuario, senha):
-    """Direito do titular (LGPD): nome, telefone, e-mail e endereço saem do cadastro e do histórico.
+    """Direito do titular (LGPD): nome, telefone, CPF, e-mail e endereço saem do cadastro e do histórico.
 
     As vendas e os pagamentos ficam (a loja precisa deles nas contas e nos relatórios), mas passam a ser de
     "Cliente removido #id". Só com a senha de quem pede e com a caderneta zerada.
@@ -76,7 +76,7 @@ def apagar_dados_pessoais(cliente, *, usuario, senha):
         registro.detalhes = _trocar(registro.detalhes, trocas)
         registro.save(update_fields=['descricao', 'detalhes'])
 
-    Cliente.objects.filter(pk=cliente.pk).update(nome=anonimo, telefone='', email='', endereco='')
+    Cliente.objects.filter(pk=cliente.pk).update(nome=anonimo, telefone='', cpf='', email='', endereco='')
     cliente.refresh_from_db()
     registrar_alteracao(
         loja=cliente.loja, usuario=usuario, acao=Acao.CLIENTE_ANONIMIZADO, descricao=anonimo, clientes=[cliente],

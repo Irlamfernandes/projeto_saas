@@ -36,6 +36,7 @@ class Cliente(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='clientes')
     nome = models.CharField(max_length=255)
     telefone = models.CharField(max_length=20, blank=True, default='')
+    cpf = models.CharField(max_length=11, blank=True, default='')  # só os dígitos; vazio = não informado
     email = models.EmailField(blank=True, default='')
     endereco = models.TextField(blank=True, default='')
     data_criacao = models.DateTimeField(auto_now_add=True)
@@ -47,6 +48,12 @@ class Cliente(models.Model):
             # Select de clientes (ordem alfabética) e listagem (mais recentes primeiro).
             models.Index(fields=['loja', 'nome'], name='cliente_loja_nome_idx'),
             models.Index(fields=['loja', '-data_criacao'], name='cliente_loja_criacao_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['loja', 'cpf'], condition=~models.Q(cpf=''), name='cliente_cpf_unico_na_loja',
+                violation_error_message="Já existe um cliente com este CPF.",
+            ),
         ]
 
     @property

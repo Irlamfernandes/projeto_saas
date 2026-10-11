@@ -5,6 +5,7 @@ from django.db.models import Q
 from application.tenancy import filtrar_por_loja
 from application.vendas.pendencias import pendencias_do_cliente
 from infrastructure.models import Cliente
+from infrastructure.utils.cpf import so_digitos
 
 
 @dataclass(frozen=True)
@@ -29,7 +30,11 @@ def clientes_da_loja(loja):
 
 def buscar_clientes(clientes, termo=''):
     if termo:
-        clientes = clientes.filter(Q(nome__icontains=termo) | Q(telefone__icontains=termo))
+        filtro = Q(nome__icontains=termo) | Q(telefone__icontains=termo)
+        digitos = so_digitos(termo)
+        if digitos:  # CPF digitado com ou sem pontos e traço
+            filtro |= Q(cpf__contains=digitos)
+        clientes = clientes.filter(filtro)
     return clientes.order_by('-data_criacao')
 
 

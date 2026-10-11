@@ -141,6 +141,7 @@ function abrirModalEdicaoCliente(botao) {
     form.action = botao.dataset.editarCliente;
     document.getElementById('edit-cli-nome').value = botao.dataset.nome;
     document.getElementById('edit-cli-telefone').value = botao.dataset.telefone;
+    document.getElementById('edit-cli-cpf').value = botao.dataset.cpf;
     document.getElementById('edit-cli-email').value = botao.dataset.email;
     document.getElementById('edit-cli-endereco').value = botao.dataset.endereco;
     modal.showModal();
