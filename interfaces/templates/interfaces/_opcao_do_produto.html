@@ -1,8 +1,0 @@
-{% load formatacao %}<fieldset class="grid gap-2 rounded-controle bg-fundo p-3" data-opcao-produto>
-    <legend class="sr-only">Opção do produto</legend>
-    <div class="flex items-end gap-2">
-        <label class="campo flex-1"><span class="rotulo">Nome da opção</span><input type="text" name="opcao_nome" value="{{ opcao.nome|default:'' }}" maxlength="40" placeholder="Ex.: Tamanho" class="entrada"></label>
-        <button type="button" class="btn-fantasma btn-pequeno px-2 py-2.5 text-critico-texto" data-remover-opcao aria-label="Tirar esta opção" title="Tirar esta opção"><svg class="ico ico-sm"><use href="#i-lixeira"/></svg></button>
-    </div>
-    <label class="campo"><span class="rotulo">Valores <span class="rotulo-opcional">um por linha</span></span><textarea name="opcao_valores" rows="3" placeholder="P&#10;M&#10;G + 5,00" class="entrada">{% if opcao %}{{ opcao|valores_da_opcao }}{% endif %}</textarea></label>
-</fieldset>

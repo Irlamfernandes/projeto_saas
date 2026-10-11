@@ -64,7 +64,7 @@ class TelaTest(GastosViewTestCase):
     def test_inicio_tem_o_atalho_e_o_resultado_do_mes(self):
         response = self.client.get(reverse('dashboard'))
         self.assertContains(response, 'Lançar gasto')
-        self.assertContains(response, 'id="t-resultado-mes"')
+        self.assertContains(response, 'até agora</span>')  # o link é lido com todo o texto do cartão
         self.assertContains(response, 'Sobrou R$ 0,00')
 
 
