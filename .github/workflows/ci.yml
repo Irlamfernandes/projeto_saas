@@ -121,8 +121,10 @@ jobs:
       - name: Falhas conhecidas nas bibliotecas Python
         run: pip-audit -r requirements.txt -r requirements-dev.txt
 
-      - name: Falhas conhecidas nas bibliotecas JS
-        run: npm audit --audit-level=moderate
+      # Só o que vai para o site barra o PR. As do npm são todas ferramentas de desenvolvimento (Tailwind, Jest,
+      # ESLint) que só processam arquivos nossos; os alertas delas saem no relatório semanal de atualizações.
+      - name: Falhas conhecidas nas bibliotecas JS que vão para o site
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Senhas e chaves no histórico (gitleaks)
         run: |

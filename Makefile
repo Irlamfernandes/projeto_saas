@@ -51,7 +51,9 @@ test:
 # Gitleaks: https://github.com/gitleaks/gitleaks (binário único; valores sempre ocultos no relatório)
 seguranca:
 	pip-audit -r requirements.txt -r requirements-dev.txt
-	npm audit
+	npm audit --omit=dev
+	@echo "Ferramentas de desenvolvimento (só aviso, não vão para o site):"
+	-npm audit --audit-level=moderate
 	@command -v gitleaks >/dev/null || (echo "Instale o gitleaks: https://github.com/gitleaks/gitleaks/releases"; exit 1)
 	gitleaks git . --redact --no-banner
 

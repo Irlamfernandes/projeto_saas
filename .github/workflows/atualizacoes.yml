@@ -31,6 +31,21 @@ jobs:
       - name: Versões novas e testes com elas
         run: python scripts/atualizacoes.py relatorio --testar > relatorio.md
 
+      - name: Alertas nas ferramentas de desenvolvimento
+        run: |
+          if ! npm audit --audit-level=moderate > auditoria.txt; then
+            {
+              echo
+              echo "### Alertas de segurança nas ferramentas de desenvolvimento"
+              echo
+              echo "Não vão para o site (o CI só barra os de produção). Atualizar quando sair a correção."
+              echo
+              echo '```'
+              head -200 auditoria.txt
+              echo '```'
+            } >> relatorio.md
+          fi
+
       - name: Publicar na issue "Atualizações"
         env:
           GH_TOKEN: ${{ github.token }}
