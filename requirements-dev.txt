@@ -3,6 +3,6 @@ coverage==7.16.2
 pytest==9.1.1
 pytest-cov==7.1.0
 pytest-django==4.14.0
-ruff==0.16.9  # linter do Python (make lint e CI)
+ruff==0.16.10  # linter do Python (make lint e CI)
 babel==2.18.0  # compila locale/*.po (make traducoes)
 pip-audit==2.10.1  # falhas conhecidas nas bibliotecas (make seguranca)
