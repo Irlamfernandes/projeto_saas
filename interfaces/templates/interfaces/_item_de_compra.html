@@ -7,7 +7,7 @@ O custo vem preenchido com o preço de custo atual do produto escolhido.
     <label class="campo col-span-2"><span class="text-xs font-semibold text-tinta-suave">Produto</span>
     <select name="item_produto" class="entrada" data-produto-compra>
         <option value="">Escolha o produto</option>
-        {% for produto in produtos %}<option value="{{ produto.id }}" data-custo="{{ produto.preco_custo|numero_simples }}" data-sigla="{{ produto.sigla }}" data-casas="{{ produto.casas_decimais }}">{{ produto.nome }}</option>{% endfor %}
+        {% include 'interfaces/_opcoes_de_produto.html' %}
     </select></label>
     <div class="grid grid-cols-2 gap-2">
         <label class="campo"><span class="text-xs font-semibold text-tinta-suave">Quantidade</span>

@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 from infrastructure.models.loja_model import LojaModel
 from infrastructure.models.produto import Produto, ProdutoImagem
-from tests.apoio import StorageFalso, imagem_de_teste
+from tests.apoio import StorageFalso, foto_heic_de_teste, imagem_de_teste
 
 User = get_user_model()
 STORAGE = 'application.produtos.services.SupabaseStorage.from_settings'
@@ -117,6 +117,17 @@ class ProdutosViewTest(TestCase):
         self.assertEqual(produto.imagens.count(), 2)
         self.assertEqual(len(self.storage.enviados), 2)
 
+    def test_foto_heic_do_celular_e_aceita_e_vira_webp(self):
+        self._cadastrar(imagens=[foto_heic_de_teste('IMG_0001.HEIC')])
+
+        produto = Produto.objects.get(nome='Tênis')
+        self.assertEqual(produto.imagens.count(), 1)
+        self.assertTrue(self.storage.enviados[0].endswith('/IMG_0001.webp'))
+
+    def test_campo_de_fotos_deixa_escolher_qualquer_foto_do_celular(self):
+        self.client.force_login(self.user_loja1)
+        self.assertContains(self.client.get(self.url), 'accept="image/*,.heic,.heif"')
+
     def test_cadastra_por_quilo_e_sem_controle_de_estoque(self):
         self._cadastrar(nome='Queijo', unidade='kg', quantidade_estoque='2.5')
         self._cadastrar(nome='Bolo', sem_controle_de_estoque='1')
@@ -146,7 +157,7 @@ class ProdutosViewTest(TestCase):
 
         response = self._cadastrar(imagens=[falso])
 
-        self.assertEqual(self._mensagens(response), ["Envie apenas imagens válidas (JPG, PNG ou WEBP)."])
+        self.assertEqual(self._mensagens(response), ["Envie apenas imagens válidas (JPG, PNG, WEBP ou HEIC)."])
         self.assertEqual(self.storage.enviados, [])
 
     def test_superuser_sem_loja_nao_cadastra(self):

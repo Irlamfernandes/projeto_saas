@@ -65,7 +65,7 @@ class VendasViewTest(TestCase):
         self.assertEqual([p['nome'] for p in response.context['catalogo']], ["Café", "Produto A"])
         self.assertEqual(response.context['catalogo'][0], {
             'id': self.cafe.pk, 'nome': "Café", 'codigo': '', 'preco': '5.00', 'estoque': 20, 'unidade': 'un.', 'casas': 0,
-            'opcoes': [],
+            'variacoes': [],
         })
         self.assertContains(response, 'id="catalogo-venda"')
 

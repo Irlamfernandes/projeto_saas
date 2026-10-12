@@ -1,5 +1,5 @@
 from application.exceptions import RegraDeNegocioError
-from infrastructure.utils.formatacao import quantidade
+from infrastructure.utils.formatacao import com_variacao, quantidade
 
 
 class VendaError(RegraDeNegocioError):
@@ -12,9 +12,11 @@ class ProdutoNaoEncontrado(VendaError):
 
 
 class EstoqueInsuficiente(VendaError):
-    def __init__(self, produto):
-        disponivel = quantidade(produto.quantidade_estoque, produto.unidade)
-        super().__init__(f"Estoque insuficiente para '{produto.nome}'. Disponível: {disponivel}")
+    def __init__(self, produto, variacao=None):
+        guardado = variacao or produto
+        disponivel = quantidade(guardado.quantidade_estoque, produto.unidade)
+        super().__init__(f"Estoque insuficiente para '{com_variacao(produto.nome, variacao and variacao.nome)}'. "
+                         f"Disponível: {disponivel}")
 
 
 class QuantidadeFracionada(VendaError):
@@ -39,13 +41,3 @@ class VendaSemLoja(VendaError):
 class SenhaIncorreta(VendaError):
     def __init__(self):
         super().__init__("Senha incorreta. A venda não foi cancelada.")
-
-
-class OpcaoNaoEscolhida(VendaError):
-    def __init__(self, produto, opcao):
-        super().__init__(f"Escolha a opção \"{opcao}\" de '{produto.nome}'.")
-
-
-class OpcoesMudaram(VendaError):
-    def __init__(self, produto):
-        super().__init__(f"As opções de '{produto.nome}' mudaram. Tire o produto da venda e adicione de novo.")

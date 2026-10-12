@@ -7,7 +7,7 @@ from infrastructure.models import Acao, RegistroDeAlteracao
 from infrastructure.utils.dados_pessoais import mascarar
 
 # Contatos dos clientes das lojas: a loja vê no relatório dela; o admin da CorsariosCode não precisa ver.
-CONTATOS = ('telefone', 'email', 'endereco')
+CONTATOS = ('telefone', 'cpf', 'email', 'endereco')
 
 CORES_DAS_ACOES = {
     Acao.VENDA_CANCELADA: 'danger',
@@ -50,7 +50,7 @@ class RegistroDeAlteracaoAdmin(ModelAdmin):
 
 
 def sem_contatos(valor):
-    """Os mesmos detalhes, com telefone, e-mail e endereço trocados por "(oculto)" em qualquer nível."""
+    """Os mesmos detalhes, com telefone, CPF, e-mail e endereço trocados por "(oculto)" em qualquer nível."""
     if isinstance(valor, dict):
         return {chave: '(oculto)' if chave in CONTATOS else sem_contatos(item) for chave, item in valor.items()}
     if isinstance(valor, list):

@@ -1,7 +1,7 @@
 {% extends 'interfaces/base.html' %}
 {% load static formatacao %}
 
-{% block title %}Editar venda #{{ venda.id }} · Gestão da Loja{% endblock %}
+{% block title %}Editar venda #{{ venda.id }} · GestCor{% endblock %}
 {% block voltar %}<a href="{% url 'vendas' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Vendas</a>{% endblock %}
 {% block header_title %}Editar venda #{{ venda.id }}{% endblock %}
 {% block subtitulo %}Registrada em {{ venda.data_venda|date:"d/m/Y \à\s H:i" }} · total atual R$ {{ venda.valor_total|moeda }}{% endblock %}

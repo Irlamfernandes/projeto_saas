@@ -1,11 +1,12 @@
 from django import forms
 from infrastructure.models import Cliente, FormaDePagamento
+from infrastructure.utils.cpf import cpf_valido, so_digitos
 
 
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nome', 'telefone', 'email', 'endereco']
+        fields = ['nome', 'telefone', 'cpf', 'email', 'endereco']
         error_messages = {
             'nome': {
                 'required': "O nome do cliente é obrigatório.",
@@ -14,6 +15,19 @@ class ClienteForm(forms.ModelForm):
             'telefone': {'max_length': "O telefone pode ter no máximo 20 caracteres."},
             'email': {'invalid': "Informe um e-mail válido."},
         }
+
+    cpf = forms.CharField(required=False, max_length=20, error_messages={'max_length': "Informe um CPF válido."})
+
+    def clean_cpf(self):
+        """Aceita com ou sem pontos e traço; guarda só os dígitos. Vazio = não informado."""
+        digitos = so_digitos(self.cleaned_data['cpf'])
+        if digitos and not cpf_valido(digitos):
+            raise forms.ValidationError("Informe um CPF válido.")
+        # A regra do banco (um CPF por loja) não é conferida pelo formulário, que não tem o campo loja.
+        outros = Cliente.objects.filter(loja_id=self.instance.loja_id, cpf=digitos).exclude(pk=self.instance.pk)
+        if digitos and outros.exists():
+            raise forms.ValidationError("Já existe um cliente com este CPF.")
+        return digitos
 
 
 class BuscaClientesForm(forms.Form):

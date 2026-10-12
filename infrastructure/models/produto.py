@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models.functions import Lower
 from infrastructure.models.loja_model import LojaModel
 
 
@@ -28,7 +29,8 @@ SIGLAS = {
 CASAS_DECIMAIS = {Unidade.QUILO: 3, Unidade.LITRO: 3, Unidade.METRO: 2}
 QUANTIDADE_MAXIMA_DE_CASAS = 3
 MILESIMO = Decimal('0.001')
-MAXIMO_DE_OPCOES = 5
+MAXIMO_DE_VARIACOES = 100
+TAMANHO_DO_NOME_DA_VARIACAO = 40
 
 
 def sigla(unidade):
@@ -82,10 +84,6 @@ class Produto(models.Model):
         default=Decimal('0'),
         validators=[MinValueValidator(Decimal('0'))]
     )
-    # Escolhas feitas na venda, com nome e valores dados pela loja (ex.: Tamanho P/M/G, Sabor, Cor):
-    # [{'nome': 'Tamanho', 'valores': [{'nome': 'G', 'acrescimo': '5.00'}, ...]}, ...]. Não mexem no estoque.
-    opcoes = models.JSONField(default=list, blank=True)
-
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     @property
@@ -128,3 +126,26 @@ class ProdutoImagem(models.Model):
         verbose_name = 'Imagem do Produto'
         verbose_name_plural = 'Imagens dos Produtos'
         ordering = ['pk']  # ordem em que foram enviadas (a primeira é a capa)
+
+
+class Variacao(models.Model):
+    """Uma versão do produto escolhida na venda (ex.: Azul P, Branca M, Chocolate), com estoque próprio e um
+    acréscimo opcional no preço. Com variações, o estoque do produto é sempre a soma do estoque delas."""
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='variacoes')
+    nome = models.CharField(max_length=TAMANHO_DO_NOME_DA_VARIACAO)
+    acrescimo = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('0.00'), validators=[MinValueValidator(Decimal('0.00'))],
+    )
+    quantidade_estoque = campo_de_quantidade(default=Decimal('0'), validators=[MinValueValidator(Decimal('0'))])
+
+    class Meta:
+        db_table = 'produto_variacoes'
+        verbose_name = 'Variação do produto'
+        verbose_name_plural = 'Variações dos produtos'
+        ordering = ['pk']  # ordem em que foram cadastradas
+        constraints = [
+            models.UniqueConstraint(Lower('nome'), 'produto', name='variacao_nome_unico_no_produto'),
+        ]
+
+    def __str__(self):
+        return f"{self.produto.nome} ({self.nome})"

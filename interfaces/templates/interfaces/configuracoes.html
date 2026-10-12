@@ -1,7 +1,7 @@
 {% extends 'interfaces/base.html' %}
 {% load static %}
 
-{% block title %}Configurações · Gestão da Loja{% endblock %}
+{% block title %}Configurações · GestCor{% endblock %}
 {% block header_title %}Configurações{% endblock %}
 {% block subtitulo %}Sua conta, a aparência, a marca da loja e o plano.{% endblock %}
 
@@ -35,8 +35,8 @@
             {% csrf_token %}
             <div class="campo">
                 <label for="id_marca" class="rotulo">{% if request.user.loja.logo_url %}Trocar a marca{% else %}Enviar a marca{% endif %} <span class="obrigatorio" aria-hidden="true">*</span></label>
-                <input type="file" id="id_marca" name="marca" required accept="image/jpeg,image/png,image/webp" class="entrada-arquivo">
-                <p class="ajuda">JPG, PNG ou WEBP, até {{ tamanho_maximo_mb }} MB. Imagens quadradas ficam melhores; nós reduzimos o arquivo automaticamente.</p>
+                <input type="file" id="id_marca" name="marca" required accept="image/*,.heic,.heif" data-reduzir-fotos class="entrada-arquivo">
+                <p class="ajuda">JPG, PNG, WEBP ou HEIC, até {{ tamanho_maximo_mb }} MB. Imagens quadradas ficam melhores; nós reduzimos o arquivo automaticamente.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <button type="submit" class="btn-primario"><svg class="ico"><use href="#i-check"/></svg>Salvar marca</button>
@@ -134,4 +134,8 @@
 </section>
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fotos.js' %}" defer></script>
 {% endblock %}

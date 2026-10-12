@@ -194,7 +194,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         jest.useRealTimers();
 
         const botao = document.createElement('button');
-        Object.assign(botao.dataset, { editarCliente: '/clientes/editar/7/', nome: 'Ana', telefone: 'Tel', email: 'Email', endereco: 'End' });
+        Object.assign(botao.dataset, { editarCliente: '/clientes/editar/7/', nome: 'Ana', telefone: 'Tel', cpf: 'Cpf', email: 'Email', endereco: 'End' });
         expect(() => abrirModalEdicaoCliente(botao)).not.toThrow(); // página sem a janela
 
         document.body.innerHTML = `
@@ -202,6 +202,7 @@ describe('Testes de Cobertura Total - main.js', () => {
             <form id="form-edicao-cliente"></form>
             <input id="edit-cli-nome" />
             <input id="edit-cli-telefone" />
+            <input id="edit-cli-cpf" />
             <input id="edit-cli-email" />
             <input id="edit-cli-endereco" />
         `;
@@ -213,6 +214,7 @@ describe('Testes de Cobertura Total - main.js', () => {
         expect(document.getElementById('form-edicao-cliente').getAttribute('action')).toBe('/clientes/editar/7/');
         expect(document.getElementById('edit-cli-nome').value).toBe('Ana');
         expect(document.getElementById('edit-cli-telefone').value).toBe('Tel');
+        expect(document.getElementById('edit-cli-cpf').value).toBe('Cpf');
         expect(document.getElementById('edit-cli-email').value).toBe('Email');
         expect(document.getElementById('edit-cli-endereco').value).toBe('End');
 
@@ -250,9 +252,9 @@ describe('Testes de Cobertura Total - main.js', () => {
 
         test('editar cliente abre a janela com os dados do botão', () => {
             ligar(`
-                <button data-editar-cliente="/clientes/editar/3/" data-nome="Bia" data-telefone="" data-email="" data-endereco=""></button>
+                <button data-editar-cliente="/clientes/editar/3/" data-nome="Bia" data-telefone="" data-cpf="" data-email="" data-endereco=""></button>
                 <dialog id="modal-edicao-cliente"></dialog><form id="form-edicao-cliente"></form>
-                <input id="edit-cli-nome"><input id="edit-cli-telefone"><input id="edit-cli-email"><input id="edit-cli-endereco">`);
+                <input id="edit-cli-nome"><input id="edit-cli-telefone"><input id="edit-cli-cpf"><input id="edit-cli-email"><input id="edit-cli-endereco">`);
             document.getElementById('modal-edicao-cliente').showModal = jest.fn();
             document.querySelector('[data-editar-cliente]').click();
             expect(document.getElementById('edit-cli-nome').value).toBe('Bia');
@@ -651,56 +653,6 @@ describe('estoque do produto', () => {
 
         expect($('[data-bloco-quantidade]').classList.contains('hidden')).toBe(false);
         expect($('[name="quantidade_estoque"]').required).toBe(true);
-    });
-});
-
-describe('opções do produto no cadastro', () => {
-    const BLOCO = `<li data-opcao-produto><input name="opcao_nome"><textarea name="opcao_valores"></textarea>
-        <button type="button" data-remover-opcao><svg></svg></button></li>`;
-
-    function montar(maximo = 3) {
-        document.body.innerHTML = `
-            <details data-opcoes-produto data-maximo="${maximo}">
-                <ol data-lista-opcoes>${BLOCO}</ol>
-                <button type="button" data-adicionar-opcao>Outra opção</button>
-                <template data-modelo-opcao>${BLOCO}</template>
-            </details>`;
-        require('../js/main.js').inicializarOpcoesDoProduto(document);
-        return {
-            lista: document.querySelector('[data-lista-opcoes]'),
-            adicionar: document.querySelector('[data-adicionar-opcao]'),
-        };
-    }
-
-    beforeEach(() => { jest.resetModules(); });
-
-    test('"Outra opção" copia o bloco vazio, foca o nome e para no máximo', () => {
-        const { lista, adicionar } = montar(2);
-        adicionar.click();
-
-        expect(lista.children).toHaveLength(2);
-        expect(document.activeElement).toBe(lista.lastElementChild.querySelector('[name="opcao_nome"]'));
-        expect(adicionar.disabled).toBe(true);
-    });
-
-    test('a lixeira tira a opção; a última só é limpa', () => {
-        const { lista, adicionar } = montar();
-        adicionar.click();
-        lista.querySelector('[name="opcao_nome"]').value = 'Tamanho';
-
-        lista.firstElementChild.querySelector('svg').dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        expect(lista.children).toHaveLength(1);
-
-        const unica = lista.firstElementChild;
-        unica.querySelector('[name="opcao_nome"]').value = 'Cor';
-        unica.querySelector('[name="opcao_valores"]').value = 'Azul';
-        unica.querySelector('[data-remover-opcao]').click();
-        expect(lista.children).toHaveLength(1);
-        expect([unica.querySelector('input').value, unica.querySelector('textarea').value]).toEqual(['', '']);
-        expect(adicionar.disabled).toBe(false);
-
-        lista.click(); // clique fora da lixeira não faz nada
-        expect(lista.children).toHaveLength(1);
     });
 });
 

@@ -18,12 +18,18 @@ def compra(linhas, **campos):
 
 class CompraFormTest(TestCase):
 
+    def test_produto_com_variacao_vem_como_id_dois_pontos_variacao(self):
+        form = compra([('1:7', '2', '3'), ('2', '1', '1')])
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertEqual([(produto, variacao) for produto, _, _, variacao in form.parametros()['itens']], [(1, 7), (2, None)])
+        self.assertFalse(compra([('1:', '2', '3')]).is_valid())
+
     def test_le_as_linhas_ignorando_as_vazias(self):
         form = compra([('1', '2,5', '10,5'), ('', '', ''), ('3', '1', '0')], fornecedor="Ceasa", atualizar_custo='1')
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.parametros(), {
-            'itens': [(1, Decimal('2.5'), Decimal('10.50')), (3, Decimal('1'), Decimal('0.00'))],
+            'itens': [(1, Decimal('2.5'), Decimal('10.50'), None), (3, Decimal('1'), Decimal('0.00'), None)],
             'data': date(2026, 9, 10), 'fornecedor': "Ceasa", 'observacao': '', 'atualizar_custo': True,
         })
 
@@ -68,7 +74,15 @@ class DespesaEPerdaFormTest(TestCase):
 
         form = PerdaForm({'data': '2026-09-10', 'produto': bolo.pk, 'quantidade': '0,5', 'motivo': 'Venceu'}, produtos=produtos)
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.parametros(), {'produto_id': bolo.pk, 'quantidade': Decimal('0.5'), 'data': date(2026, 9, 10),
-                                             'motivo': 'Venceu'})
+        self.assertEqual(form.parametros(), {'produto_id': bolo.pk, 'variacao_id': None, 'quantidade': Decimal('0.5'),
+                                             'data': date(2026, 9, 10), 'motivo': 'Venceu'})
+        com_variacao = PerdaForm({'data': '2026-09-10', 'produto': f'{bolo.pk}:7', 'quantidade': '1', 'motivo': 'x'},
+                                 produtos=produtos)
+        self.assertTrue(com_variacao.is_valid(), com_variacao.errors)
+        self.assertEqual(com_variacao.parametros()['variacao_id'], 7)
+        for invalido in ('abc', f'{bolo.pk}:', ':3'):
+            with self.subTest(invalido):
+                form = PerdaForm({'data': '2026-09-10', 'produto': invalido, 'quantidade': '1', 'motivo': 'x'}, produtos=produtos)
+                self.assertEqual(primeiro_erro(form), "Produto não encontrado nesta loja.")
         fora = PerdaForm({'data': '2026-09-10', 'produto': de_fora.pk, 'quantidade': '1', 'motivo': 'x'}, produtos=produtos)
         self.assertEqual(primeiro_erro(fora), "Produto não encontrado nesta loja.")

@@ -1,0 +1,17 @@
+{% load formatacao %}{% comment %}
+Variações do produto (ex.: Azul P, Branca M, Chocolate): uma por linha, cada uma com a sua quantidade em estoque e um
+acréscimo opcional no preço. Parâmetro: produto (na edição). O static/js/variacoes.js adiciona e tira linhas e mostra
+a soma no estoque do produto.
+{% endcomment %}{% maximo_de_variacoes as maximo %}
+<details class="rounded-controle border border-linha" data-variacoes-produto data-maximo="{{ maximo }}"{% if produto.variacoes.all %} open{% endif %}>
+    <summary class="cursor-pointer px-3.5 py-3 text-sm font-semibold">Variações <span class="rotulo-opcional">cor, tamanho, sabor…</span></summary>
+    <div class="grid gap-3 px-3.5 pb-3.5">
+        <p class="ajuda">Uma linha para cada versão do produto, com a quantidade dela: <b class="font-semibold">Azul P</b>, <b class="font-semibold">Azul M</b>, <b class="font-semibold">Branca P</b>… Na venda, você escolhe qual saiu e o estoque dela baixa. O acréscimo é opcional: só para a que custa mais que o preço do produto.</p>
+        <div class="grid gap-2" data-lista-variacoes>
+            {% for variacao in produto.variacoes.all %}{% include 'interfaces/_variacao_do_produto.html' %}{% endfor %}
+        </div>
+        <button type="button" class="btn-secundario btn-pequeno justify-self-start" data-adicionar-variacao><svg class="ico ico-sm"><use href="#i-mais"/></svg>Adicionar variação</button>
+        <p class="ajuda">Com variações, o estoque do produto é a soma delas. Até {{ maximo }} por produto.</p>
+        <template data-modelo-variacao>{% include 'interfaces/_variacao_do_produto.html' with variacao=None %}</template>
+    </div>
+</details>

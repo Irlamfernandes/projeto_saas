@@ -1,7 +1,7 @@
 # Bate na porta do sistema de hora em hora. Quem decide se é hora de fazer o backup é a configuração do admin
 # (Sistema → Backups → Configurar): ligado/desligado, a cada quantas horas, dias ou meses.
 # Precisa de dois segredos no GitHub (Settings → Secrets and variables → Actions):
-#   SITE_URL      endereço do sistema, ex.: https://projeto-saas-44z9.onrender.com
+#   SITE_URL      endereço do sistema, ex.: https://meu-app.onrender.com
 #   BACKUP_TOKEN  o mesmo valor da variável BACKUP_TOKEN no Render
 # Para bater mais vezes (ex.: a cada 30 min), troque o cron por "*/30 * * * *".
 name: Backup

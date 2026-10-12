@@ -1,7 +1,7 @@
 {% extends 'interfaces/base.html' %}
-{% load formatacao %}
+{% load static formatacao %}
 
-{% block title %}Produtos · Gestão da Loja{% endblock %}
+{% block title %}Produtos · GestCor{% endblock %}
 {% block header_title %}Produtos{% endblock %}
 {% block subtitulo %}Cadastre, encontre e acompanhe o estoque.{% endblock %}
 
@@ -59,7 +59,7 @@
 
             {% include 'interfaces/_estoque_do_produto.html' with prefixo='id' ajuda='Avisamos no início quando estiver acabando.' %}
 
-            {% include 'interfaces/_opcoes_do_produto.html' %}
+            {% include 'interfaces/_variacoes_do_produto.html' %}
 
             <div class="campo">
                 <label for="id_descricao_produto" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
@@ -68,10 +68,10 @@
 
             <div class="campo">
                 <label for="id_imagens_produto" class="rotulo">Fotos <span class="rotulo-opcional">opcional</span></label>
-                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+                <input type="file" id="id_imagens_produto" name="imagens" multiple accept="image/*,.heic,.heif" data-reduzir-fotos
                        data-maximo-fotos="{{ maximo_de_fotos }}"
                        class="entrada-arquivo">
-                <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG ou WEBP (máx. 15 MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
+                <p class="ajuda">Até {{ maximo_de_fotos }} fotos JPG, PNG, WEBP ou HEIC (máx. {{ tamanho_maximo_mb }} MB cada). Reduzimos cada foto para ocupar pouco espaço.</p>
             </div>
 
             <button type="submit" class="btn-primario w-full py-3"><svg class="ico"><use href="#i-check"/></svg>Salvar produto</button>
@@ -148,6 +148,9 @@
                                         {% elif produto.quantidade_estoque <= 5 %}<span class="pilula-alerta"><svg class="ico ico-sm"><use href="#i-alerta"/></svg>{{ produto.quantidade_estoque|quantidade:produto.unidade }}</span>
                                         {% else %}<span class="pilula-neutra">{{ produto.quantidade_estoque|quantidade:produto.unidade }}</span>{% endif %}
                                     </span>
+                                    {% with variacoes=produto.variacoes.all %}{% if variacoes %}
+                                    <span class="mt-1 block text-xs text-tinta-suave">{% for variacao in variacoes %}{{ variacao.nome }}{% if produto.controla_estoque %}: <b class="font-semibold tabular-nums{% if not variacao.quantidade_estoque %} text-critico-texto{% endif %}">{{ variacao.quantidade_estoque|quantidade:produto.unidade }}</b>{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</span>
+                                    {% endif %}{% endwith %}
                                 </span>
                             </div>
                         </td>
@@ -173,4 +176,9 @@
         <button id="btn-proximo" type="button" class="btn-secundario px-3" data-mudar-foto="1" aria-label="Próxima foto"><svg class="ico"><use href="#i-seta"/></svg></button>
     </div>
 </dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fotos.js' %}" defer></script>
+<script src="{% static 'js/variacoes.js' %}" defer></script>
 {% endblock %}

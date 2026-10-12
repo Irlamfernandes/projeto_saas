@@ -1,7 +1,7 @@
 {% extends 'interfaces/base.html' %}
-{% load formatacao %}
+{% load static formatacao %}
 
-{% block title %}Editar {{ produto.nome }} · Gestão da Loja{% endblock %}
+{% block title %}Editar {{ produto.nome }} · GestCor{% endblock %}
 {% block voltar %}<a href="{% url 'produtos' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-tinta-suave hover:text-tinta mb-1"><svg class="ico ico-sm"><use href="#i-voltar"/></svg>Produtos</a>{% endblock %}
 {% block header_title %}{{ produto.nome }}{% endblock %}
 {% block subtitulo %}Cadastrado em {{ produto.data_criacao|date:"d/m/Y" }}{% if produto.codigo_interno %} · código {{ produto.codigo_interno }}{% endif %}{% endblock %}
@@ -49,7 +49,7 @@
 
         {% include 'interfaces/_estoque_do_produto.html' with prefixo='edit' ajuda='Use para acertar o estoque depois de uma contagem ou de uma compra.' %}
 
-        {% include 'interfaces/_opcoes_do_produto.html' %}
+        {% include 'interfaces/_variacoes_do_produto.html' %}
 
         <div class="campo">
             <label for="edit-descricao" class="rotulo">Descrição <span class="rotulo-opcional">opcional</span></label>
@@ -76,7 +76,7 @@
 
         <div class="campo">
             <label for="edit-imagens" class="rotulo">Adicionar fotos <span class="rotulo-opcional">opcional</span></label>
-            <input type="file" id="edit-imagens" name="imagens" multiple accept="image/jpeg,image/png,image/webp"
+            <input type="file" id="edit-imagens" name="imagens" multiple accept="image/*,.heic,.heif" data-reduzir-fotos
                    data-maximo-fotos="{{ maximo_de_fotos }}"
                    class="entrada-arquivo">
             <p class="ajuda">Cada produto pode ter até {{ maximo_de_fotos }} fotos: {% if fotos_disponiveis %}dá para adicionar mais {{ fotos_disponiveis }}{% else %}remova alguma para adicionar outra{% endif %}. JPG, PNG ou WEBP (máx. 15 MB cada); reduzimos cada foto para ocupar pouco espaço.</p>
@@ -88,4 +88,9 @@
         </div>
     </form>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/fotos.js' %}" defer></script>
+<script src="{% static 'js/variacoes.js' %}" defer></script>
 {% endblock %}

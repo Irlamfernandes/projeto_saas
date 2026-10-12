@@ -45,6 +45,11 @@ def item(valor, unidade, nome):
     return f"{numero(valor)} {sigla(unidade)} {nome}"
 
 
+def com_variacao(nome, variacao):
+    """'Camiseta (Azul P)'; sem variação, só o nome."""
+    return f"{nome} ({variacao})" if variacao else nome
+
+
 def com_opcoes(nome, opcoes):
     """Nome do produto com o que foi escolhido nas opções: 'Camiseta (G, Azul)'."""
     valores = ", ".join(opcao['valor'] for opcao in opcoes or ())

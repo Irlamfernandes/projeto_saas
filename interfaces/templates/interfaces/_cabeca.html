@@ -1,7 +1,7 @@
 {% load static %}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="Gestão da loja: vendas, produtos, clientes, caderneta e relatórios.">
+<meta name="description" content="GestCor: vendas, produtos, clientes, caderneta e relatórios da sua loja.">
 {# Cor da barra do navegador no celular: acompanha o tema #}
 {% if tema == 'escuro' %}<meta name="theme-color" content="#0d1514">
 {% elif tema == 'claro' %}<meta name="theme-color" content="#0f766e">
@@ -9,7 +9,10 @@
 <meta name="theme-color" content="#0d1514" media="(prefers-color-scheme: dark)">{% endif %}
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="manifest" href="{% static 'manifest.json' %}">
+<link rel="icon" type="image/svg+xml" href="{% static 'images/logo.svg' %}">
 <link rel="icon" type="image/png" href="{% static 'images/icon-192.png' %}">
-<link rel="apple-touch-icon" href="{% static 'images/icon-192.png' %}">
+<link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
 <link rel="preload" href="{% static 'fonts/figtree-latin.woff2' %}" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{% static 'css/output.css' %}">
+<link rel="stylesheet" href="{% static 'css/mostrar_senha.css' %}">
+<script src="{% static 'js/mostrar_senha.js' %}" defer></script>

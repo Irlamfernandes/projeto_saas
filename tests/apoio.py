@@ -1,3 +1,4 @@
+import base64
 import dataclasses
 import importlib
 import io
@@ -31,6 +32,21 @@ def imagem_de_teste(nome='foto.png', formato='PNG'):
     Image.new('RGB', (2, 2), 'red').save(buffer, formato)
     content_type = Image.MIME[formato]
     return SimpleUploadedFile(nome, buffer.getvalue(), content_type=content_type)
+
+
+# Foto HEIC de verdade (64x48 px, vermelha), como as do iPhone: gerada uma vez com o pillow-heif.
+_FOTO_HEIC = (
+    'AAAAHGZ0eXBoZWljAAAAAG1pZjFoZWljbWlhZgAAAX1tZXRhAAAAAAAAACFoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAAAAA'
+    'ACJpbG9jAAAAAERAAAEAAQAAAAABoQABAAAAAAAAAB0AAAAjaWluZgAAAAAAAQAAABVpbmZlAgAAAAABAABodmMxAAAAAA5waXRt'
+    'AAAAAAABAAAA/WlwcnAAAADdaXBjbwAAAHZodmNDAQNwAAAAAAAAAAAAHvAA/P34+AAADwNgAAEAGEABDAH//wNwAAADAJAAAAMA'
+    'AAMAHroCQGEAAQAqQgEBA3AAAAMAkAAAAwAAAwAeoCCBBZbq5Ka5uAhoMCAAAAMDIAAAAwAhYgABAAZEAcFzwIkAAAATY29scm5j'
+    'bHgAAQANAAaAAAAAFGlzcGUAAAAAAAAAQAAAAEAAAAAoY2xhcAAAAEAAAAABAAAAMAAAAAEAAAAAAAAAAv////AAAAACAAAAEHBp'
+    'eGkAAAAAAwgICAAAABhpcG1hAAAAAAAAAAEAAQWBAgMFhAAAACVtZGF0AAAAGSgBrxOA9SeBP//gpUf/utZ4fg8Lfnny1PA='
+)
+
+
+def foto_heic_de_teste(nome='foto.heic'):
+    return SimpleUploadedFile(nome, base64.b64decode(_FOTO_HEIC), content_type='image/heic')
 
 
 class StorageFalso:

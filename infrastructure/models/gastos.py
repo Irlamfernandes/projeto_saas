@@ -5,8 +5,8 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 from infrastructure.models.loja_model import LojaModel
-from infrastructure.models.produto import Produto, campo_de_quantidade
-from infrastructure.utils.formatacao import item
+from infrastructure.models.produto import Produto, Variacao, campo_de_quantidade
+from infrastructure.utils.formatacao import com_variacao, item
 
 MINIMO = [MinValueValidator(Decimal('0.001'))]
 
@@ -38,6 +38,8 @@ class Compra(models.Model):
 class ItemCompra(models.Model):
     compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='itens')
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT, related_name='itens_de_compra')
+    variacao = models.ForeignKey(Variacao, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    variacao_nome = models.CharField(max_length=40, blank=True, default='')  # como era na compra
     quantidade = campo_de_quantidade(validators=MINIMO)
     custo_unitario = _dinheiro(validators=[MinValueValidator(Decimal('0'))])
 
@@ -47,8 +49,12 @@ class ItemCompra(models.Model):
         verbose_name_plural = 'Itens das compras'
         ordering = ['pk']  # ordem em que foram lançados (sem isso o Postgres devolve em qualquer ordem)
 
+    @property
+    def nome(self):
+        return com_variacao(self.produto.nome, self.variacao_nome)
+
     def __str__(self):
-        return item(self.quantidade, self.produto.unidade, self.produto.nome)
+        return item(self.quantidade, self.produto.unidade, self.nome)
 
 
 class Despesa(models.Model):
@@ -76,6 +82,8 @@ class Perda(models.Model):
     loja = models.ForeignKey(LojaModel, on_delete=models.CASCADE, related_name='perdas')
     data = models.DateField(default=timezone.localdate)
     produto = models.ForeignKey(Produto, on_delete=models.PROTECT, related_name='perdas')
+    variacao = models.ForeignKey(Variacao, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    variacao_nome = models.CharField(max_length=40, blank=True, default='')  # como era na perda
     quantidade = campo_de_quantidade(validators=MINIMO)
     custo_unitario = _dinheiro(default=Decimal('0.00'))
     motivo = models.CharField(max_length=120)
@@ -92,5 +100,9 @@ class Perda(models.Model):
     def valor(self):
         return (self.quantidade * self.custo_unitario).quantize(Decimal('0.01'))
 
+    @property
+    def nome(self):
+        return com_variacao(self.produto.nome, self.variacao_nome)
+
     def __str__(self):
-        return f"Perda de {self.produto.nome} · {self.data:%d/%m/%Y}"
+        return f"Perda de {self.nome} · {self.data:%d/%m/%Y}"

@@ -1,4 +1,4 @@
-# Projeto SaaS — Gestão de Lojas
+# GestCor — gestão de lojas
 
 Sistema multi-loja para pequenos comércios: cadastro de produtos (com fotos), clientes com
 caderneta de fiado, vendas com baixa de estoque, extrato do cliente em PDF, relatórios com

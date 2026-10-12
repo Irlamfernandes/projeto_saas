@@ -2,13 +2,13 @@
 <html lang="pt-br" data-tema="{{ tema|default:'auto' }}">
 <head>
     {% include 'interfaces/_cabeca.html' %}
-    <title>{% block titulo %}{% endblock %} · Gestão da Loja</title>
+    <title>{% block titulo %}{% endblock %} · GestCor</title>
 </head>
 <body class="flex min-h-dvh flex-col">
     {% include 'interfaces/_icones.html' %}
     <header class="border-b border-linha bg-superficie">
         <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-            <a href="{% url 'login' %}" class="flex items-center gap-2 font-titulo text-lg font-bold text-marca-700"><svg class="ico w-7 h-7"><use href="#i-loja"/></svg>Gestão da Loja</a>
+            <a href="{% url 'login' %}" class="flex items-center gap-2.5 font-titulo text-xl lg:text-2xl font-bold text-marca-700"><img src="{% static 'images/logo.svg' %}" alt="" class="w-10 h-10 lg:w-12 lg:h-12">GestCor</a>
             <nav class="flex gap-4 text-sm font-semibold" aria-label="Termos e privacidade">
                 <a href="{% url 'termos' %}" class="text-tinta-suave hover:text-tinta" {% if request.resolver_match.url_name == 'termos' %}aria-current="page"{% endif %}>Termos de uso</a>
                 <a href="{% url 'privacidade' %}" class="text-tinta-suave hover:text-tinta" {% if request.resolver_match.url_name == 'privacidade' %}aria-current="page"{% endif %}>Privacidade</a>

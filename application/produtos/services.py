@@ -4,6 +4,7 @@ from django.db import transaction
 from application.auditoria.services import diferencas, fotografar, registrar_alteracao
 from application.produtos.exceptions import FalhaNoEnvioDeImagem, ImagemInvalida, LimiteDeFotosExcedido, ProdutoSemLoja
 from application.produtos.selectors import MAXIMO_DE_FOTOS
+from application.produtos.variacoes import resumo_das_variacoes, salvar_variacoes
 from infrastructure.models import Acao, Produto
 from infrastructure.models.produto import ProdutoImagem
 from infrastructure.utils.otimizacao_de_imagem import ImagemIlegivel, otimizar_imagem
@@ -13,39 +14,47 @@ logger = logging.getLogger(__name__)
 
 CAMPOS_DO_PRODUTO = (
     'nome', 'codigo_interno', 'categoria', 'preco_custo', 'preco_venda', 'unidade', 'controla_estoque', 'quantidade_estoque',
-    'descricao', 'opcoes',
+    'descricao',
 )
 
 
 @transaction.atomic
-def cadastrar_produto(produto, imagens=(), storage=None, usuario=None):
-    """Salva o produto novo e anexa as imagens. Se algum envio falhar, nada é salvo."""
+def cadastrar_produto(produto, imagens=(), storage=None, usuario=None, variacoes=()):
+    """Salva o produto novo com as variações e anexa as imagens. Se algum envio falhar, nada é salvo."""
     if produto.loja_id is None:
         raise ProdutoSemLoja()
     _exigir_limite_de_fotos(ja_tem=0, novas=len(imagens))
 
     produto.save()
+    salvar_variacoes(produto, variacoes)
     _anexar_imagens(produto, imagens, storage or SupabaseStorage.from_settings())
     registrar_alteracao(
         loja=produto.loja, usuario=usuario, acao=Acao.PRODUTO_CADASTRADO, descricao=produto.nome,
-        detalhes={'produto': fotografar(produto, CAMPOS_DO_PRODUTO), 'fotos': len(imagens)},
+        detalhes={'produto': _fotografar(produto), 'fotos': len(imagens)},
     )
     return produto
 
 
 @transaction.atomic
-def atualizar_produto(produto, imagens_novas=(), ids_imagens_remover=(), storage=None, usuario=None):
-    """Salva as alterações, remove as imagens marcadas e anexa as novas, tudo ou nada."""
+def atualizar_produto(produto, imagens_novas=(), ids_imagens_remover=(), storage=None, usuario=None, variacoes=None):
+    """Salva as alterações e as variações (None = ficam como estão), remove as imagens marcadas e anexa as novas,
+    tudo ou nada."""
     mantidas = produto.imagens.exclude(pk__in=ids_imagens_remover).count()
     _exigir_limite_de_fotos(ja_tem=mantidas, novas=len(imagens_novas))
     storage = storage or SupabaseStorage.from_settings()
-    antes = fotografar(Produto.objects.get(pk=produto.pk), CAMPOS_DO_PRODUTO)
+    antes = _fotografar(Produto.objects.get(pk=produto.pk))
     produto.save()
+    if variacoes is not None:
+        salvar_variacoes(produto, variacoes)
     removidas = _remover_imagens(produto, ids_imagens_remover, storage)
     _anexar_imagens(produto, imagens_novas, storage)
-    _registrar_edicao(produto, usuario, diferencas(antes, fotografar(produto, CAMPOS_DO_PRODUTO)),
+    _registrar_edicao(produto, usuario, diferencas(antes, _fotografar(produto)),
                       fotos_novas=len(imagens_novas), fotos_removidas=removidas)
     return produto
+
+
+def _fotografar(produto):
+    return {**fotografar(produto, CAMPOS_DO_PRODUTO), 'variacoes': resumo_das_variacoes(produto)}
 
 
 def _registrar_edicao(produto, usuario, alteracoes, *, fotos_novas, fotos_removidas):

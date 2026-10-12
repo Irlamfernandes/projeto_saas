@@ -33,28 +33,28 @@ class NovaVendaFormTest(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         self.assertEqual(form.parametros(), {
-            'cliente': self.cliente, 'itens': [(1, 2, {}), (5, 1, {})], 'forma_pagamento': 'pix',
+            'cliente': self.cliente, 'itens': [(1, 2, None), (5, 1, None)], 'forma_pagamento': 'pix',
             'observacoes': 'obs', 'valor_pago': Decimal('10.50'), 'vencimentos': [],
         })
 
     def test_quantidade_com_fracao_aceita_virgula_ou_ponto(self):
         form = self._form(((1, '0,350'), (2, '1.5')), cliente=self.cliente.pk)
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.parametros()['itens'], [(1, Decimal('0.350'), {}), (2, Decimal('1.5'), {})])
+        self.assertEqual(form.parametros()['itens'], [(1, Decimal('0.350'), None), (2, Decimal('1.5'), None)])
 
-    def test_opcoes_escolhidas_em_cada_item(self):
+    def test_variacao_escolhida_em_cada_item(self):
         post = dados_do_post(((1, 1), (1, 2)), cliente=self.cliente.pk)
-        post.setlist('item_opcoes', ['{"Tamanho": "G", "Cor": "Azul"}', ' '])
+        post.setlist('item_variacao', ['7', ' '])
         form = NovaVendaForm(post, clientes=self.clientes)
 
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.parametros()['itens'], [(1, 1, {'Tamanho': 'G', 'Cor': 'Azul'}), (1, 2, {})])
+        self.assertEqual(form.parametros()['itens'], [(1, 1, 7), (1, 2, None)])
 
-    def test_opcoes_malformadas_sao_recusadas(self):
-        for opcoes in (['{"Tamanho": 1}'], ['["G"]'], ['{quebrado'], ['{}', '{}']):
-            with self.subTest(opcoes):
+    def test_variacao_malformada_e_recusada(self):
+        for variacoes in (['G'], ['1.5'], ['', '']):
+            with self.subTest(variacoes):
                 post = dados_do_post(cliente=self.cliente.pk)
-                post.setlist('item_opcoes', opcoes)
+                post.setlist('item_variacao', variacoes)
                 form = NovaVendaForm(post, clientes=self.clientes)
                 self.assertFalse(form.is_valid())
                 self.assertEqual(primeiro_erro(form), ERRO_ITEM)
@@ -154,7 +154,7 @@ class EditarVendaFormTest(TestCase):
     def test_fiado_sem_pagamento_no_ato_dispensa_a_forma(self):
         form = self._form(cliente=self.cliente.pk)
         self.assertTrue(form.is_valid(), form.errors)
-        self.assertEqual(form.parametros()['itens'], [(1, 2, {})])
+        self.assertEqual(form.parametros()['itens'], [(1, 2, None)])
 
     def test_com_pagamento_no_ato_pede_a_forma(self):
         PagamentoCliente.objects.create(loja=self.loja, cliente=self.cliente, venda=self.venda, valor=Decimal('1'))

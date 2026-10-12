@@ -183,7 +183,8 @@ class TelasDaLojaTest(TestCase):
         self.assertEqual(self.contexto('produtos')['maximo_de_fotos'], MAXIMO_DE_FOTOS)
         self.assertEqual(self.contexto('extrato_cliente', argumentos={'cliente_id': cliente.pk})['formas_de_pagamento'],
                          FormaDePagamento.choices)
-        self.assertEqual(self.contexto('configuracoes')['tamanho_maximo_mb'], 15)
+        self.assertEqual(self.contexto('configuracoes')['tamanho_maximo_mb'], 25)
+        self.assertEqual(self.contexto('produtos')['tamanho_maximo_mb'], 25)
         geral = self.contexto('relatorios', data_inicio='2026-01-01', data_fim='2026-01-31')
         self.assertEqual((geral['aba'], geral['data_inicio'], geral['data_fim']), ('geral', date(2026, 1, 1), date(2026, 1, 31)))
 

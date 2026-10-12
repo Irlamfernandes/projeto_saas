@@ -13,10 +13,10 @@ from application.auditoria.services import registrar_alteracao
 from application.vendas.exceptions import (
     EstoqueInsuficiente, ProdutoNaoEncontrado, QuantidadeFracionada, SenhaIncorreta, VendaSemItens, VendaSemLoja,
 )
-from application.vendas.opcoes import chave, escolhas_do_item, escolher
+from application.produtos.variacoes import escolher_variacao, opcoes_do_item, travar_variacoes
 from application.vendas.pendencias import a_prazo
 from application.vendas.selectors import produtos_da_loja
-from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Parcela, Produto, Venda
+from infrastructure.models import Acao, ItemVenda, PagamentoCliente, Parcela, Produto, Variacao, Venda
 from infrastructure.models.produto import quantidade_aceita
 from infrastructure.models.venda import subtotal
 from infrastructure.utils.formatacao import reais
@@ -25,7 +25,7 @@ from infrastructure.utils.formatacao import reais
 @transaction.atomic
 def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), forma_pagamento='',
                     observacoes='', vencimentos=(), usuario=None):
-    """`itens`: (id do produto, quantidade[, {opção: valor}]). A loja vem do cliente; no balcão, da loja informada."""
+    """`itens`: (id do produto, quantidade[, id da variação]). A loja vem do cliente; no balcão, da loja informada."""
     loja = cliente.loja if cliente else loja
     if loja is None:
         raise VendaSemLoja()
@@ -52,11 +52,11 @@ def registrar_venda(*, itens, cliente=None, loja=None, valor_pago=Decimal('0'), 
 
 @transaction.atomic
 def editar_venda(venda, *, itens, cliente=None, forma_pagamento='', observacoes='', vencimentos=(), usuario=None):
-    """Troca itens, cliente e observações. Itens que já estavam na venda (mesmo produto e mesmas opções)
+    """Troca itens, cliente e observações. Itens que já estavam na venda (mesmo produto e mesma variação)
     mantêm o preço e o custo da época."""
     antes = fotografar_venda(venda)
     cliente_antes = venda.cliente
-    da_epoca = {(item.produto_id, chave(escolhas_do_item(item.opcoes))): item for item in venda.itens.all()}
+    da_epoca = {(item.produto_id, item.variacao_id): item for item in venda.itens.all()}
     _devolver_estoque(venda)
     venda.itens.all().delete()
 
@@ -118,6 +118,7 @@ def fotografar_venda(venda):
 
 class Linha(NamedTuple):
     produto: Produto
+    variacao: Variacao | None
     quantidade: Decimal
     preco: Decimal
     custo: Decimal
@@ -125,13 +126,14 @@ class Linha(NamedTuple):
 
 
 def _reservar_estoque(loja, itens, da_epoca=None):
-    """Trava os produtos, confere e baixa o estoque. Retorna uma Linha por produto + escolha de opções.
+    """Trava os produtos e as variações, confere e baixa o estoque. Retorna uma Linha por produto + variação.
 
-    `itens`: (id do produto, quantidade) ou (id do produto, quantidade, {opção: valor}); iguais são somados.
-    `da_epoca`: {(id do produto, chave das escolhas): item} dos itens que já estavam na venda em edição —
-    mantêm o preço, o custo e as opções da época, mesmo que o produto tenha mudado.
+    `itens`: (id do produto, quantidade) ou (id do produto, quantidade, id da variação); iguais são somados.
+    `da_epoca`: {(id do produto, id da variação): item} dos itens que já estavam na venda em edição — mantêm o
+    preço, o custo e a descrição da época, mesmo que o produto tenha mudado.
 
-    Produto sem controle de estoque é vendido sem conferir nem baixar a quantidade.
+    Produto sem controle de estoque é vendido sem conferir nem baixar a quantidade. Com variações, baixa da
+    variação e do produto (que é a soma delas).
     """
     pedidos = _juntar_iguais(itens)
     if not pedidos:
@@ -143,57 +145,66 @@ def _reservar_estoque(loja, itens, da_epoca=None):
     produtos = {produto.pk: produto for produto in travados}
     if len(produtos) != len(ids):
         raise ProdutoNaoEncontrado()
+    variacoes = travar_variacoes(ids)
 
     da_epoca = da_epoca or {}
     linhas = [
-        _linha(produtos[produto_id], quantidade, escolhas, da_epoca.get((produto_id, escolhas)))
-        for (produto_id, escolhas), quantidade in pedidos.items()
+        _linha(produtos[produto_id], quantidade, escolher_variacao(produtos[produto_id], variacao_id,
+                                                                     variacoes.get(produto_id, {})),
+               da_epoca.get((produto_id, variacao_id)))
+        for (produto_id, variacao_id), quantidade in pedidos.items()
     ]
+    for linha in linhas:
+        if linha.variacao and linha.produto.controla_estoque:
+            _baixar_estoque(linha.variacao, linha.quantidade, linha.produto)
     quantidades = Counter()
     for linha in linhas:
         quantidades[linha.produto.pk] += linha.quantidade
     for produto in produtos.values():
         if produto.controla_estoque:
-            _baixar_estoque(produto, quantidades[produto.pk])
+            _baixar_estoque(produto, quantidades[produto.pk], produto)
     return linhas
 
 
 def _juntar_iguais(itens):
-    """{(id do produto, chave das escolhas): quantidade somada}."""
+    """{(id do produto, id da variação): quantidade somada}."""
     pedidos = Counter()
-    for produto_id, quantidade, *escolhas in itens:
-        pedidos[(produto_id, chave(escolhas[0] if escolhas else {}))] += quantidade
+    for produto_id, quantidade, *variacao in itens:
+        pedidos[(produto_id, variacao[0] if variacao else None)] += quantidade
     return pedidos
 
 
-def _linha(produto, quantidade, escolhas, anterior):
+def _linha(produto, quantidade, variacao, anterior):
     if not quantidade_aceita(quantidade, produto.unidade):
         raise QuantidadeFracionada(produto)
     if anterior:
-        return Linha(produto, quantidade, anterior.preco_unitario, anterior.custo_unitario, anterior.opcoes)
-    opcoes, acrescimo = escolher(produto, dict(escolhas))
-    return Linha(produto, quantidade, produto.preco_venda + acrescimo, produto.preco_custo, opcoes)
+        return Linha(produto, variacao, quantidade, anterior.preco_unitario, anterior.custo_unitario, anterior.opcoes)
+    acrescimo = variacao.acrescimo if variacao else Decimal('0')
+    return Linha(produto, variacao, quantidade, produto.preco_venda + acrescimo, produto.preco_custo,
+                 opcoes_do_item(variacao))
 
 
-def _baixar_estoque(produto, quantidade):
-    if produto.quantidade_estoque < quantidade:
-        raise EstoqueInsuficiente(produto)
-    produto.quantidade_estoque -= quantidade
-    produto.save(update_fields=['quantidade_estoque'])
+def _baixar_estoque(guardado, quantidade, produto):
+    """`guardado`: o produto ou a variação de onde sai a quantidade."""
+    if guardado.quantidade_estoque < quantidade:
+        raise EstoqueInsuficiente(produto, guardado if guardado is not produto else None)
+    guardado.quantidade_estoque -= quantidade
+    guardado.save(update_fields=['quantidade_estoque'])
 
 
 def _devolver_estoque(venda):
-    for item in venda.itens.all():
-        Produto.objects.filter(pk=item.produto_id, controla_estoque=True).update(
-            quantidade_estoque=F('quantidade_estoque') + item.quantidade,
-        )
+    for item in venda.itens.select_related('produto'):
+        if not item.produto.controla_estoque:
+            continue
+        Produto.objects.filter(pk=item.produto_id).update(quantidade_estoque=F('quantidade_estoque') + item.quantidade)
+        Variacao.objects.filter(pk=item.variacao_id).update(quantidade_estoque=F('quantidade_estoque') + item.quantidade)
 
 
 def _criar_itens(venda, linhas):
     for linha in linhas:
         ItemVenda.objects.create(
-            venda=venda, produto=linha.produto, quantidade=linha.quantidade, preco_unitario=linha.preco,
-            custo_unitario=linha.custo, opcoes=linha.opcoes,
+            venda=venda, produto=linha.produto, variacao=linha.variacao, quantidade=linha.quantidade,
+            preco_unitario=linha.preco, custo_unitario=linha.custo, opcoes=linha.opcoes,
         )
 
 

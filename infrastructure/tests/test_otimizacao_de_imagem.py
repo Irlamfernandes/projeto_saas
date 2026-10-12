@@ -3,6 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase
 from PIL import Image
 from infrastructure.utils.otimizacao_de_imagem import LADO_MAXIMO, ImagemIlegivel, otimizar_imagem
+from tests.apoio import foto_heic_de_teste
 
 TAG_ORIENTACAO = 0x0112
 TAG_GPS = 0x8825
@@ -26,6 +27,11 @@ def _abrir(arquivo):
 
 
 class OtimizarImagemTest(SimpleTestCase):
+
+    def test_le_foto_heic_do_iphone(self):
+        otimizada = otimizar_imagem(foto_heic_de_teste())
+        self.assertEqual(otimizada.name, 'foto.webp')
+        self.assertEqual(_abrir(otimizada).size, (64, 48))
 
     def test_reduz_o_maior_lado_mantendo_a_proporcao(self):
         imagem = _abrir(otimizar_imagem(_foto((4000, 3000))))
