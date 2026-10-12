@@ -29,7 +29,10 @@ def menu_lateral(_request):
 
 
 def favicons(_request):
-    return [{'rel': 'icon', 'type': 'image/png', 'href': static('images/icon-192.png')}]
+    return [
+        {'rel': 'icon', 'type': 'image/svg+xml', 'href': static('images/logo.svg')},
+        {'rel': 'icon', 'type': 'image/png', 'href': static('images/icon-192.png')},
+    ]
 
 
 def _item(titulo, icone, rota, permissao=None):

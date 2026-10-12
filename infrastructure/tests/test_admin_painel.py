@@ -107,7 +107,7 @@ class TemaTest(TestCase):
         self.assertNotIn('permission', grupos[0]['items'][0])  # o Painel aparece para todos
 
     def test_favicon_do_sistema(self):
-        self.assertTrue(favicons(None)[0]['href'].endswith('images/icon-192.png'))
+        self.assertEqual([f['href'].rsplit('/', 1)[-1] for f in favicons(None)], ['logo.svg', 'icon-192.png'])
 
 
 class TelasDoAdminTest(ComPlanosIniciais, TestCase):

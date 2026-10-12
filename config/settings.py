@@ -171,7 +171,7 @@ UNFOLD = {
     'SITE_HEADER': 'GestCor',
     'SITE_SUBHEADER': 'Administração · CorsariosCode',
     'SITE_URL': '/dashboard/',
-    'SITE_SYMBOL': 'storefront',
+    'SITE_ICON': lambda request: static('images/logo.svg'),
     'SITE_FAVICONS': 'infrastructure.admin.tema.favicons',
     # Olhinho nos campos de senha, o mesmo do site (login do admin incluído).
     'STYLES': [lambda request: static('css/mostrar_senha.css')],
